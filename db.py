@@ -32,8 +32,10 @@ class Nikki:
                               WHERE id=?', (id,)).fetchone()
         tags = self.conn.execute('SELECT tagid FROM Nikki_Tags WHERE \
                                  nikkiid = ?', (id,)).fetchall()
-        if tags:
-            tags = ' '.join([self.gettag(i[0]) for i in tags])
+        if len(tagsL) >= 1:
+            tags = ' '.join(tagsL) + ' '
+        else:
+            tags = ''
         
         return {'id': L[0], 'created': L[1], 'modified': L[2], \
                 'plaintext': L[3], 'text': L[4], 'title': L[5], 'tags': tags}
@@ -92,7 +94,11 @@ class Nikki:
             tags = self.conn.execute('SELECT tagid FROM Nikki_Tags WHERE \
                                      nikkiid = ?', (L[0],)).fetchall()
 
-            tags = ' '.join([self.gettag(i[0]) for i in tags]) if tags else ''
+            tagsL = [self.gettag(i[0]) for i in tags]
+            if len(tagsL) >= 1:
+                tags = ' '.join(tagsL) + ' '
+            else:
+                tags = ''
             yield {'id': L[0], 'created': L[1], 'modified': L[2], \
                    'plaintext': L[3], 'text': L[4], 'title': L[5], \
                    'tags': tags}
