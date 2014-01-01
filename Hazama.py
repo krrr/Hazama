@@ -26,11 +26,11 @@ else:
     path = os.path.split(sys.argv[0])[0] + os.sep
 
 
-class Edelegate(QStyledItemDelegate):
-    "Delegate for Entry"
+class CintaEntryDelegate(QStyledItemDelegate):
+    "CintaNotes like delegate for Entry"
     def __init__(self):
         "calculate first"
-        super(Edelegate, self).__init__()
+        super(CintaEntryDelegate, self).__init__()
 
         self.tr_h = titlefont.pixelSize() + 11
         
@@ -145,11 +145,12 @@ class Entry(QListWidgetItem):
 class Nlist(QListWidget):
     def __init__(self):
         super(Nlist, self).__init__()
+        self.editors = []
 
         self.setSelectionMode(self.ExtendedSelection)
         self.itemDoubleClicked.connect(self.starteditor)
         
-        self.setItemDelegate(Edelegate())
+        self.setItemDelegate(CintaEntryDelegate())
         self.setStyleSheet('QListWidget{background-color:rgb(174,176,189); \
                            border: solid 0px}')
         
@@ -159,32 +160,39 @@ class Nlist(QListWidget):
                                 triggered=self.starteditor)
         self.addAction(self.editAct)  # make shortcut working anytime
         self.delAct = QAction('Delete', self, shortcut=QKeySequence('Delete'),
-                               triggered=self.delNikki)
+                              triggered=self.delNikki)
         self.addAction(self.delAct)
-        # no shortcut for selAct, QListWidget Events instead
-        self.selAct = QAction('Select all', self,triggered=self.selectAll,
-                              shortcut=QKeySequence('Ctrl+A'))
+        self.newAct = QAction('New Nikki', self, shortcut=QKeySequence.New,
+                              triggered=self.newNikki)
+        self.addAction(self.newAct)
 
     def contextMenuEvent(self, event):
         menu = QMenu(self)
         menu.addAction(self.editAct)
         menu.addAction(self.delAct)
-        menu.addAction(self.selAct)
+        menu.addSeparator()
+        menu.addAction(self.newAct)
         
-        self.editAct.setDisabled(True if len(self.selectedItems())>1
+        selcount = len(self.selectedItems())
+        self.editAct.setDisabled(True if (selcount>1 or selcount==0)
                                  else False)
         menu.popup(event.globalPos())
 
     def starteditor(self, item=None, new=False):
         if not new:
-            # call by doubleclick event or contextmenu
+            # called by doubleclick event or contextmenu
             self.curtitem = item if item else self.selectedItems()[0] 
             row = self.curtitem.data(2)
-            self.editwindow = Editwindow(row)
-            self.editwindow.show()
+            editor = Editwindow(row)
         else:
-            self.editwindow = Editwindow(None, True)
-            self.editwindow.show()
+            editor = Editwindow(None, True)
+
+        self.editors.append(editor)
+        center = self.mapToGlobal(self.geometry().center())
+        w, h = (int(i) for i in settings.value('Editor/size', (500, 400)))
+        editor.setGeometry(center.x()-w/2, center.y()-h/2, w, h)
+
+        editor.show()
 
     def delNikki(self):
         msgbox = QMessageBox(QMessageBox.NoIcon,
@@ -205,7 +213,7 @@ class Nlist(QListWidget):
         self.starteditor(None, True)
 
     def load(self):
-        order='created'
+        order = settings.value('Nlist/sortorder', 'created')
         for e in nikki.sorted(order):
             Entry(e, nlist)
         
@@ -213,6 +221,7 @@ class Nlist(QListWidget):
 
     def refresh(self, id):
         "Reload after nikki in Nlist changed"
+        logging.info('Nikki List reloading')
         self.clear()
         order='created'
         for e in nikki.sorted(order):
@@ -222,13 +231,16 @@ class Nlist(QListWidget):
             
         self.setCurrentRow(rownum)
 
+    def destroyEditor(self, editor):
+        self.editors.remove(editor)
+
 
 class Editwindow(QWidget):
     createdModified = False
     def __init__(self, row=None, new=False):
         super(Editwindow, self).__init__()
 
-        self.setMinimumSize(500,400)
+        self.setMinimumSize(350,200)
         self.setWindowTitle("Editor")
 
         self.titleeditor = QLineEdit(self)
@@ -249,10 +261,10 @@ class Editwindow(QWidget):
         else:
             self.modified = self.created = self.id = None
             self.editor = Editor(parent=self)
-        # set up tageditor
-        taglist = nikki.gettag()
-        completer = QCompleter(taglist, self)
+        # set up tageditor 
+        completer = TagCompleter(nikki.gettag(), self)
         self.tageditor.setCompleter(completer)
+        
         self.title_h = self.titleeditor.sizeHint().height()
         self.tageditor_h = self.tageditor.sizeHint().height()
         self.box = QDialogButtonBox(QDialogButtonBox.Save | \
@@ -274,6 +286,8 @@ class Editwindow(QWidget):
         self.tageditor.isModified()):
             realid = self.saveNikki()
             nlist.refresh(realid)
+        settings.setValue('Editor/size', self.size().toTuple())
+        nlist.destroyEditor(self)
 
     def saveNikki(self):
         if not self.created:  # new nikki
@@ -319,6 +333,31 @@ class Editwindow(QWidget):
     def showEvent(self, event):
         self.editor.setFocus()
         self.editor.moveCursor(QTextCursor.End)
+
+
+class TagCompleter(QCompleter):
+    def __init__(self, tagL, parent=None):
+        self.tagL = tagL
+        super(TagCompleter, self).__init__(tagL, parent)
+        self.setCaseSensitivity(Qt.CaseInsensitive)
+    def pathFromIndex(self, index):
+        # path is current matched tag.
+        path = QCompleter.pathFromIndex(self, index)
+        # a list like [tag1, tag2, tag3(maybe a part)]
+        L = self.widget().text().split()
+        if len(L) > 1:
+            path = '%s %s ' % (' '.join(L[:-1]), path)
+        else:
+            path += ' '
+        return path
+
+    def splitPath(self, path):
+        # path is tag string like "tag1 tag2 tag3(maybe a part) "
+        path = path.split()[-1]
+        if path in self.tagL:
+            return ' '
+        else:
+            return [path,]
 
 
 class Editor(QTextEdit):
@@ -473,6 +512,8 @@ class NDate(QDateTimeEdit):
 class Main(QWidget):
     def __init__(self):
         super(Main, self).__init__()
+        self.setMinimumSize(300,200)
+        self.restoreGeometry(settings.value("Main/windowGeo"))
         self.setWindowTitle('Hazama Prototype')
         
 
@@ -490,7 +531,7 @@ class Main(QWidget):
         layout.addWidget(self.menubar)
         layout.addWidget(nlist)
         self.setLayout(layout)
-        
+
     def createActMenu(self):
         self.newAct = QAction("&New", self,
                 shortcut=QKeySequence.New,
@@ -500,17 +541,17 @@ class Main(QWidget):
         self.menubar.addMenu("   File   ")
         editMenu = self.menubar.addMenu("   Edit   ")
         editMenu.addAction(self.newAct)
-        
+
     def closeEvent(self, event):
+        settings.setValue("Main/windowGeo", self.saveGeometry())
         event.accept()
-        
+
+
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     timee = time.clock()
-    
-    # cfgfile = open(path + 'config.ini')
-    # cfg.read(cfgfile)
+    settings = QSettings(path+'config.ini', QSettings.IniFormat)
     
     app = QApplication(sys.argv)
     
@@ -518,7 +559,6 @@ if __name__ == '__main__':
     print(nikki)
     m = Main()
 
-    m.resize(420, 550)
 
     m.show()
     print(round(time.clock()-timee,3))
