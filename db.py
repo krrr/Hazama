@@ -24,8 +24,8 @@ class Nikki:
         self.conn.execute(('CREATE TABLE IF NOT EXISTS TextFormat'
                            '(nikkiid INTEGER, start INTEGER, '
                            'length INTEGER, type INTEGER)'))
-        #self.conn.execute('CREATE INDEX IF NOT EXISTS createdIndex \
-        #                   ON Nikki (created DESC)')
+        self.conn.execute(('CREATE TRIGGER IF NOT EXISTS autodeltag AFTER '
+                           'DELETE ON Nikki_Tags BEGIN   DELETE FROM Tags ' 'WHERE (SELECT COUNT(*) FROM Nikki_Tags WHERE ' 'Nikki_Tags.tagid=Tags.id)==0;  END'))
 
     def __getitem__(self, id):
         L = self.conn.execute('SELECT * FROM Nikki \
@@ -39,7 +39,7 @@ class Nikki:
         
         return {'id': L[0], 'created': L[1], 'modified': L[2], \
                 'plaintext': L[3], 'text': L[4], 'title': L[5], 'tags': tags}
-                
+
     def impxml(self, xmlpath):
         "import CintaNotes XML file"
         import xml.etree.ElementTree as ET
@@ -104,24 +104,31 @@ class Nikki:
                    'tags': tags}
 
     def delete(self, id):
+        logging.info('Deleting Nikki.ID: %s' % id)
         self.conn.execute('DELETE FROM Nikki WHERE id = ?', (id,))
         try:
             self.conn.execute('DELETE FROM Nikki_Tags WHERE \
                              nikkiid = ?', (id,))
         except:
             pass
+        self.commit()
 
     def commit(self):
         self.conn.commit()
 
-    def gettag(self, tagid=None):
+    def gettag(self, tagid=None, *, getcount=False):
         if tagid:
             return self.conn.execute('SELECT name FROM Tags WHERE \
                                      id = ?', (tagid,)).fetchone()[0]
-        else:  # get all tags
-            result = self.conn.execute('SELECT name FROM Tags')
-            return [n[0] for n in result]
-            
+        else:
+            if getcount:  # get all tags with counts,used in TList
+                result = self.conn.execute('SELECT Tags.name,(SELECT COUNT(*) FROM Nikki_Tags WHERE Nikki_Tags.tagid=Tags.id) FROM Tags ORDER BY Tags.name')
+
+                return result
+            else:  #used in tag completer
+                result = self.conn.execute('SELECT name FROM Tags')
+                return [n[0] for n in result]
+
     def parseXMLrichtag(self, text):
         nikkiid = self.getnewid()
 
@@ -133,12 +140,12 @@ class Nikki:
     def getformat(self, id):
         return self.conn.execute('SELECT start, length, type \
                                  FROM TextFormat WHERE nikkiid = ?', (id,))
-        
+
     def save(self, id, created, modified, html, title, tags):
         new = not bool(id)  # new is True if current nikki is new one
         if new: id=self.getnewid()
 
-        logging.info('Saving ID: %s' % id)
+        logging.info('Saving Nikki.ID: %s' % id)
 
         parser = richtagparser.NTextParser(strict=False)
         parser.myfeed(id, html, self.conn)
@@ -155,16 +162,20 @@ class Nikki:
                               'text=?, title=?, plaintext=? '
                               'WHERE id=?'), values)
         # tags processing
-        if not new:
-            self.conn.execute('DELETE FROM Nikki_Tags WHERE nikkiid=?', (id,))
-        for t in tags:
-            try:
-                self.conn.execute('INSERT INTO Tags VALUES(NULL,?)', (t,))
-                self.commit()
-            except:
-                pass
-            values = (id, self.conn.execute('SELECT id FROM Tags WHERE name=?', (t,)).fetchone()[0])
-            self.conn.execute('INSERT INTO Nikki_Tags VALUES(?,?)', values)
+        if tags != None:  # tags modified
+            if not new:
+                self.conn.execute('DELETE FROM Nikki_Tags WHERE nikkiid=?',
+                                  (id,))
+            for t in tags:  # both new and old
+                try:
+                    self.conn.execute('INSERT INTO Tags VALUES(NULL,?)', (t,))
+                    self.commit()
+                except:
+                    pass
+                values = (id, self.conn.execute('SELECT id FROM Tags WHERE \
+                                                name=?', (t,)).fetchone()[0])
+                self.conn.execute('INSERT INTO Nikki_Tags VALUES(?,?)',
+                                  values)
         
         self.commit()
         return id
@@ -172,9 +183,10 @@ class Nikki:
     def getnewid(self):
         maxid = self.conn.execute('SELECT max(id) FROM Nikki').fetchone()[0]
         return (maxid+1 if maxid else 1)
-
+    
+        
+        
 if __name__ == '__main__':
     path = os.path.split(__file__)[0] + os.sep
     n = Nikki(path+'test.db')
-    
     # n.impxml(path+'\\xmlsample\\1.xml')

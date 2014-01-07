@@ -6,6 +6,7 @@ import configparser
 import time
 import logging
 
+__version__ = 0.03
 # from config tile
 titlefont = QFont('SimSun')
 titlefont.setBold(True)
@@ -18,7 +19,6 @@ textfont.setPixelSize(13)
 txfontm = QFontMetrics(textfont)
 defaultfont = QFont()
 defaultfont.setPixelSize(12)
-previewlines = 4
 
 if os.sep not in sys.argv[0]:
     path = ''
@@ -26,16 +26,17 @@ else:
     path = os.path.split(sys.argv[0])[0] + os.sep
 
 
-class CintaEntryDelegate(QStyledItemDelegate):
-    "CintaNotes like delegate for Entry"
+class CintaNListDelegate(QStyledItemDelegate):
+    "CintaNotes like delegate for Entry(QListWidgetItem)"
     def __init__(self):
         "calculate first"
-        super(CintaEntryDelegate, self).__init__()
+        super(CintaNListDelegate, self).__init__()
 
         self.tr_h = titlefont.pixelSize() + 11
-        
-        leading = txfontm.leading() if txfontm.leading()>=0 else 0
-        self.text_h = (txfontm.height()+leading) * previewlines
+
+        leading = txfontm.leading() if (txfontm.leading() >= 0) else 0
+        self.text_h = (txfontm.height()+leading) * \
+                      int(settings.value('Nlist/previewlines', 4))
         self.dico_w, self.dico_h = 8, 7
         self.dico_y = self.tr_h // 2 - 3
         # for displaying text
@@ -136,22 +137,49 @@ class CintaEntryDelegate(QStyledItemDelegate):
         return QSize(-1, self.height+1)
 
 
+class CintaTListDelegate(QStyledItemDelegate):
+    def __init__(self):
+        super(CintaTListDelegate, self).__init__()
+        self.h = defaultfont.pixelSize()+8
+    def paint(self, painter, option, index):
+        x, y, w= option.rect.x(), option.rect.y(), option.rect.width()
+        tag, count = index.data().split()
+        
+        selected = bool(option.state & QStyle.State_Selected)
+        if index.row() == 0:
+            pass
+        else:
+            painter.drawLine(x+1, y, x+w-5, y)
+        
+            trect = QRect(x+5, y, w-10, self.h-1)
+            painter.drawText(x+10, y, x+w-30, self.h-1,
+                             Qt.AlignVCenter|Qt.AlignLeft, tag)
+            if selected:
+                painter.drawRect(trect)
+            
+        # painter.drawText(option.rect, tag)
+        
+    def sizeHint(self, option, index):
+        return QSize(-1, self.h)
+
+
 class Entry(QListWidgetItem):
     def __init__(self, row, parent=None):
         super(Entry, self).__init__(parent)
         self.setData(2, row)
 
 
-class Nlist(QListWidget):
+class NList(QListWidget):
     def __init__(self):
-        super(Nlist, self).__init__()
+        super(NList, self).__init__()
+        self.setMinimumSize(350,200)
         self.editors = []
 
         self.setSelectionMode(self.ExtendedSelection)
         self.itemDoubleClicked.connect(self.starteditor)
         
-        self.setItemDelegate(CintaEntryDelegate())
-        self.setStyleSheet('QListWidget{background-color:rgb(174,176,189); \
+        self.setItemDelegate(CintaNListDelegate())
+        self.setStyleSheet('QListWidget{background-color: rgb(173,179,180); \
                            border: solid 0px}')
         
         # Context Menu
@@ -176,6 +204,7 @@ class Nlist(QListWidget):
         selcount = len(self.selectedItems())
         self.editAct.setDisabled(True if (selcount>1 or selcount==0)
                                  else False)
+        self.delAct.setDisabled(True if selcount==0 else False)
         menu.popup(event.globalPos())
 
     def starteditor(self, item=None, new=False):
@@ -188,7 +217,7 @@ class Nlist(QListWidget):
             editor = Editwindow(None, True)
 
         self.editors.append(editor)
-        center = self.mapToGlobal(self.geometry().center())
+        center = main.geometry().center()
         w, h = (int(i) for i in settings.value('Editor/size', (500, 400)))
         editor.setGeometry(center.x()-w/2, center.y()-h/2, w, h)
 
@@ -207,28 +236,27 @@ class Nlist(QListWidget):
             for i in self.selectedItems():
                 nikki.delete(i.data(2)['id'])
                 self.takeItem(self.row(i))
-            nikki.commit()
 
     def newNikki(self):
         self.starteditor(None, True)
 
     def load(self):
-        order = settings.value('Nlist/sortorder', 'created')
+        order = settings.value('NList/sortorder', 'created')
         for e in nikki.sorted(order):
-            Entry(e, nlist)
+            Entry(e, self)
         
         self.setCurrentRow(0)
 
     def refresh(self, id):
-        "Reload after nikki in Nlist changed"
+        "Reload after nikki in NList changed"
         logging.info('Nikki List reloading')
         self.clear()
-        order='created'
+        order = settings.value('NList/sortorder', 'created')
         for e in nikki.sorted(order):
             if e['id'] == id:
                 rownum = self.count()
-            Entry(e, nlist)
-            
+            Entry(e, self)
+
         self.setCurrentRow(rownum)
 
     def destroyEditor(self, editor):
@@ -237,6 +265,7 @@ class Nlist(QListWidget):
 
 class Editwindow(QWidget):
     createdModified = False
+    tagsModified = False
     def __init__(self, row=None, new=False):
         super(Editwindow, self).__init__()
 
@@ -245,15 +274,12 @@ class Editwindow(QWidget):
 
         self.titleeditor = QLineEdit(self)
         self.titleeditor.setFont(titlefont)
-        self.tageditor = QLineEdit(self)
-        self.tageditor.setFont(defaultfont)
-        # Load data
+        # load data & set up nikki editor
         if not new:  # existing nikki
             self.id = row['id']
             self.created = row['created']
             self.modified = row['modified']
             self.titleeditor.setText(row['title'])
-            self.tageditor.setText(row['tags'])
             self.editor = Editor(row['text'],
                                  row['plaintext'],
                                  row['id'],
@@ -262,8 +288,13 @@ class Editwindow(QWidget):
             self.modified = self.created = self.id = None
             self.editor = Editor(parent=self)
         # set up tageditor 
+        self.tageditor = QLineEdit(self)
+        self.tageditor.setPlaceholderText('Tags')
+        if not new: self.tageditor.setText(row['tags'])
+        self.tageditor.setFont(defaultfont)
         completer = TagCompleter(nikki.gettag(), self)
         self.tageditor.setCompleter(completer)
+        self.tageditor.textChanged.connect(self.setTagsModified)
         
         self.title_h = self.titleeditor.sizeHint().height()
         self.tageditor_h = self.tageditor.sizeHint().height()
@@ -280,13 +311,13 @@ class Editwindow(QWidget):
         
             
     def closeEvent(self, event):
-        event.accept()
-        if (self.editor.document().isModified() or \
-        self.titleeditor.isModified() or self.createdModified or \
-        self.tageditor.isModified()):
+        if (self.editor.document().isModified() or
+        self.titleeditor.isModified() or self.createdModified or
+        self.tagsModified):
             realid = self.saveNikki()
             nlist.refresh(realid)
         settings.setValue('Editor/size', self.size().toTuple())
+        event.accept()
         nlist.destroyEditor(self)
 
     def saveNikki(self):
@@ -295,7 +326,7 @@ class Editwindow(QWidget):
             modified = self.created
         else:
             modified = time.strftime('%Y/%m/%d %H:%M')
-        tags = self.tageditor.text().split()
+        tags = self.tageditor.text().split() if self.tagsModified else None
         # realid: id returned by database
         realid = nikki.save(self.id, self.created, modified,
                             self.editor.toHtml(), self.titleeditor.text(),
@@ -304,6 +335,9 @@ class Editwindow(QWidget):
     # def setCreatedModified(self):
         # self.created = self.d_created.toString()
         # self.createdModified = True
+    def setTagsModified(self):
+        # tageditor.isModified() will be reset by completer.So this instead.
+        self.tagsModified = True
 
     def paintEvent(self, event):
         w, h = self.size().toTuple()
@@ -332,7 +366,7 @@ class Editwindow(QWidget):
 
     def showEvent(self, event):
         self.editor.setFocus()
-        self.editor.moveCursor(QTextCursor.End)
+        self.editor.moveCursor(QTextCursor.Start)
 
 
 class TagCompleter(QCompleter):
@@ -353,8 +387,8 @@ class TagCompleter(QCompleter):
 
     def splitPath(self, path):
         # path is tag string like "tag1 tag2 tag3(maybe a part) "
-        path = path.split()[-1]
-        if path in self.tagL:
+        path = path.split()[-1] if path.split() else None
+        if (path in self.tagL) or (path == None):
             return ' '
         else:
             return [path,]
@@ -363,7 +397,8 @@ class TagCompleter(QCompleter):
 class Editor(QTextEdit):
     def __init__(self, *values, parent=None):
         super(Editor, self).__init__(parent)
-        self.setAcceptRichText(False)
+        self.setTabChangesFocus(True)
+        self.autoIndent = int(settings.value('Editor/autoindent', 0))
         
         doc = NText()
         doc.setDefaultFont(textfont)
@@ -410,7 +445,7 @@ class Editor(QTextEdit):
     def contextMenuEvent(self, event):
         menu = self.createStandardContextMenu(event.globalPos())
         before = menu.actions()[2]
-        
+
         curtfmt = self.currentCharFormat()
         self.hlAct.setChecked(True if curtfmt.background().color() == \
                               QColor(255, 250, 160) else False)
@@ -419,7 +454,7 @@ class Editor(QTextEdit):
         self.soAct.setChecked(curtfmt.fontStrikeOut())    
         self.ulAct.setChecked(curtfmt.fontUnderline())   
         self.itaAct.setChecked(curtfmt.fontItalic())
-        print(1)
+
         menu.insertSeparator(before)        
         menu.insertMenu(before, self.submenu)
         menu.exec_(event.globalPos())
@@ -480,7 +515,41 @@ class Editor(QTextEdit):
         fmt = QTextCharFormat()
         self.textCursor().setCharFormat(fmt)
 
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Return and self.autoIndent:
+            spacecount = 0
+            cur = self.textCursor()
+            savedpos = cur.position()
+            cur.movePosition(QTextCursor.StartOfBlock)
+            cur.movePosition(QTextCursor.Right, QTextCursor.KeepAnchor)
+            while cur.selectedText() == ' ':
+                spacecount += 1
+                cur.clearSelection()
+                cur.movePosition(QTextCursor.Right, QTextCursor.KeepAnchor)
+            
+            cur.setPosition(savedpos)
+            super(Editor, self).keyPressEvent(event)
+            cur.insertText(' '*spacecount)
+        else:
+            return super(Editor, self).keyPressEvent(event)
 
+    def currentCharFormat(self):
+        "solution of right-to-left(cursor at left,anchor at right) selection"
+        cur = self.textCursor()
+        cpos, apos = cur.position(), cur.anchor()
+        if cpos >= apos:
+            return cur.charFormat()
+        else:
+            # Now it is like CxxxxxA  (x represents characters)
+            cur.clearSelection()
+            cur.setPosition(apos, QTextCursor.KeepAnchor)
+            return cur.charFormat()
+            
+    def insertFromMimeData(self, source):
+        "Disable some unsuportted types"
+        self.insertHtml(source.html())
+
+           
 class NText(QTextDocument):
     typedic = {1: 'setBD', 2: 'setHL', 3: 'setIta', 4: 'setSO', 5: 'setUL'}
     def setText(self, text, plain, nikkiid=None):
@@ -512,54 +581,86 @@ class NDate(QDateTimeEdit):
 class Main(QWidget):
     def __init__(self):
         super(Main, self).__init__()
-        self.setMinimumSize(300,200)
         self.restoreGeometry(settings.value("Main/windowGeo"))
-        self.setWindowTitle('Hazama Prototype')
+        self.setWindowTitle('Hazama Prototype Ver0.03')
         
-
         global nlist
-        nlist = Nlist()
+        nlist = NList()
         nlist.load()
-        self.menubar = QMenuBar()
-        self.menubar.setFont(defaultfont)
-        self.menubar.setStyleSheet('QMenuBar::item{padding: 1px 0px}')
         
-        self.createActMenu()
         layout = QVBoxLayout()
+        self.splitter = MainSplitter()
+        self.splitter.setHandleWidth(2)
         layout.setContentsMargins(0,0,0,0)
+        self.splitter.splitterMoved.connect(self.keepTList)
         layout.setSpacing(0)
-        layout.addWidget(self.menubar)
-        layout.addWidget(nlist)
+        self.splitter.addWidget(TList())
+        self.splitter.addWidget(nlist)
+        for i in range(2):
+            self.splitter.setCollapsible(i, False)
+        layout.addWidget(self.splitter)
         self.setLayout(layout)
-
-    def createActMenu(self):
-        self.newAct = QAction("&New", self,
-                shortcut=QKeySequence.New,
-                statusTip="Create a new file",
-                triggered=nlist.newNikki)
-
-        self.menubar.addMenu("   File   ")
-        editMenu = self.menubar.addMenu("   Edit   ")
-        editMenu.addAction(self.newAct)
+        self.keepTList()
 
     def closeEvent(self, event):
-        settings.setValue("Main/windowGeo", self.saveGeometry())
-        event.accept()
+        settings.setValue('Main/windowGeo', self.saveGeometry())
+        settings.setValue('Main/TListWidth', self.splitter.sizes()[0])
+        event.accept()        
+
+    def keepTList(self):
+        "keep TList's size when reducing window's width"
+        self.setMinimumWidth(int(settings.value('Main/TListWidth'))+350+2)
+
+
+class TList(QListWidget):
+    def __init__(self, parent=None):
+        super(TList, self).__init__(parent)
+        self.setItemDelegate(CintaTListDelegate())
+        #self.setFixedWidth(100)
+        self.setStyleSheet('QListWidget{background-color: rgb(227,235,249); \
+                           border: solid 0px}')
+        # self.itemClicked.connect()
+        QListWidgetItem('All all', self) 
+        for t in nikki.gettag(getcount=True):
+            QListWidgetItem(t[0]+' '+str(t[1]), self)
+
+
+class MainSplitter(QSplitter):
+    def __init__(self, parent=None):
+        super(MainSplitter, self).__init__(parent)
+        self.setHandleWidth(2)
+        
+    def resizeEvent(self, event):
+        if event.oldSize().width() != -1:
+            TListWidth = self.sizes()[0]
+            self.setSizes([TListWidth, event.size().width()-2-TListWidth])
+        else:
+            # set taglist to saved size
+            # reference: stackoverflow.com/questions/14397653
+            w = int(settings.value('Main/TListWidth', 0))
+            self.setSizes([w, event.size().width()-2-w])
+        
+    def createHandle(self):
+        handle = QSplitterHandle(Qt.Horizontal, self)
+        handle.setStyleSheet('background-color: rgb(227,235,249)')
+        handle.setCursor(Qt.SizeHorCursor)
+        return handle
 
 
 
+ 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     timee = time.clock()
     settings = QSettings(path+'config.ini', QSettings.IniFormat)
-    
     app = QApplication(sys.argv)
     
     nikki = Nikki(path + 'test.db')
-    print(nikki)
-    m = Main()
+    logging.info(str(nikki))
+    main = Main()
 
 
-    m.show()
+    main.show()
     print(round(time.clock()-timee,3))
+    
     sys.exit(app.exec_())
