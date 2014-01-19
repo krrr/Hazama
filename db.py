@@ -117,6 +117,7 @@ class Nikki:
 
     def exportXml(self, xmlpath, range=None):
         "export to XML file"
+        # TODO: add support for range
         import xml.etree.ElementTree as ET
         root = ET.Element('nikkichou')
         tags = ET.SubElement(root, 'tags')
@@ -149,11 +150,17 @@ class Nikki:
         tree.write(xmlpath)
 
     def sorted(self, orderby, reverse=True, *, tagid=None, search=None):
-        if tagid:  # only fetch nikki which has tag(tagid)
+        if tagid and (search is None):  # only fetch nikki which has tag(tagid)
             where = ('WHERE id IN (SELECT nikkiid FROM Nikki_Tags WHERE '
                      'tagid=%i) ') % tagid
-        elif search:
-            pass
+        elif search and (tagid is None):
+            where = ('WHERE created LIKE "%%%s%%" OR text LIKE "%%%s%%" '
+                     'OR title LIKE "%%%s%%"') % ((search,)*3)
+        elif search and tagid:
+            where = ('WHERE (id IN (SELECT nikkiid FROM Nikki_Tags WHERE '
+                     'tagid=%i)) AND (created LIKE "%%%s%%" OR '
+                     'text LIKE "%%%s%%" OR title LIKE "%%%s%%")' %
+                     ((tagid,) + (search,)*3))
         else:
             where = ''
 
@@ -215,9 +222,8 @@ class Nikki:
 
     def save(self, id, created, modified, html, title, tags):
         new = not bool(id)  # new is True if current nikki is new one
-        if new: id=self.getnewid()
-
-        logging.info('Saving Nikki (ID: %s)' % id)
+        if new:
+            id = self.getnewid()
 
         parser = richtagparser.NTextParser(strict=False)
         parser.myfeed(id, html, self.conn)
@@ -226,13 +232,25 @@ class Nikki:
 
         if new:
             values = (id, created, modified, plain, text, title)
-            self.conn.execute('INSERT INTO Nikki VALUES(?,?,?,?,?,?)', 
-                              values)
+            try:
+                self.conn.execute('INSERT INTO Nikki VALUES(?,?,?,?,?,?)',
+                                  values)
+            except Exception:
+                logging.warning('Failed saving Nikki (ID: %s)' % id)
+                return None
+            else:
+                logging.info('Nikki saved (ID: %s)' % id)
         else:
             values = (created, modified, text, title, plain, id)
-            self.conn.execute(('UPDATE Nikki SET created=?, modified=?, '
-                              'text=?, title=?, plaintext=? '
-                              'WHERE id=?'), values)
+            try:
+                self.conn.execute(('UPDATE Nikki SET created=?, modified=?, '
+                                   'text=?, title=?, plaintext=? '
+                                   'WHERE id=?'), values)
+            except Exception:
+                logging.warning('Failed saving Nikki (ID: %s)' % id)
+                return None
+            else:
+                logging.info('Nikki saved (ID: %s)' % id)
         # tags processing
         if tags is not None:  # tags modified
             if not new:
@@ -260,5 +278,6 @@ class Nikki:
 if __name__ == '__main__':
     path = os.path.split(__file__)[0] + os.sep
     n = Nikki(path+'test.db')
-    n.importXml(path+'out.xml')
+    #n.importXml(path+'out.xml')
     # n.exportXml(path+'out.xml')
+    for i in n.sorted('created', search='现在已经'): print(i['id'])
