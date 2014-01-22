@@ -1,13 +1,15 @@
 ﻿from PySide.QtGui import *
 from PySide.QtCore import *
-import sys, os
+import res
 from db import Nikki
+
+import sys, os
+import socket
 import configparser
 import time
 import logging
-import res
 
-__version__ = 0.043
+__version__ = 0.05
 
 # from config tile
 titlefont = QFont('SimSun')
@@ -49,7 +51,7 @@ class CintaNListDelegate(QStyledItemDelegate):
         self.qtd.setDocumentMargin(0)
 
     def paint(self, painter, option, index):
-        x, y, w= option.rect.x()+1, option.rect.y(), option.rect.width()-3
+        x, y, w= option.rect.x(), option.rect.y(), option.rect.width()-2
         row = index.data()
 
         selected = bool(option.state & QStyle.State_Selected)
@@ -207,10 +209,10 @@ class NList(QListWidget):
                                 shortcut=QKeySequence('Return'),
                                 triggered=self.starteditor)
         self.addAction(self.editAct)  # make shortcut working anytime
-        self.delAct = QAction('Delete', self, shortcut=QKeySequence('Delete'),
+        self.delAct = QAction('Delete', self, shortcut=QKeySequence.Delete,
                               triggered=self.delNikki)
         self.addAction(self.delAct)
-        self.newAct = QAction('New Nikki', self, shortcut=QKeySequence.New,
+        self.newAct = QAction('New', self, shortcut=QKeySequence.New,
                               triggered=self.newNikki)
         self.addAction(self.newAct)
 
@@ -229,7 +231,7 @@ class NList(QListWidget):
 
     def starteditor(self, item=None, new=False):
         if not new:
-            # called by doubleclick event or contextmenu
+            # called by doubleclick event or contextmenu or key-shortcut
             self.curtitem = item if item else self.selectedItems()[0]
             row = self.curtitem.data(2)
             editor = Editwindow(new=False, row=row, main=self.main)
@@ -251,7 +253,7 @@ class NList(QListWidget):
         msgbox = QMessageBox(QMessageBox.NoIcon,
                              'Confirm',
                              'Delete it?',
-                             QMessageBox.Yes|QMessageBox.Cancel,
+                             QMessageBox.Yes|QMessageBox.No,
                              parent=self)
         msgbox.setDefaultButton(QMessageBox.Cancel)
         ret = msgbox.exec_()
@@ -266,17 +268,17 @@ class NList(QListWidget):
         self.starteditor(None, True)
 
     def load(self, *, tagid=None, search=None):
-        order = settings.value('NList/sortorder', 'created')
-        for e in nikki.sorted(order, tagid=tagid, search=search):
+        order, reverse = self.getOrder()
+        for e in nikki.sorted(order, reverse, tagid=tagid, search=search):
             Entry(e, self)
 
         self.setCurrentRow(0)
 
     def reload(self, id):
+        order, reverse = self.getOrder()
         logging.info('Nikki List reload')
         self.clear()
-        order = settings.value('NList/sortorder', 'created')
-        for e in nikki.sorted(order):
+        for e in nikki.sorted(order, reverse):
             if e['id'] == id:
                 rownum = self.count()
             Entry(e, self)
@@ -287,6 +289,12 @@ class NList(QListWidget):
 
     def destroyEditor(self, editor):
         del self.editors[editor.id]
+
+    def getOrder(self):
+        "get sort order(str) and reverse(int) from settings file"
+        order = settings.value('NList/sortOrder', 'created')
+        reverse = int(settings.value('NList/sortReverse', 1))
+        return order, reverse
 
 
 class Editwindow(QWidget):
@@ -317,7 +325,7 @@ class Editwindow(QWidget):
 
         titlehint = (row['title'] if row else None) or \
                     (self.created.split()[0] if self.created else None) or \
-                    'New Nikki'
+                    'New Diary'
         self.setWindowTitle("%s - Hazama" % titlehint)
 
 
@@ -458,16 +466,21 @@ class NTextEdit(QTextEdit):
         prt.setColor(prt.HighlightedText, QColor(0, 0, 0))
         self.setPalette(prt)
 
-        self.creatacts()
+        self.creActs()
         self.setModified(False)
 
-    def creatacts(self):
+    def creActs(self):
         self.submenu = QMenu('Format')
-        self.hlAct = QAction('Highlight', self, shortcut=QKeySequence('Ctrl+H'))
-        self.soAct = QAction('Strike out', self, shortcut=QKeySequence('Ctrl+-'))
-        self.bdAct = QAction('Bold', self, shortcut=QKeySequence('Ctrl+B'))
-        self.ulAct = QAction('Underline', self, shortcut=QKeySequence('Ctrl+U'))
-        self.itaAct = QAction('Italic', self, shortcut=QKeySequence('Ctrl+I'))
+        self.hlAct = QAction(QIcon(':/fmt/highlight.png'), 'Highlight',
+                             self, shortcut=QKeySequence('Ctrl+H'))
+        self.soAct = QAction(QIcon(':/fmt/strikeout.png'), 'Strike out',
+                             self, shortcut=QKeySequence('Ctrl+-'))
+        self.bdAct = QAction(QIcon(':/fmt/bold.png'), 'Bold',
+                             self, shortcut=QKeySequence('Ctrl+B'))
+        self.ulAct = QAction(QIcon(':/fmt/underline.png'), 'Underline',
+                             self, shortcut=QKeySequence('Ctrl+U'))
+        self.itaAct = QAction(QIcon(':/fmt/italic.png'), 'Italic',
+                              self, shortcut=QKeySequence('Ctrl+I'))
 
         self.hlAct.triggered.connect(self.setHL)
         self.soAct.triggered.connect(self.setSO)
@@ -639,6 +652,7 @@ class Main(QWidget):
         layout.setContentsMargins(0,0,0,0)
         layout.setSpacing(0)
 
+        # setuo MainSplitter
         self.splitter.splitterMoved.connect(self.keepTList)
         self.searchbox.textChanged.connect(self.filter)
 
@@ -647,14 +661,20 @@ class Main(QWidget):
         for i in range(2):
             self.splitter.setCollapsible(i, False)
 
-        # set up ToolBar
-        self.creatacts()
+        # setup ToolBar
+        self.creActs()
         self.toolbar.addAction(self.tlistAct)
-
-        self.toolbar.setIconSize(QSize(18,18))
-        self.toolbar.setStyleSheet('QToolBar{background-color: rgb(225,231,243); margin: 0px}')
+        self.toolbar.setIconSize(QSize(18, 18))
+        self.toolbar.setStyleSheet('QToolBar{background: rgb(237, 240, 248);'
+                                   'border: 0; padding: 2px; spacing: 2px}')
         self.toolbar.addWidget(self.searchbox)
         self.searchbox.setMaximumWidth(100)  # TEMP
+        self.sorAct.setMenu(SortOrderMenu(main=self))
+        for a in [self.sorAct, self.creAct, self.delAct]:
+            self.toolbar.addAction(a)
+        sortbtn = self.toolbar.widgetForAction(self.sorAct)
+        sortbtn.setPopupMode(QToolButton.InstantPopup)
+
         layout.addWidget(self.toolbar)
         layout.addWidget(self.splitter)
         self.setLayout(layout)
@@ -694,17 +714,87 @@ class Main(QWidget):
             self.nlist.clear()
             self.nlist.load(tagid=tagid, search=search)
 
-    def creatacts(self):
+    def creActs(self):
         self.tlistAct = QAction(QIcon(':/images/tlist.png'), 'Tag List',
                                 self, shortcut=QKeySequence('F5'))
         self.tlistAct.setCheckable(True)
+        self.creAct = QAction(QIcon(':/images/new.png'), 'New', self)
+        self.delAct = QAction(QIcon(':/images/delete.png'),'Delete', self)
+        self.sorAct = QAction(QIcon(':/images/sort.png'), 'Sort By', self)
+
         self.tlistAct.triggered[bool].connect(self.setTList)
+        self.creAct.triggered.connect(self.nlist.newNikki)
+        self.delAct.triggered.connect(self.nlist.delNikki)
 
     def setTList(self, checked):
         self.tlist.setVisible(checked)
 
     def showEvent(self, event):
         self.nlist.setFocus()
+
+
+class SortOrderMenu(QMenu):
+    def __init__(self, main):
+        self.main = main
+        super(SortOrderMenu, self).__init__()
+        self.aboutToShow.connect(self.setActs)
+
+        self.bycreated = QAction('Created Date', self)
+        self.bymodified = QAction('Modified Date', self)
+        self.bytitle = QAction('Title', self)
+        self.bysize = QAction('Size', self)
+        self.reverse = QAction('Reverse', self)
+        self.reverse.setCheckable(True)
+
+        self.ordertypes = [self.bycreated, self.bymodified, self.bytitle, self.bysize]
+        for a in self.ordertypes:
+            a.setCheckable(True)
+            self.addAction(a)
+        self.addSeparator()
+        self.addAction(self.reverse)
+
+        self.bycreated.triggered[bool].connect(self.setCR)
+        self.bymodified.triggered[bool].connect(self.setMD)
+        self.bytitle.triggered[bool].connect(self.setTT)
+        self.bysize.triggered[bool].connect(self.setSZ)
+        self.reverse.triggered[bool].connect(self.setRE)
+
+    def setActs(self):
+        order, reverse = self.main.nlist.getOrder()
+
+        for a in self.ordertypes: a.setChecked(False)
+        enabled = getattr(self, 'by'+order)
+        enabled.setChecked(True)
+        self.reverse.setChecked(reverse)
+
+    def setCR(self, checked):
+        if checked:
+            settings.setValue('NList/sortOrder', 'created')
+            self.main.nlist.clear()
+            self.main.nlist.load()
+
+    def setMD(self, checked):
+        if checked:
+            settings.setValue('NList/sortOrder', 'modified')
+            self.main.nlist.clear()
+            self.main.nlist.load()
+
+    def setTT(self, checked):
+        if checked:
+            settings.setValue('NList/sortOrder', 'title')
+            self.main.nlist.clear()
+            self.main.nlist.load()
+
+    def setSZ(self, checked):
+        if checked:
+            settings.setValue('NList/sortOrder', 'size')
+            self.main.nlist.clear()
+            self.main.nlist.load()
+
+    def setRE(self, checked):
+        settings.setValue('NList/sortReverse', int(checked))
+        self.main.nlist.clear()
+        self.main.nlist.load()
 
 
 class TList(QListWidget):
@@ -823,17 +913,24 @@ class SearchBox(QLineEdit):
 
 
 if __name__ == '__main__':
-    print('ハザマ：起動中')
+    app = QApplication(sys.argv)
+    try:
+        socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        socket.bind(('127.0.0.1', 5002))
+    except OSError:
+        logging.warning('already running,exit')
+        msgbox = QMessageBox(text='Hazama is already running')
+        msgbox.setWindowTitle('Hazama')
+        msgbox.exec_()
+        sys.exit()
 
     logging.basicConfig(level=logging.DEBUG)
     timee = time.clock()
     settings = QSettings(path+'config.ini', QSettings.IniFormat)
-    app = QApplication(sys.argv)
 
     nikki = Nikki(path + 'test.db')
     logging.info(str(nikki))
     main = Main()
-
 
     main.show()
     logging.debug('startup take %s seconds' % round(time.clock()-timee,3))
