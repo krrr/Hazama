@@ -15,6 +15,7 @@ __version__ = 0.05
 titlefont = QFont('SimSun')
 titlefont.setBold(True)
 titlefont.setPixelSize(13)
+tfontm = QFontMetrics(titlefont)
 datefont = QFont('Segoe UI')
 datefont.setPixelSize(12)
 dfontm = QFontMetrics(datefont)
@@ -201,18 +202,18 @@ class NList(QListWidget):
         self.itemDoubleClicked.connect(self.starteditor)
 
         self.setItemDelegate(CintaNListDelegate())
-        self.setStyleSheet('QListWidget{background-color: rgb(173,179,180); \
-                           border: solid 0px}')
+        self.setStyleSheet('QListWidget{background-color: rgb(173,179,180);'
+                           'border: solid 0px}')
 
         # Context Menu
-        self.editAct = QAction('Edit', self,
+        self.editAct = QAction(self.tr('Edit'), self,
                                 shortcut=QKeySequence('Return'),
                                 triggered=self.starteditor)
         self.addAction(self.editAct)  # make shortcut working anytime
-        self.delAct = QAction('Delete', self, shortcut=QKeySequence.Delete,
+        self.delAct = QAction(self.tr('Delete'), self, shortcut=QKeySequence.Delete,
                               triggered=self.delNikki)
         self.addAction(self.delAct)
-        self.newAct = QAction('New', self, shortcut=QKeySequence.New,
+        self.newAct = QAction(self.tr('New'), self, shortcut=QKeySequence.New,
                               triggered=self.newNikki)
         self.addAction(self.newAct)
 
@@ -251,8 +252,9 @@ class NList(QListWidget):
 
     def delNikki(self):
         msgbox = QMessageBox(QMessageBox.NoIcon,
-                             'Confirm',
-                             'Delete it?',
+                             self.tr('Delete Diary'),
+                             self.tr('Are you sure you want to delete'
+                                     'the selected diary?'),
                              QMessageBox.Yes|QMessageBox.No,
                              parent=self)
         msgbox.setDefaultButton(QMessageBox.Cancel)
@@ -325,13 +327,13 @@ class Editwindow(QWidget):
 
         titlehint = (row['title'] if row else None) or \
                     (self.created.split()[0] if self.created else None) or \
-                    'New Diary'
+                    self.tr('New Diary')
         self.setWindowTitle("%s - Hazama" % titlehint)
 
 
         # set up tageditor 
         self.tageditor = QLineEdit(self)
-        self.tageditor.setPlaceholderText('Tags')
+        self.tageditor.setPlaceholderText(self.tr('Tags'))
         if not new: self.tageditor.setText(row['tags'])
         self.tageditor.setFont(defaultfont)
         completer = TagCompleter(nikki.gettag(), self)
@@ -404,7 +406,7 @@ class Editwindow(QWidget):
         painter.setFont(datefont)
         cre = self.created if self.created is not None else ''
         mod = self.modified if self.modified is not None else ''
-        date = 'Created: %s\nModified: %s' % (cre, mod)
+        date = self.tr('Created: %s\nModified: %s') % (cre, mod)
         painter.drawText(10, h-self.box_h-20, w, self.box_h+20,
                          Qt.AlignVCenter, date)
 
@@ -470,16 +472,16 @@ class NTextEdit(QTextEdit):
         self.setModified(False)
 
     def creActs(self):
-        self.submenu = QMenu('Format')
-        self.hlAct = QAction(QIcon(':/fmt/highlight.png'), 'Highlight',
+        self.submenu = QMenu(self.tr('Format'))
+        self.hlAct = QAction(QIcon(':/fmt/highlight.png'), self.tr('Highlight'),
                              self, shortcut=QKeySequence('Ctrl+H'))
-        self.soAct = QAction(QIcon(':/fmt/strikeout.png'), 'Strike out',
+        self.soAct = QAction(QIcon(':/fmt/strikeout.png'), self.tr('Strike out'),
                              self, shortcut=QKeySequence('Ctrl+-'))
-        self.bdAct = QAction(QIcon(':/fmt/bold.png'), 'Bold',
+        self.bdAct = QAction(QIcon(':/fmt/bold.png'), self.tr('Bold'),
                              self, shortcut=QKeySequence('Ctrl+B'))
-        self.ulAct = QAction(QIcon(':/fmt/underline.png'), 'Underline',
+        self.ulAct = QAction(QIcon(':/fmt/underline.png'), self.tr('Underline'),
                              self, shortcut=QKeySequence('Ctrl+U'))
-        self.itaAct = QAction(QIcon(':/fmt/italic.png'), 'Italic',
+        self.itaAct = QAction(QIcon(':/fmt/italic.png'), self.tr('Italic'),
                               self, shortcut=QKeySequence('Ctrl+I'))
 
         self.hlAct.triggered.connect(self.setHL)
@@ -495,7 +497,7 @@ class NTextEdit(QTextEdit):
             a.setCheckable(True)
 
         self.submenu.addSeparator()
-        self.clrAct = QAction('Clear format', self,
+        self.clrAct = QAction(self.tr('Clear format'), self,
                               shortcut=QKeySequence('Ctrl+D'))
         self.addAction(self.clrAct)
         self.submenu.addAction(self.clrAct)
@@ -715,12 +717,12 @@ class Main(QWidget):
             self.nlist.load(tagid=tagid, search=search)
 
     def creActs(self):
-        self.tlistAct = QAction(QIcon(':/images/tlist.png'), 'Tag List',
+        self.tlistAct = QAction(QIcon(':/images/tlist.png'), self.tr('Tag List'),
                                 self, shortcut=QKeySequence('F5'))
         self.tlistAct.setCheckable(True)
-        self.creAct = QAction(QIcon(':/images/new.png'), 'New', self)
-        self.delAct = QAction(QIcon(':/images/delete.png'),'Delete', self)
-        self.sorAct = QAction(QIcon(':/images/sort.png'), 'Sort By', self)
+        self.creAct = QAction(QIcon(':/images/new.png'), self.tr('New'), self)
+        self.delAct = QAction(QIcon(':/images/delete.png'), self.tr('Delete'), self)
+        self.sorAct = QAction(QIcon(':/images/sort.png'), self.tr('Sort By'), self)
 
         self.tlistAct.triggered[bool].connect(self.setTList)
         self.creAct.triggered.connect(self.nlist.newNikki)
@@ -739,11 +741,11 @@ class SortOrderMenu(QMenu):
         super(SortOrderMenu, self).__init__()
         self.aboutToShow.connect(self.setActs)
 
-        self.bycreated = QAction('Created Date', self)
-        self.bymodified = QAction('Modified Date', self)
-        self.bytitle = QAction('Title', self)
-        self.bysize = QAction('Size', self)
-        self.reverse = QAction('Reverse', self)
+        self.bycreated = QAction(self.tr('Created Date'), self)
+        self.bymodified = QAction(self.tr('Modified Date'), self)
+        self.bytitle = QAction(self.tr('Title'), self)
+        self.bysize = QAction(self.tr('Size'), self)
+        self.reverse = QAction(self.tr('Reverse'), self)
         self.reverse.setCheckable(True)
 
         self.ordertypes = [self.bycreated, self.bymodified, self.bytitle, self.bysize]
@@ -898,7 +900,7 @@ class SearchBox(QLineEdit):
         self.button.clicked.connect(self.clear)
 
         self.textChanged.connect(self.update)
-        self.setPlaceholderText('Search')
+        self.setPlaceholderText(self.tr('Search'))
         self.update('')
 
     def resizeEvent(self, event):
@@ -914,19 +916,28 @@ class SearchBox(QLineEdit):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
+    settings = QSettings(path+'config.ini', QSettings.IniFormat)
+    trans = QTranslator()
+    lang = settings.value('Main/lang', '')
+    trans.load('lang/'+lang, directory=path)
+    transQt = QTranslator()
+    transQt.load('qt_'+lang, QLibraryInfo.location(QLibraryInfo.TranslationsPath))
+    for i in [trans, transQt]: app.installTranslator(i)
+
     try:
         socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         socket.bind(('127.0.0.1', 5002))
     except OSError:
         logging.warning('already running,exit')
-        msgbox = QMessageBox(text='Hazama is already running')
+        msgbox = QMessageBox()
+        msgbox.setText(QT_TRANSLATE_NOOP('FailStart',
+                                         'Hazama is already running'))
         msgbox.setWindowTitle('Hazama')
         msgbox.exec_()
         sys.exit()
 
     logging.basicConfig(level=logging.DEBUG)
     timee = time.clock()
-    settings = QSettings(path+'config.ini', QSettings.IniFormat)
 
     nikki = Nikki(path + 'test.db')
     logging.info(str(nikki))
@@ -934,5 +945,4 @@ if __name__ == '__main__':
 
     main.show()
     logging.debug('startup take %s seconds' % round(time.clock()-timee,3))
-
     sys.exit(app.exec_())
