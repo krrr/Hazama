@@ -11,25 +11,22 @@ import logging
 
 __version__ = 0.05
 
-# from config tile
-titlefont = QFont('SimSun')
-titlefont.setBold(True)
-titlefont.setPixelSize(13)
-tfontm = QFontMetrics(titlefont)
-datefont = QFont('Segoe UI')
-datefont.setPixelSize(12)
-dfontm = QFontMetrics(datefont)
-textfont = QFont('SimSun')  # WenQuanYi Micro Hei
-textfont.setPixelSize(13)
-txfontm = QFontMetrics(textfont)
-defaultfont = QFont('Microsoft YaHei')
-defaultfont.setPixelSize(12)
-defontm = QFontMetrics(defaultfont)
 
 if os.sep not in sys.argv[0]:
     path = ''
 else:
     path = os.path.split(sys.argv[0])[0] + os.sep
+
+class NFont(QFont):
+    '''Calculate pixelSize when font set by pointSize.'''
+    def __init__(self, *args, s=None):
+        super(NFont, self).__init__(*args)
+        if s: self.fromString(s)
+        w = QWidget()
+        self.DPI = w.logicalDpiY()
+
+    def pixelSize(self):
+        return int(self.pointSize() / 72 * self.DPI) - 1
 
 
 class CintaNListDelegate(QStyledItemDelegate):
@@ -915,7 +912,9 @@ class SearchBox(QLineEdit):
 
 
 if __name__ == '__main__':
+    timee = time.clock()
     app = QApplication(sys.argv)
+    # setup translation
     settings = QSettings(path+'config.ini', QSettings.IniFormat)
     trans = QTranslator()
     lang = settings.value('Main/lang', '')
@@ -923,6 +922,21 @@ if __name__ == '__main__':
     transQt = QTranslator()
     transQt.load('qt_'+lang, QLibraryInfo.location(QLibraryInfo.TranslationsPath))
     for i in [trans, transQt]: app.installTranslator(i)
+
+    # setup fonts
+    titlefont = NFont(s=settings.value('/Font/title'))
+    tfontm = QFontMetrics(titlefont)
+    datefont = NFont(s=settings.value('/Font/datetime'))
+    dfontm = QFontMetrics(datefont)
+    textfont = NFont(s=settings.value('/Font/text'))  # WenQuanYi Micro Hei
+    txfontm = QFontMetrics(textfont)
+
+    defaultfont = NFont('Microsoft YaHei')
+    defaultfont.setPointSize(app.font().pointSize())
+    defontm = QFontMetrics(defaultfont)
+    app.setFont(defaultfont)
+
+
 
     try:
         socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -937,7 +951,6 @@ if __name__ == '__main__':
         sys.exit()
 
     logging.basicConfig(level=logging.DEBUG)
-    timee = time.clock()
 
     nikki = Nikki(path + 'test.db')
     logging.info(str(nikki))
