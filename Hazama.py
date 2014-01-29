@@ -330,7 +330,9 @@ class Editwindow(QWidget):
 
         # set up tageditor 
         self.tageditor = QLineEdit(self)
-        self.tageditor.setPlaceholderText(self.tr('Tags'))
+        self.tageditor.setPlaceholderText(self.tr('Tags separated by space'))
+        self.tageditor.textChanged.connect(self.updateTagEditorFont)
+        self.updateTagEditorFont('')
         if not new: self.tageditor.setText(row['tags'])
         self.tageditor.setFont(defaultfont)
         completer = TagCompleter(nikki.gettag(), self)
@@ -349,7 +351,6 @@ class Editwindow(QWidget):
         # self.d_created = NDate(self.created, self)
         # self.d_created.move(50, 330)
         # self.d_created.dateTimeChanged.connect(self.setCreatedModified)
-
 
     def closeEvent(self, event):
         if (self.editor.document().isModified() or
@@ -419,6 +420,11 @@ class Editwindow(QWidget):
     def showEvent(self, event):
         self.editor.setFocus()
         self.editor.moveCursor(QTextCursor.Start)
+
+    def updateTagEditorFont(self, text):
+        "Set tageditor's placeHoderFont to italic"
+        fontstyle = 'normal' if text else 'italic'
+        self.tageditor.setStyleSheet('font-style: %s' % fontstyle)
 
 
 class TagCompleter(QCompleter):
@@ -665,11 +671,12 @@ class Main(QWidget):
         self.toolbar.addAction(self.tlistAct)
         self.toolbar.setIconSize(QSize(18, 18))
         self.toolbar.setStyleSheet('QToolBar{background: rgb(237, 240, 248);'
-                                   'border: 0; padding: 2px; spacing: 2px}')
+                                   'border-bottom: 1px solid rgb(182, 189, 197);'
+                                   'padding: 2px; spacing: 2px}')
         self.toolbar.addWidget(self.searchbox)
         self.searchbox.setMaximumWidth(100)  # TEMP
         self.sorAct.setMenu(SortOrderMenu(main=self))
-        for a in [self.sorAct, self.creAct, self.delAct]:
+        for a in [self.sorAct, self.creAct, self.delAct, self.cfgAct]:
             self.toolbar.addAction(a)
         sortbtn = self.toolbar.widgetForAction(self.sorAct)
         sortbtn.setPopupMode(QToolButton.InstantPopup)
@@ -720,6 +727,7 @@ class Main(QWidget):
         self.creAct = QAction(QIcon(':/images/new.png'), self.tr('New'), self)
         self.delAct = QAction(QIcon(':/images/delete.png'), self.tr('Delete'), self)
         self.sorAct = QAction(QIcon(':/images/sort.png'), self.tr('Sort By'), self)
+        self.cfgAct = QAction(QIcon(':/images/config.png'), self.tr('Settings'), self)
 
         self.tlistAct.triggered[bool].connect(self.setTList)
         self.creAct.triggered.connect(self.nlist.newNikki)
@@ -741,11 +749,11 @@ class SortOrderMenu(QMenu):
         self.bycreated = QAction(self.tr('Created Date'), self)
         self.bymodified = QAction(self.tr('Modified Date'), self)
         self.bytitle = QAction(self.tr('Title'), self)
-        self.bysize = QAction(self.tr('Size'), self)
+        self.bylength = QAction(self.tr('Length'), self)
         self.reverse = QAction(self.tr('Reverse'), self)
         self.reverse.setCheckable(True)
 
-        self.ordertypes = [self.bycreated, self.bymodified, self.bytitle, self.bysize]
+        self.ordertypes = [self.bycreated, self.bymodified, self.bytitle, self.bylength]
         for a in self.ordertypes:
             a.setCheckable(True)
             self.addAction(a)
@@ -755,7 +763,7 @@ class SortOrderMenu(QMenu):
         self.bycreated.triggered[bool].connect(self.setCR)
         self.bymodified.triggered[bool].connect(self.setMD)
         self.bytitle.triggered[bool].connect(self.setTT)
-        self.bysize.triggered[bool].connect(self.setSZ)
+        self.bylength.triggered[bool].connect(self.setLT)
         self.reverse.triggered[bool].connect(self.setRE)
 
     def setActs(self):
@@ -784,9 +792,9 @@ class SortOrderMenu(QMenu):
             self.main.nlist.clear()
             self.main.nlist.load()
 
-    def setSZ(self, checked):
+    def setLT(self, checked):
         if checked:
-            settings.setValue('NList/sortOrder', 'size')
+            settings.setValue('NList/sortOrder', 'length')
             self.main.nlist.clear()
             self.main.nlist.load()
 
@@ -902,13 +910,16 @@ class SearchBox(QLineEdit):
 
     def resizeEvent(self, event):
         w, h = event.size().toTuple()
-        self.button.move(w-19, (h-18)/2)
+        pos_y = (h-18) / 2
+        self.button.move(w-16-pos_y, pos_y)
 
     def update(self, text):
         iconame = 'search_clr' if text else 'search'
+        fontstyle = 'normal' if text else 'italic'
         self.button.setStyleSheet('QToolButton{border: none;'
                                   'background: url(:/images/%s.png);'
                                   'background-position: center}' % iconame)
+        self.setStyleSheet('font-style: %s' % fontstyle)
 
 
 if __name__ == '__main__':

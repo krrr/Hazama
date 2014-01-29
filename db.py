@@ -164,6 +164,8 @@ class Nikki:
         else:
             where = ''
 
+        if orderby == 'length':
+            orderby = 'LENGTH(text)'
         comm = 'SELECT * FROM Nikki '+ where + 'ORDER BY ' + \
                orderby + (' DESC' if reverse else '')
         t = self.conn.execute(comm)
