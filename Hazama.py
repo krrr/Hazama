@@ -298,7 +298,7 @@ class NList(QListWidget):
 
 class Editwindow(QWidget):
     "Editor"
-    createdModified = False
+    timeModified = False
     tagsModified = False
     def __init__(self, new, row, main):
         super(Editwindow, self).__init__()
@@ -327,6 +327,15 @@ class Editwindow(QWidget):
                     self.tr('New Diary')
         self.setWindowTitle("%s - Hazama" % titlehint)
 
+        # setup timelabel(display created datetime)
+        cre = self.created if self.created is not None else ''
+        mod = self.modified if self.modified is not None else ''
+        datetime = self.tr('Created: %s\nModified: %s') % (cre, mod)
+        self.timelabel = QLabel(datetime, self)
+        self.timelabel.setFont(datefont)
+        self.timelabel.setStyleSheet('color: rgb(115, 115, 115)')
+        self.timelabel.mouseReleaseEvent = self.startTimeEditor
+        self.timelabel_w = self.timelabel.sizeHint().width()
 
         # set up tageditor 
         self.tageditor = QLineEdit(self)
@@ -347,14 +356,13 @@ class Editwindow(QWidget):
         self.box.accepted.connect(self.close)
         self.box.rejected.connect(self.hide)
         self.box_w, self.box_h = self.box.sizeHint().toTuple()
-        # title and created,modified,tags
         # self.d_created = NDate(self.created, self)
         # self.d_created.move(50, 330)
         # self.d_created.dateTimeChanged.connect(self.setCreatedModified)
 
     def closeEvent(self, event):
         if (self.editor.document().isModified() or
-        self.titleeditor.isModified() or self.createdModified or
+        self.titleeditor.isModified() or self.timeModified or
         self.tagsModified):
             realid = self.saveNikki()
             if realid is not None:
@@ -382,9 +390,6 @@ class Editwindow(QWidget):
                             self.editor.toHtml(), self.titleeditor.text(),
                             tags)
         return realid
-    # def setCreatedModified(self):
-        # self.created = self.d_created.toString()
-        # self.createdModified = True
 
     def setTagsModified(self):
         # tageditor.isModified() will be reset by completer.So this instead.
@@ -400,17 +405,11 @@ class Editwindow(QWidget):
         painter.setBrush(QColor(249,245,238))  # 77,199,145
         painter.drawRect(0, h-self.box_h-70, w, 50)
 
-        painter.setPen(QColor(115, 115, 115))
-        painter.setFont(datefont)
-        cre = self.created if self.created is not None else ''
-        mod = self.modified if self.modified is not None else ''
-        date = self.tr('Created: %s\nModified: %s') % (cre, mod)
-        painter.drawText(10, h-self.box_h-20, w, self.box_h+20,
-                         Qt.AlignVCenter, date)
-
     def resizeEvent(self, event):
         w, h = event.size().toTuple()
         # from buttom to top
+        self.timelabel.setGeometry(10, h-self.box_h-20, self.timelabel_w,
+                                   self.box_h+20)
         box_x, box_y = w-self.box_w-10, h-self.box_h-10
         self.box.move(box_x, box_y)
         self.tageditor.setGeometry(20, box_y-35, w-40, self.tageditor_h)
@@ -425,6 +424,13 @@ class Editwindow(QWidget):
         "Set tageditor's placeHoderFont to italic"
         fontstyle = 'normal' if text else 'italic'
         self.tageditor.setStyleSheet('font-style: %s' % fontstyle)
+
+    def startTimeEditor(self, event):
+        if self.created is None: return  # new diary
+        clicked, time = DateTimeDialog.getDateTime(self.created, self)
+        if clicked and time!=self.created:
+            self.created = time
+            self.timeModified = True
 
 
 class TagCompleter(QCompleter):
@@ -629,15 +635,37 @@ class NTextDocument(QTextDocument):
         return self.cur
 
 
-class NDate(QDateTimeEdit):
-    fmt = "yyyy/MM/dd HH:mm"
-    def __init__(self, string, parent=None):
-        dt = QDateTime.fromString(string, self.fmt)
-        super(NDate, self).__init__(dt, parent)
-        self.setDisplayFormat(self.fmt)
+class DateTimeDialog(QDialog):
+    timeFmt = "yyyy/MM/dd HH:mm"
+    def __init__(self, timestr, parent=None):
+        super(DateTimeDialog, self).__init__(parent)
+        self.setWindowModality(Qt.WindowModal)
+        self.setWindowTitle(self.tr('Edit created time'))
+        self.setMinimumWidth(100)
 
-    def toString(self):
-        return self.dateTime().toString(self.fmt)
+        self.verticalLayout = QVBoxLayout(self)
+
+        dt = QDateTime.fromString(timestr, self.timeFmt)
+        self.dtEdit = QDateTimeEdit(dt)
+        self.dtEdit.setDisplayFormat(self.timeFmt)
+        self.verticalLayout.addWidget(self.dtEdit)
+
+        self.btnBox = QDialogButtonBox()
+        self.btnBox.setOrientation(Qt.Horizontal)
+        self.btnBox.setStandardButtons(QDialogButtonBox.Ok |
+                                       QDialogButtonBox.Cancel)
+        self.verticalLayout.addWidget(self.btnBox)
+
+        self.btnBox.accepted.connect(self.accept)
+        self.btnBox.rejected.connect(self.reject)
+
+    @staticmethod
+    def getDateTime(timestr, parent):
+        "Run Dialog,return None if canceled,otherwise return timestr"
+        dtDialog = DateTimeDialog(timestr, parent)
+        # result code is 1 if OK clicked else 0
+        code = dtDialog.exec_()
+        return (code, dtDialog.dtEdit.dateTime().toString(dtDialog.timeFmt))
 
 
 class Main(QWidget):
