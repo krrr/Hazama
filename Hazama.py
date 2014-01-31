@@ -262,6 +262,7 @@ class NList(QListWidget):
                 nikki.delete(i.data(2)['id'])
                 self.takeItem(self.row(i))
             if self.main.tlist.isVisible(): self.main.tlist.load()
+            self.main.updateCountLabel()
 
     def newNikki(self):
         self.starteditor(None, True)
@@ -365,8 +366,10 @@ class Editwindow(QWidget):
         self.titleeditor.isModified() or self.timeModified or
         self.tagsModified):
             realid = self.saveNikki()
-            if realid is not None:
+            if realid is not None:  # save existed diary
                 self.main.nlist.reload(realid)
+                self.main.updateCountLabel()
+
 
         if self.tagsModified and self.main.tlist.isVisible():
             self.main.tlist.load()
@@ -680,6 +683,7 @@ class Main(QWidget):
         self.splitter = MainSplitter()
         self.toolbar = QToolBar()
         self.searchbox = SearchBox(main=self)
+        self.countlabel = QLabel()
 
         layout = QVBoxLayout()
         layout.setContentsMargins(0,0,0,0)
@@ -688,7 +692,6 @@ class Main(QWidget):
         # setuo MainSplitter
         self.splitter.splitterMoved.connect(self.keepTList)
         self.searchbox.textChanged.connect(self.filter)
-
         self.splitter.addWidget(self.tlist)
         self.splitter.addWidget(self.nlist)
         for i in range(2):
@@ -697,15 +700,21 @@ class Main(QWidget):
         # setup ToolBar
         self.creActs()
         self.toolbar.addAction(self.tlistAct)
-        self.toolbar.setIconSize(QSize(18, 18))
-        self.toolbar.setStyleSheet('QToolBar{background: rgb(237, 240, 248);'
+        self.toolbar.setIconSize(QSize(24, 24))
+        self.toolbar.setStyleSheet('QToolBar{background: rgb(242, 241, 231);'
                                    'border-bottom: 1px solid rgb(182, 189, 197);'
                                    'padding: 2px; spacing: 2px}')
         self.toolbar.addWidget(self.searchbox)
-        self.searchbox.setMaximumWidth(100)  # TEMP
         self.sorAct.setMenu(SortOrderMenu(main=self))
-        for a in [self.sorAct, self.creAct, self.delAct, self.cfgAct]:
+        for a in [self.creAct, self.delAct, self.sorAct, self.cfgAct]:
             self.toolbar.addAction(a)
+        #label
+        self.countlabel.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.countlabel.setAlignment(Qt.AlignVCenter|Qt.AlignRight)
+        self.countlabel.setIndent(6)
+        self.countlabel.setStyleSheet('color: rgb(115, 115, 115)')
+        self.updateCountLabel()
+        self.toolbar.addWidget(self.countlabel)
         sortbtn = self.toolbar.widgetForAction(self.sorAct)
         sortbtn.setPopupMode(QToolButton.InstantPopup)
 
@@ -766,6 +775,10 @@ class Main(QWidget):
 
     def showEvent(self, event):
         self.nlist.setFocus()
+
+    def updateCountLabel(self):
+        "Only called when diary saving or deleting"
+        self.countlabel.setText(self.tr('%i diary') % self.nlist.count())
 
 
 class SortOrderMenu(QMenu):
@@ -947,7 +960,7 @@ class SearchBox(QLineEdit):
         self.button.setStyleSheet('QToolButton{border: none;'
                                   'background: url(:/images/%s.png);'
                                   'background-position: center}' % iconame)
-        self.setStyleSheet('font-style: %s' % fontstyle)
+        self.setStyleSheet('QLineEdit{font-style: %s}' % fontstyle)
 
 
 if __name__ == '__main__':
