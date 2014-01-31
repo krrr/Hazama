@@ -618,7 +618,7 @@ class NTextEdit(QTextEdit):
 
     def insertFromMimeData(self, source):
         "Disable some unsuportted types"
-        self.insertHtml(source.html())
+        self.insertHtml(source.html() or source.text())
 
 
 class NTextDocument(QTextDocument):
