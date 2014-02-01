@@ -1,3 +1,5 @@
+# tlist.png, sort.png, search_clr.png, search.png, new.png, delete.png, config.png
+
 
 SweetiePlus
 -----------

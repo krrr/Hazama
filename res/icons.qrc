@@ -1,0 +1,39 @@
+<RCC>
+  <qresource prefix="/images">
+    <file>tlist.png</file>
+  </qresource>
+  <qresource prefix="/images">
+    <file>search.png</file>
+  </qresource>
+  <qresource prefix="/images">
+    <file>search_clr.png</file>
+  </qresource>
+  <qresource prefix="/images">
+    <file>new.png</file>
+  </qresource>
+  <qresource prefix="/images">
+    <file>delete.png</file>
+  </qresource>
+  <qresource prefix="/images">
+    <file>sort.png</file>
+  </qresource>
+  <qresource prefix="/images">
+    <file>config.png</file>
+  </qresource>
+  
+  <qresource prefix="/fmt">
+    <file>highlight.png</file>
+  </qresource>
+  <qresource prefix="/fmt">
+    <file>strikeout.png</file>
+  </qresource>
+  <qresource prefix="/fmt">
+    <file>underline.png</file>
+  </qresource>
+  <qresource prefix="/fmt">
+    <file>italic.png</file>
+  </qresource>
+  <qresource prefix="/fmt">
+    <file>bold.png</file>
+  </qresource>
+</RCC>
