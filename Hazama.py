@@ -361,45 +361,46 @@ class Editwindow(QWidget):
         self.box = QDialogButtonBox(QDialogButtonBox.Save | \
                                     QDialogButtonBox.Cancel,
                                     parent=self)
-        self.box.accepted.connect(self.close)
-        self.box.rejected.connect(self.hide)
+        self.box.accepted.connect(self.closeWithSaving)
+        self.box.rejected.connect(self.close)
         self.box_w, self.box_h = self.box.sizeHint().toTuple()
-        # self.d_created = NDate(self.created, self)
-        # self.d_created.move(50, 330)
-        # self.d_created.dateTimeChanged.connect(self.setCreatedModified)
 
     def closeEvent(self, event):
-        if (self.editor.document().isModified() or
-        self.titleeditor.isModified() or self.timeModified or
-        self.tagsModified):
-            realid = self.saveNikki()
-            if realid is not None:  # save existed diary
-                self.main.nlist.reload(realid)
-                self.main.updateCountLabel()
-
-
-        if self.tagsModified and self.main.tlist.isVisible():
-            self.main.tlist.load()
+        "Save geometry information and call NList's destroyEditor method"
         if int(settings.value('Editor/savepos', 1)):
             settings.setValue('Editor/windowGeo', self.saveGeometry())
         else:
             settings.setValue('Editor/size', self.size().toTuple())
+
         event.accept()
         self.main.nlist.destroyEditor(self)
 
+    def closeWithSaving(self):
+        self.saveNikki()
+        self.close()
+
     def saveNikki(self):
-        if not self.created:  # new nikki
-            self.created = time.strftime('%Y/%m/%d %H:%M')
-            modified = self.created
-        else:
-            modified = time.strftime('%Y/%m/%d %H:%M')
-        tagsL = self.tageditor.text().split() if self.tagsModified else None
-        tags = filter(lambda t: tagsL.count(t)==1, tagsL) if tagsL else None
-        # realid: id returned by database
-        realid = nikki.save(self.id, self.created, modified,
-                            self.editor.toHtml(), self.titleeditor.text(),
-                            tags)
-        return realid
+        "Save when necessary;Refresh NList and TList when necessary"
+        if (self.editor.document().isModified() or
+        self.titleeditor.isModified() or self.timeModified or
+        self.tagsModified):
+            if not self.created:  # new nikki
+                self.created = time.strftime('%Y/%m/%d %H:%M')
+                modified = self.created
+            else:
+                modified = time.strftime('%Y/%m/%d %H:%M')
+            tagsL = self.tageditor.text().split() if self.tagsModified else None
+            tags = filter(lambda t: tagsL.count(t)==1, tagsL) if tagsL else None
+            # realid: id returned by database
+            realid = nikki.save(self.id, self.created, modified,
+                                self.editor.toHtml(), self.titleeditor.text(),
+                                tags)
+            if realid is not None:  # save existed diary
+                self.main.nlist.reload(realid)
+                self.main.updateCountLabel()
+
+        if self.tagsModified and self.main.tlist.isVisible():
+            self.main.tlist.load()
 
     def setTagsModified(self):
         # tageditor.isModified() will be reset by completer.So this instead.
@@ -786,7 +787,7 @@ class Main(QWidget):
 
     def updateCountLabel(self):
         "Only called when diary saving or deleting"
-        self.countlabel.setText(self.tr('%i diary') % self.nlist.count())
+        self.countlabel.setText(self.tr('%i diary') % nikki.count())
 
 
 class SortOrderMenu(QMenu):
@@ -885,7 +886,8 @@ class TList(QListWidget):
     def hideEvent(self, event):
         # Reset minimumWidth which set by Main.keepTList
         self.main.setMinimumWidth(350)
-        if self.currentItem().data(1) != 'All':
+        # currentItem is None when tag deleted
+        if self.currentItem() is None or self.currentItem().data(1)!='All':
             self.setCurrentRow(0)
         # avoid refreshing nlist by unexpected signal
         self.itemSelectionChanged.disconnect(self.main.filter)

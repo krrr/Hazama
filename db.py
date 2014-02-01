@@ -10,8 +10,7 @@ class Nikki:
     
     '''
     def __str__(self):
-        c = self.conn.execute('SELECT COUNT(id) FROM Nikki').fetchone()[0]
-        return '%s nikki in database' % c
+        return '%s nikki in database' % self.count()
 
     def __init__(self, dbpath):
         self.conn = sqlite3.connect(dbpath)
@@ -194,6 +193,9 @@ class Nikki:
 
     def commit(self):
         self.conn.commit()
+
+    def count(self):
+        return self.conn.execute('SELECT COUNT(id) FROM Nikki').fetchone()[0]
 
     def gettag(self, tagid=None, *, getcount=False):
         if tagid:
