@@ -9,7 +9,7 @@ import configparser
 import time
 import logging
 
-__version__ = 0.05
+__version__ = 0.06
 
 
 if os.sep not in sys.argv[0]:
@@ -232,20 +232,20 @@ class NList(QListWidget):
             # called by doubleclick event or contextmenu or key-shortcut
             self.curtitem = item if item else self.selectedItems()[0]
             row = self.curtitem.data(2)
-            editor = Editwindow(new=False, row=row, main=self.main)
-            self.editors[row['id']] = editor
+            id = row['id']
+            if id in self.editors:
+                self.editors[id].activateWindow()
+            else:  # create new editor
+                editor = Editwindow(new=False, row=row, main=self.main)
+                self.editors[id] = editor
+                editor.show()
         else:
-            editor = Editwindow(new=True, row=None, main=self.main)
-            self.editors[None] = editor
-
-        if int(settings.value("Editor/savepos", 1)):
-            editor.restoreGeometry(settings.value("Editor/windowGeo"))
-        else:
-            center = main.geometry().center()
-            w, h = (int(i) for i in settings.value('Editor/size', (500, 400)))
-            editor.setGeometry(center.x()-w/2, center.y()-h/2, w, h)
-
-        editor.show()
+            if None in self.editors:
+                self.editors[None].activateWindow()
+            else:  # create new editor
+                editor = Editwindow(new=True, row=None, main=self.main)
+                self.editors[None] = editor
+                editor.show()
 
     def delNikki(self):
         msgbox = QMessageBox(QMessageBox.NoIcon,
@@ -306,6 +306,13 @@ class Editwindow(QWidget):
         self.main = main
 
         self.setMinimumSize(350,200)
+        # setup window geometry
+        if int(settings.value("Editor/savepos", 1)):
+            self.restoreGeometry(settings.value("Editor/windowGeo"))
+        else:
+            center = main.geometry().center()
+            w, h = (int(i) for i in settings.value('Editor/size', (500, 400)))
+            self.setGeometry(center.x()-w/2, center.y()-h/2, w, h)
 
         self.titleeditor = QLineEdit(self)
         self.titleeditor.setFont(titlefont)
@@ -732,6 +739,7 @@ class Main(QWidget):
             settings.setValue('Main/TListVisible', 1)
 
         event.accept()
+        app.quit()
 
     def keepTList(self, pos=None, index=None, init=False):
         "keep TList's size when reducing window's width"
