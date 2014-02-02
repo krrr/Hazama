@@ -140,9 +140,12 @@ class CintaNListDelegate(QStyledItemDelegate):
         return QSize(-1, self.height+1)
 
 
-class CintaTListDelegate(QStyledItemDelegate):
+class TListDelegate(QStyledItemDelegate):
+    '''Default TagList(TList) Delegate.Also contains TList's stylesheet'''
+    TListSS = ('QListWidget{background-color: rgb(234,182,138);'
+               'border: solid 0px}')
     def __init__(self):
-        super(CintaTListDelegate, self).__init__()
+        super(TListDelegate, self).__init__()
         self.h = defaultfont.pixelSize()+8
 
     def paint(self, painter, option, index):
@@ -151,35 +154,33 @@ class CintaTListDelegate(QStyledItemDelegate):
         painter.setFont(defaultfont)
 
         selected = bool(option.state & QStyle.State_Selected)
-        if index.row() == 0:
-            pass
+
+        if index.row() == 0:  # row 0 is always All(clear tag filter)
+            painter.setPen(QColor(80, 80, 80))
+            painter.drawText(x+4, y+1, w-8, self.h-1,
+                             Qt.AlignLeft|Qt.AlignLeft,
+                             qApp.translate('TList', 'All'))
         else:
-            painter.setPen(QColor(181,188,199))
-            painter.drawLine(x+1, y, w-4, y)
+            painter.setPen(QColor(209, 109, 63))
+            painter.drawLine(x, y, w, y)
             if selected:
-                trect = QRect(x+5, y, w-7, self.h-1)
-                painter.setPen(QColor(144,144,140))
+                trect = QRect(x, y+1, w-1, self.h-2)
+                painter.setPen(QColor(181, 61, 0))
                 painter.setBrush(QColor(250, 250, 250))
                 painter.drawRect(trect)
 
             # draw tag
-            painter.setPen(QColor(20,20,20) if selected else
-                           QColor(100,100,115))
-            textarea = QRect(x+10, y, w-15, self.h-1)
-            tag = defontm.elidedText(tag, Qt.ElideRight, w-40)
+            painter.setPen(QColor(20, 20, 20) if selected else
+                           QColor(80, 80, 80))
+            textarea = QRect(x+4, y, w-8, self.h)
+            tag = defontm.elidedText(tag, Qt.ElideRight, w-dfontm.width(count)-12)
             painter.drawText(textarea, Qt.AlignVCenter|Qt.AlignLeft, tag)
             # draw tag count
             painter.setFont(datefont)
-            painter.setPen(QColor(20,20,20) if selected else
-                           QColor(181,188,199))
             painter.drawText(textarea, Qt.AlignVCenter|Qt.AlignRight, count)
 
-
-        # painter.drawText(option.rect, tag)
-
     def sizeHint(self, option, index):
-        h = self.h if index.row() else self.h*1.2
-        return QSize(-1, h)
+        return QSize(-1, self.h)
 
 
 class Entry(QListWidgetItem):
@@ -720,7 +721,7 @@ class Main(QWidget):
         self.countlabel.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.countlabel.setAlignment(Qt.AlignVCenter|Qt.AlignRight)
         self.countlabel.setIndent(6)
-        self.countlabel.setStyleSheet('color: rgb(115, 115, 115)')
+        self.countlabel.setStyleSheet('color: rgb(144, 144, 144)')
         self.updateCountLabel()
         self.toolbar.addWidget(self.countlabel)
         sortbtn = self.toolbar.widgetForAction(self.sorAct)
@@ -740,7 +741,7 @@ class Main(QWidget):
             settings.setValue('Main/TListVisible', 1)
 
         event.accept()
-        app.quit()
+        qApp.quit()
 
     def keepTList(self, pos=None, index=None, init=False):
         "keep TList's size when reducing window's width"
@@ -858,11 +859,10 @@ class TList(QListWidget):
     def __init__(self, main):
         super(TList, self).__init__()
         self.main = main
-        self.setItemDelegate(CintaTListDelegate())
+        self.setItemDelegate(TListDelegate())
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollMode(QAbstractItemView.ScrollPerPixel)
-        self.setStyleSheet('QListWidget{background-color: rgb(227,235,249);'
-                           'border: solid 0px}')
+        self.setStyleSheet(TListDelegate.TListSS)
 
     def load(self):
         logging.info('Tag List load')
@@ -941,8 +941,8 @@ class TSplitterHandle(QSplitterHandle):
     def paintEvent(self, event):
         w, h = self.size().toTuple()
         painter = QPainter(self)
-        painter.fillRect(0, 0, w-1, h, QColor(227,235,249))
-        painter.fillRect(w-1, 0, 1, h, QColor(116,135,164))
+        painter.fillRect(0, 0, w-1, h, QColor(234, 182, 138))  # same as bg of TList
+        painter.fillRect(w-1, 0, 1, h, QColor(181, 61, 0))
 
 
 class SearchBox(QLineEdit):
@@ -1006,8 +1006,8 @@ if __name__ == '__main__':
     except OSError:
         logging.warning('already running,exit')
         msgbox = QMessageBox()
-        msgbox.setText(QT_TRANSLATE_NOOP('FailStart',
-                                         'Hazama is already running'))
+        msgbox.setText(qApp.translate('FailStart',
+                                      'Hazama is already running'))
         msgbox.setWindowTitle('Hazama')
         msgbox.exec_()
         sys.exit()
