@@ -1,6 +1,7 @@
 ﻿from PySide.QtGui import *
 from PySide.QtCore import *
 import res
+import ui.configration
 from db import Nikki
 
 import sys, os
@@ -211,16 +212,15 @@ class NList(QListWidget):
         self.delAct = QAction(self.tr('Delete'), self, shortcut=QKeySequence.Delete,
                               triggered=self.delNikki)
         self.addAction(self.delAct)
-        self.newAct = QAction(self.tr('New'), self, shortcut=QKeySequence.New,
-                              triggered=self.newNikki)
-        self.addAction(self.newAct)
+        self.selAct = QAction(self.tr('Select All'), self, shortcut=QKeySequence.SelectAll,
+                              triggered=self.selectAll)
 
     def contextMenuEvent(self, event):
         menu = QMenu(self)
         menu.addAction(self.editAct)
         menu.addAction(self.delAct)
         menu.addSeparator()
-        menu.addAction(self.newAct)
+        menu.addAction(self.selAct)
 
         selcount = len(self.selectedItems())
         self.editAct.setDisabled(True if (selcount>1 or selcount==0)
@@ -288,9 +288,6 @@ class NList(QListWidget):
         self.main.tlist.setCurrentRow(0)
         self.setCurrentRow(rownum)
 
-    def destroyEditor(self, editor):
-        del self.editors[editor.id]
-
     def getOrder(self):
         "get sort order(str) and reverse(int) from settings file"
         order = settings.value('NList/sortOrder', 'created')
@@ -304,6 +301,7 @@ class Editwindow(QWidget):
     tagsModified = False
     def __init__(self, new, row, main):
         super(Editwindow, self).__init__()
+        self.setAttribute(Qt.WA_DeleteOnClose)
         self.main = main
 
         self.setMinimumSize(350,200)
@@ -338,7 +336,8 @@ class Editwindow(QWidget):
 
         # setup timelabel(display created datetime)
         cre = self.created if self.created is not None else ''
-        mod = self.modified if self.modified is not None else ''
+        mod = (self.modified if (self.modified is not None)
+               and (self.created != self.modified) else '')
         datetime = self.tr('Created: %s\nModified: %s') % (cre, mod)
         self.timelabel = QLabel(datetime, self)
         self.timelabel.setFont(datefont)
@@ -374,7 +373,7 @@ class Editwindow(QWidget):
             settings.setValue('Editor/size', self.size().toTuple())
 
         event.accept()
-        self.main.nlist.destroyEditor(self)
+        del self.main.nlist.editors[self.id]
 
     def closeWithSaving(self):
         self.saveNikki()
@@ -707,15 +706,13 @@ class Main(QWidget):
             self.splitter.setCollapsible(i, False)
 
         # setup ToolBar
-        self.creActs()
-        self.toolbar.addAction(self.tlistAct)
+        self.creActs()  #create actions
         self.toolbar.setIconSize(QSize(24, 24))
         self.toolbar.setStyleSheet('QToolBar{background: rgb(242, 241, 231);'
                                    'border-bottom: 1px solid rgb(182, 189, 197);'
                                    'padding: 2px; spacing: 2px}')
-        self.toolbar.addWidget(self.searchbox)
         self.sorAct.setMenu(SortOrderMenu(main=self))
-        for a in [self.creAct, self.delAct, self.sorAct, self.cfgAct]:
+        for a in [self.creAct, self.delAct, self.tlistAct, self.sorAct, self.cfgAct]:
             self.toolbar.addAction(a)
         #label
         self.countlabel.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
@@ -724,6 +721,10 @@ class Main(QWidget):
         self.countlabel.setStyleSheet('color: rgb(144, 144, 144)')
         self.updateCountLabel()
         self.toolbar.addWidget(self.countlabel)
+
+        self.toolbar.addWidget(self.searchbox)
+        self.searchbox.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+
         sortbtn = self.toolbar.widgetForAction(self.sorAct)
         sortbtn.setPopupMode(QToolButton.InstantPopup)
 
@@ -779,6 +780,11 @@ class Main(QWidget):
         self.tlistAct.triggered[bool].connect(self.setTList)
         self.creAct.triggered.connect(self.nlist.newNikki)
         self.delAct.triggered.connect(self.nlist.delNikki)
+        self.cfgAct.triggered.connect(self.startConfigDialog)
+
+    def startConfigDialog(self):
+        self.cfgdialog = ConfigDialog(self)
+        self.cfgdialog.show()
 
     def setTList(self, checked):
         self.tlist.setVisible(checked)
@@ -862,6 +868,7 @@ class TList(QListWidget):
         self.setItemDelegate(TListDelegate())
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollMode(QAbstractItemView.ScrollPerPixel)
+        self.setUniformItemSizes(True)
         self.setStyleSheet(TListDelegate.TListSS)
 
     def load(self):
@@ -973,6 +980,47 @@ class SearchBox(QLineEdit):
         self.setStyleSheet('QLineEdit{font-style: %s}' % fontstyle)
 
 
+class ConfigDialog(QDialog):
+    # first try that using Qt Designer generated UI.
+    # Slot decorator from QtCore."suiltbly-named method + @Slot == auto connection"
+    def __init__(self, main):
+        super(ConfigDialog, self).__init__()
+        self.setAttribute(Qt.WA_DeleteOnClose)
+        self.setAttribute
+        self.main = main
+        self._ui = ui.configration.Ui_Settings()
+        self._ui.setupUi(self)
+        self.setFont(sysfont)
+
+        self._ui.locEdit.setText(dbPath)
+
+        self.filter_o = self.tr('CintaNotes/Hazama XML files(*.xml)')
+        self.filter_s = self.tr('Hazama XML(*.xml);;Text file(*.txt)')
+
+    def closeEvent(self, event):
+        del self.main.cfgdialog
+        event.accept()
+
+    @Slot()
+    def on_importBtn_clicked(self):
+        "Show File Dialog for selecting a XML file to import"
+        files, _ = QFileDialog.getOpenFileNames(parent=self, filter=self.filter_o)
+
+        for f in files: nikki.importXml(f)
+
+    @Slot()
+    def on_exportBtn_clicked(self):
+        export_all = not bool(self._ui.exportOption.currentIndex())
+        file, t = QFileDialog.getSaveFileName(parent=self, filter=self.filter_s)
+        export_xml = True if 'xml' in t else False
+        if export_xml:
+            if export_all:
+                nikki.exportXml(file)
+            else:
+                for i in self.main.nlist.selectedItems(): print(i.data(2)['id'])
+
+
+
 if __name__ == '__main__':
     timee = time.clock()
     app = QApplication(sys.argv)
@@ -993,6 +1041,7 @@ if __name__ == '__main__':
     textfont = NFont(s=settings.value('/Font/text'))  # WenQuanYi Micro Hei
     txfontm = QFontMetrics(textfont)
 
+    sysfont = app.font()
     defaultfont = NFont('Microsoft YaHei')
     defaultfont.setPointSize(app.font().pointSize())
     defontm = QFontMetrics(defaultfont)
@@ -1013,11 +1062,11 @@ if __name__ == '__main__':
         sys.exit()
 
     logging.basicConfig(level=logging.DEBUG)
-
-    nikki = Nikki(path + 'test.db')
+    dbPath = settings.value('/Main/dbPath', 'nikkichou.db')
+    nikki = Nikki(dbPath if os.sep in dbPath else path+dbPath)
     logging.info(str(nikki))
-    main = Main()
 
+    main = Main()
     main.show()
     logging.debug('startup take %s seconds' % round(time.clock()-timee,3))
     sys.exit(app.exec_())

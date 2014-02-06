@@ -1,6 +1,7 @@
-﻿SOURCES = Hazama.py
+﻿SOURCES = Hazama.py \
+	      ui/configration.py
 TRANSLATIONS = lang/zh_CN.ts
-INTERFACES = configration.ui
+INTERFACES = ui/configration.ui
 RESOURCES = res/icons.qrc
 CODECFORTR = UTF-8
 CODECFORSRC = UTF-8
