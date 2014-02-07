@@ -1,7 +1,7 @@
 ﻿from PySide.QtGui import *
 from PySide.QtCore import *
 import res
-import ui.configration
+import ui.configdialog
 from db import Nikki
 
 import sys, os
@@ -191,9 +191,8 @@ class Entry(QListWidgetItem):
 
 
 class NList(QListWidget):
-    def __init__(self, main=None):
+    def __init__(self):
         super(NList, self).__init__()
-        self.main = main
         self.setMinimumSize(350,200)
         self.editors = {}
 
@@ -237,14 +236,14 @@ class NList(QListWidget):
             if id in self.editors:
                 self.editors[id].activateWindow()
             else:  # create new editor
-                editor = Editwindow(new=False, row=row, main=self.main)
+                editor = Editwindow(new=False, row=row)
                 self.editors[id] = editor
                 editor.show()
         else:
             if None in self.editors:
                 self.editors[None].activateWindow()
             else:  # create new editor
-                editor = Editwindow(new=True, row=None, main=self.main)
+                editor = Editwindow(new=True, row=None)
                 self.editors[None] = editor
                 editor.show()
 
@@ -262,8 +261,11 @@ class NList(QListWidget):
             for i in self.selectedItems():
                 nikki.delete(i.data(2)['id'])
                 self.takeItem(self.row(i))
-            if self.main.tlist.isVisible(): self.main.tlist.load()
-            self.main.updateCountLabel()
+            if main.tlist.isVisible(): self.main.tlist.load()
+            main.updateCountLabel()
+
+        # QWidget.destroy() doesn't work
+        msgbox.deleteLater()
 
     def newNikki(self):
         self.starteditor(None, True)
@@ -284,8 +286,8 @@ class NList(QListWidget):
                 rownum = self.count()
             Entry(e, self)
 
-        self.main.searchbox.clear()
-        self.main.tlist.setCurrentRow(0)
+        main.searchbox.clear()
+        main.tlist.setCurrentRow(0)
         self.setCurrentRow(rownum)
 
     def getOrder(self):
@@ -299,10 +301,9 @@ class Editwindow(QWidget):
     "Editor"
     timeModified = False
     tagsModified = False
-    def __init__(self, new, row, main):
+    def __init__(self, new, row):
         super(Editwindow, self).__init__()
         self.setAttribute(Qt.WA_DeleteOnClose)
-        self.main = main
 
         self.setMinimumSize(350,200)
         # setup window geometry
@@ -373,7 +374,7 @@ class Editwindow(QWidget):
             settings.setValue('Editor/size', self.size().toTuple())
 
         event.accept()
-        del self.main.nlist.editors[self.id]
+        del main.nlist.editors[self.id]
 
     def closeWithSaving(self):
         self.saveNikki()
@@ -396,11 +397,11 @@ class Editwindow(QWidget):
                                 self.editor.toHtml(), self.titleeditor.text(),
                                 tags)
             if realid is not None:  # save existed diary
-                self.main.nlist.reload(realid)
-                self.main.updateCountLabel()
+                main.nlist.reload(realid)
+                main.updateCountLabel()
 
-        if self.tagsModified and self.main.tlist.isVisible():
-            self.main.tlist.load()
+        if self.tagsModified and main.tlist.isVisible():
+            main.tlist.load()
 
     def setTagsModified(self):
         # tageditor.isModified() will be reset by completer.So this instead.
@@ -685,12 +686,12 @@ class Main(QWidget):
         self.restoreGeometry(settings.value("Main/windowGeo"))
         self.setWindowTitle('Hazama Prototype Ver'+str(__version__))
 
-        self.nlist = NList(self)
+        self.nlist = NList()
         self.nlist.load()
-        self.tlist = TList(self)
+        self.tlist = TList()
         self.splitter = MainSplitter()
         self.toolbar = QToolBar()
-        self.searchbox = SearchBox(main=self)
+        self.searchbox = SearchBox()
         self.countlabel = QLabel()
 
         layout = QVBoxLayout()
@@ -711,7 +712,7 @@ class Main(QWidget):
         self.toolbar.setStyleSheet('QToolBar{background: rgb(242, 241, 231);'
                                    'border-bottom: 1px solid rgb(182, 189, 197);'
                                    'padding: 2px; spacing: 2px}')
-        self.sorAct.setMenu(SortOrderMenu(main=self))
+        self.sorAct.setMenu(SortOrderMenu())
         for a in [self.creAct, self.delAct, self.tlistAct, self.sorAct, self.cfgAct]:
             self.toolbar.addAction(a)
         #label
@@ -783,7 +784,7 @@ class Main(QWidget):
         self.cfgAct.triggered.connect(self.startConfigDialog)
 
     def startConfigDialog(self):
-        self.cfgdialog = ConfigDialog(self)
+        self.cfgdialog = ConfigDialog()
         self.cfgdialog.show()
 
     def setTList(self, checked):
@@ -798,8 +799,7 @@ class Main(QWidget):
 
 
 class SortOrderMenu(QMenu):
-    def __init__(self, main):
-        self.main = main
+    def __init__(self):
         super(SortOrderMenu, self).__init__()
         self.aboutToShow.connect(self.setActs)
 
@@ -824,7 +824,7 @@ class SortOrderMenu(QMenu):
         self.reverse.triggered[bool].connect(self.setRE)
 
     def setActs(self):
-        order, reverse = self.main.nlist.getOrder()
+        order, reverse = main.nlist.getOrder()
 
         for a in self.ordertypes: a.setChecked(False)
         enabled = getattr(self, 'by'+order)
@@ -834,37 +834,36 @@ class SortOrderMenu(QMenu):
     def setCR(self, checked):
         if checked:
             settings.setValue('NList/sortOrder', 'created')
-            self.main.nlist.clear()
-            self.main.nlist.load()
+            main.nlist.clear()
+            main.nlist.load()
 
     def setMD(self, checked):
         if checked:
             settings.setValue('NList/sortOrder', 'modified')
-            self.main.nlist.clear()
-            self.main.nlist.load()
+            main.nlist.clear()
+            main.nlist.load()
 
     def setTT(self, checked):
         if checked:
             settings.setValue('NList/sortOrder', 'title')
-            self.main.nlist.clear()
-            self.main.nlist.load()
+            main.nlist.clear()
+            main.nlist.load()
 
     def setLT(self, checked):
         if checked:
             settings.setValue('NList/sortOrder', 'length')
-            self.main.nlist.clear()
-            self.main.nlist.load()
+            main.nlist.clear()
+            main.nlist.load()
 
     def setRE(self, checked):
         settings.setValue('NList/sortReverse', int(checked))
-        self.main.nlist.clear()
-        self.main.nlist.load()
+        main.nlist.clear()
+        main.nlist.load()
 
 
 class TList(QListWidget):
-    def __init__(self, main):
+    def __init__(self):
         super(TList, self).__init__()
-        self.main = main
         self.setItemDelegate(TListDelegate())
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollMode(QAbstractItemView.ScrollPerPixel)
@@ -884,21 +883,21 @@ class TList(QListWidget):
 
     def showEvent(self, event):
         self.load()
-        self.main.keepTList(init=True)
+        main.keepTList(init=True)
         self.setCurrentRow(0)
         # avoid refreshing nlist by unexpected signal
-        self.itemSelectionChanged.connect(self.main.filter)
-        self.main.tlistAct.setChecked(True)
+        self.itemSelectionChanged.connect(main.filter)
+        main.tlistAct.setChecked(True)
 
     def hideEvent(self, event):
         # Reset minimumWidth which set by Main.keepTList
-        self.main.setMinimumWidth(350)
+        main.setMinimumWidth(350)
         # currentItem is None when tag deleted
         if self.currentItem() is None or self.currentItem().data(1)!='All':
             self.setCurrentRow(0)
         # avoid refreshing nlist by unexpected signal
-        self.itemSelectionChanged.disconnect(self.main.filter)
-        settings.setValue('Main/TListWidth', self.main.splitter.sizes()[0])
+        self.itemSelectionChanged.disconnect(main.filter)
+        settings.setValue('Main/TListWidth', main.splitter.sizes()[0])
 
     # all three events below for drag scroll
     def mousePressEvent(self, event):
@@ -953,9 +952,8 @@ class TSplitterHandle(QSplitterHandle):
 
 
 class SearchBox(QLineEdit):
-    def __init__(self, main, parent=None):
+    def __init__(self, parent=None):
         super(SearchBox, self).__init__(parent)
-        self.main = main
 
         self.button = QToolButton(self)
         self.button.setFixedSize(18, 18)
@@ -980,25 +978,21 @@ class SearchBox(QLineEdit):
         self.setStyleSheet('QLineEdit{font-style: %s}' % fontstyle)
 
 
-class ConfigDialog(QDialog):
+class ConfigDialog(QDialog, ui.configdialog.Ui_Settings):
     # first try that using Qt Designer generated UI.
-    # Slot decorator from QtCore."suiltbly-named method + @Slot == auto connection"
-    def __init__(self, main):
+    def __init__(self):
         super(ConfigDialog, self).__init__()
         self.setAttribute(Qt.WA_DeleteOnClose)
-        self.setAttribute
-        self.main = main
-        self._ui = ui.configration.Ui_Settings()
-        self._ui.setupUi(self)
+        self.setupUi(self)
         self.setFont(sysfont)
 
-        self._ui.locEdit.setText(dbPath)
+        self.locEdit.setText(dbPath)
 
         self.filter_o = self.tr('CintaNotes/Hazama XML files(*.xml)')
         self.filter_s = self.tr('Hazama XML(*.xml);;Text file(*.txt)')
 
     def closeEvent(self, event):
-        del self.main.cfgdialog
+        del main.cfgdialog
         event.accept()
 
     @Slot()
@@ -1017,7 +1011,7 @@ class ConfigDialog(QDialog):
             if export_all:
                 nikki.exportXml(file)
             else:
-                for i in self.main.nlist.selectedItems(): print(i.data(2)['id'])
+                for i in main.nlist.selectedItems(): print(i.data(2)['id'])
 
 
 

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'configration.ui'
+# Form implementation generated from reading ui file 'configdialog.ui'
 #
-# Created: Wed Feb  5 16:20:54 2014
+# Created: Fri Feb  7 20:52:17 2014
 #      by: pyside-uic 0.2.15 running on PySide 1.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -107,6 +107,11 @@ class Ui_Settings(object):
         self.exportLabel.setObjectName("exportLabel")
         self.horizontalLayout_3.addWidget(self.exportLabel)
         self.exportOption = QtGui.QComboBox(self.groupBox_2)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Maximum, QtGui.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.exportOption.sizePolicy().hasHeightForWidth())
+        self.exportOption.setSizePolicy(sizePolicy)
         self.exportOption.setObjectName("exportOption")
         self.exportOption.addItem("")
         self.exportOption.addItem("")
