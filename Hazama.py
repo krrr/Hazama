@@ -236,14 +236,14 @@ class NList(QListWidget):
             if id in self.editors:
                 self.editors[id].activateWindow()
             else:  # create new editor
-                editor = Editwindow(new=False, row=row)
+                editor = Editor(new=False, row=row)
                 self.editors[id] = editor
                 editor.show()
         else:
             if None in self.editors:
                 self.editors[None].activateWindow()
             else:  # create new editor
-                editor = Editwindow(new=True, row=None)
+                editor = Editor(new=True, row=None)
                 self.editors[None] = editor
                 editor.show()
 
@@ -297,12 +297,10 @@ class NList(QListWidget):
         return order, reverse
 
 
-class Editwindow(QWidget):
-    "Editor"
-    timeModified = False
-    tagsModified = False
+class Editor(QWidget):
+    "Editor Window.Edit diary's contents,title,tag,modified time here."
     def __init__(self, new, row):
-        super(Editwindow, self).__init__()
+        super(Editor, self).__init__()
         self.setAttribute(Qt.WA_DeleteOnClose)
 
         self.setMinimumSize(350,200)
@@ -345,7 +343,6 @@ class Editwindow(QWidget):
         self.timelabel.setStyleSheet('color: rgb(115, 115, 115)')
         self.timelabel.mouseReleaseEvent = self.startTimeEditor
         self.timelabel_w = self.timelabel.sizeHint().width()
-
         # set up tageditor 
         self.tageditor = QLineEdit(self)
         self.tageditor.setPlaceholderText(self.tr('Tags separated by space'))
@@ -356,29 +353,32 @@ class Editwindow(QWidget):
         completer = TagCompleter(nikki.gettag(), self)
         self.tageditor.setCompleter(completer)
         self.tageditor.textChanged.connect(self.setTagsModified)
-
-        self.title_h = self.titleeditor.sizeHint().height()
-        self.tageditor_h = self.tageditor.sizeHint().height()
+        # setup dialog buttons
         self.box = QDialogButtonBox(QDialogButtonBox.Save | \
                                     QDialogButtonBox.Cancel,
                                     parent=self)
-        self.box.accepted.connect(self.closeWithSaving)
-        self.box.rejected.connect(self.close)
+        self.box.accepted.connect(self.close)
+        self.box.rejected.connect(self.closeWithoutSaving)
         self.box_w, self.box_h = self.box.sizeHint().toTuple()
 
+        self.title_h = self.titleeditor.sizeHint().height()
+        self.tageditor_h = self.tageditor.sizeHint().height()
+        self.timeModified = self.tagsModified = False
+
     def closeEvent(self, event):
-        "Save geometry information and call NList's destroyEditor method"
+        "Save geometry information and diary(if changed)"
         if int(settings.value('Editor/savepos', 1)):
             settings.setValue('Editor/windowGeo', self.saveGeometry())
         else:
             settings.setValue('Editor/size', self.size().toTuple())
-
+        self.saveNikki()
         event.accept()
         del main.nlist.editors[self.id]
 
-    def closeWithSaving(self):
-        self.saveNikki()
-        self.close()
+    def closeWithoutSaving(self):
+        self.hide()
+        self.deleteLater()
+        del main.nlist.editors[self.id]
 
     def saveNikki(self):
         "Save when necessary;Refresh NList and TList when necessary"
@@ -472,6 +472,11 @@ class TagCompleter(QCompleter):
 
 
 class NTextEdit(QTextEdit):
+    '''The widget used to edit diary contents in Editor window.
+
+    setXX methods are used in NTextDocument(in NikkiList preview),
+    first load of NTextEdit,NTextEdit's context-menu.
+    '''
     def __init__(self, *values, parent=None):
         super(NTextEdit, self).__init__(parent)
         self.setTabChangesFocus(True)
@@ -528,41 +533,46 @@ class NTextEdit(QTextEdit):
         menu = self.createStandardContextMenu(event.globalPos())
         before = menu.actions()[2]
 
-        curtfmt = self.currentCharFormat()
-        self.hlAct.setChecked(True if curtfmt.background().color() == \
-                              QColor(255, 250, 160) else False)
-        self.bdAct.setChecked(True if curtfmt.fontWeight() == QFont.Bold \
-                              else False)
-        self.soAct.setChecked(curtfmt.fontStrikeOut())
-        self.ulAct.setChecked(curtfmt.fontUnderline())
-        self.itaAct.setChecked(curtfmt.fontItalic())
+        cur = self.textCursor()
+        if cur.hasSelection():
+            curtfmt = cur.charFormat()
+            self.hlAct.setChecked(True if curtfmt.background().color() == \
+                                  QColor(255, 250, 160) else False)
+            self.bdAct.setChecked(True if curtfmt.fontWeight() == QFont.Bold \
+                                  else False)
+            self.soAct.setChecked(curtfmt.fontStrikeOut())
+            self.ulAct.setChecked(curtfmt.fontUnderline())
+            self.itaAct.setChecked(curtfmt.fontItalic())
+            self.submenu.setEnabled(True)
+        else:
+            self.submenu.setEnabled(False)
 
         menu.insertSeparator(before)
         menu.insertMenu(before, self.submenu)
         menu.exec_(event.globalPos())
 
-    def setHL(self, pre=None):
+    def setHL(self, pre=False):
+        fmt = self.textCursor().charFormat()
+        if pre:  # called by NTextDocument
+            hasFormat = False
+        else:  # called by NTextEdit(Editor's context menu)
+            hasFormat = (fmt.background().color() == QColor(255, 250, 160))
+
+        fmt.setBackground(QBrush(Qt.white if hasFormat
+                                 else QColor(255, 250, 160)))
+        self.textCursor().mergeCharFormat(fmt)
+
+    def setBD(self, pre=False):
         fmt = self.textCursor().charFormat()
         if pre:
             hasFormat = False
         else:
-            hasFormat = fmt.background().color()==QColor(255, 250, 160)
+            hasFormat = (fmt.fontWeight() == QFont.Bold)
 
-        fmt.setBackground(QBrush(QColor('white') if hasFormat
-                                 else QColor(255, 250, 160)))
-        self.textCursor().mergeCharFormat(fmt)
-
-    def setBD(self, pre=None):
-        if pre:
-            hasFormat = False
-        else:
-            curtfmt = self.currentCharFormat()
-            hasFormat = (curtfmt.fontWeight() == QFont.Bold)
-        fmt = QTextCharFormat()
         fmt.setFontWeight(QFont.Normal if hasFormat else QFont.Bold)
         self.textCursor().mergeCharFormat(fmt)
 
-    def setSO(self, pre=None):
+    def setSO(self, pre=False):
         fmt = self.textCursor().charFormat()
         if pre:
             hasFormat = False
@@ -572,7 +582,7 @@ class NTextEdit(QTextEdit):
         fmt.setFontStrikeOut(not hasFormat)
         self.textCursor().mergeCharFormat(fmt)
 
-    def setUL(self, pre=None):
+    def setUL(self, pre=False):
         fmt = self.textCursor().charFormat()
         if pre:
             hasFormat = False
@@ -582,7 +592,7 @@ class NTextEdit(QTextEdit):
         fmt.setFontUnderline(not hasFormat)
         self.textCursor().mergeCharFormat(fmt)
 
-    def setIta(self, pre=None):
+    def setIta(self, pre=False):
         fmt = self.textCursor().charFormat()
         if pre:
             hasFormat = False
@@ -597,6 +607,7 @@ class NTextEdit(QTextEdit):
         self.textCursor().setCharFormat(fmt)
 
     def keyPressEvent(self, event):
+        "Auto-indent support"
         if event.key() == Qt.Key_Return and self.autoIndent:
             spacecount = 0
             cur = self.textCursor()
@@ -614,23 +625,13 @@ class NTextEdit(QTextEdit):
         else:
             return super(NTextEdit, self).keyPressEvent(event)
 
-    def currentCharFormat(self):
-        "Solve right-to-left(cursor at left,anchor at right) selection"
-        cur = self.textCursor()
-        cpos, apos = cur.position(), cur.anchor()
-        if cpos >= apos:  # Normal case
-            return cur.charFormat()
-        else:  # Now it is like CxxxxxA  (x represents characters)
-            cur.clearSelection()
-            cur.setPosition(apos, QTextCursor.KeepAnchor)
-            return cur.charFormat()
-
     def insertFromMimeData(self, source):
         "Disable some unsuportted types"
         self.insertHtml(source.html() or source.text())
 
 
 class NTextDocument(QTextDocument):
+    '''Read format info from database and apply it.'''
     typedic = {1: 'setBD', 2: 'setHL', 3: 'setIta', 4: 'setSO', 5: 'setUL'}
     def setText(self, text, plain, nikkiid=None):
         self.setPlainText(text)
