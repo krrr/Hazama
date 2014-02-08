@@ -800,6 +800,7 @@ class Main(QWidget):
 
 
 class SortOrderMenu(QMenu):
+    '''Menu used to Change sort order of NList.'''
     def __init__(self):
         super(SortOrderMenu, self).__init__()
         self.aboutToShow.connect(self.setActs)
@@ -825,8 +826,8 @@ class SortOrderMenu(QMenu):
         self.reverse.triggered[bool].connect(self.setRE)
 
     def setActs(self):
+        "Set actions checked/unchecked before showing"
         order, reverse = main.nlist.getOrder()
-
         for a in self.ordertypes: a.setChecked(False)
         enabled = getattr(self, 'by'+order)
         enabled.setChecked(True)
