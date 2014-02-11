@@ -318,7 +318,7 @@ class Editor(QWidget):
         if not new:  # existing nikki
             self.id = row['id']
             self.created = row['created']
-            self.modified = row['modified']
+            self.modified = row['modified']  # is '' when not modified
             self.titleeditor.setText(row['title'])
             self.editor = NTextEdit(row['text'],
                                     row['plaintext'],
@@ -333,10 +333,9 @@ class Editor(QWidget):
                     self.tr('New Diary')
         self.setWindowTitle("%s - Hazama" % titlehint)
 
-        # setup timelabel(display created datetime)
+        # setup timelabel(display created,modified datetime)
         cre = self.created if self.created is not None else ''
-        mod = (self.modified if (self.modified is not None)
-               and (self.created != self.modified) else '')
+        mod = self.modified if self.modified is not None else ''
         datetime = self.tr('Created: %s\nModified: %s') % (cre, mod)
         self.timelabel = QLabel(datetime, self)
         self.timelabel.setFont(datefont)
@@ -387,7 +386,7 @@ class Editor(QWidget):
         self.tagsModified):
             if not self.created:  # new nikki
                 self.created = time.strftime('%Y/%m/%d %H:%M')
-                modified = self.created
+                modified = ''
             else:
                 modified = time.strftime('%Y/%m/%d %H:%M')
             tagsL = self.tageditor.text().split() if self.tagsModified else None

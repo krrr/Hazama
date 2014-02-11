@@ -49,7 +49,12 @@ class Nikki:
                 'plaintext': L[3], 'text': L[4], 'title': L[5], 'tags': tags}
 
     def importXml(self, xmlpath):
-        "import CintaNotes/Hazama XML file"
+        "Import CintaNotes/Hazama XML file,will not appear in main program."
+        def trans_date(datetime):
+            d, t = datetime.split('T')
+            return (d[:4] + '/' + d[4:6] + '/' + d[6:] + ' '   # date
+                     + t[:2] + ':' + t[2:4])                    # time
+
         import xml.etree.ElementTree as ET
         
         tree = ET.parse(xmlpath)
@@ -68,7 +73,7 @@ class Nikki:
                 try:
                     self.conn.execute('INSERT INTO Tags VALUES(NULL,?)', tag)
                 except Exception:
-                    pass
+                    logging.warning('Failed adding tag: %s' % tag)
             self.commit()
 
         id = self.getnewid()  # the first column in Nikki Table
@@ -77,6 +82,7 @@ class Nikki:
             nikki = root[i].attrib
             text = root[i].text if root[i].text else ' '
             plain = int(nikki.get('plainText', 0))
+            # import formats if nikki has rich text
             if not plain:
                 if not Hxml:
                     text = self.parseXMLrichtag(text,id)
@@ -87,13 +93,18 @@ class Nikki:
                                       f.attrib['length'], f.attrib['type'])
                             self.conn.execute('INSERT INTO TextFormat VALUES '
                                               '(?,?,?,?)', values)
-
-            values = (self.transXmlDate(nikki['created']),
-                      self.transXmlDate(nikki['modified']),
-                      plain, text, nikki['title'])
+            # import nikki itself into Nikki Table
+            if Hxml:
+                created, modified = nikki['created'], nikki['modified']
+            else:
+                created, modified = (trans_date(nikki['created']),
+                                     trans_date(nikki['modified']))
+                if created==modified:
+                    modified = None
+            values = (created, modified, plain, text, nikki['title'])
             self.conn.execute('INSERT INTO Nikki VALUES(NULL,?,?,?,?,?)',
                               values)
-
+            # import tags if nikki has
             if nikki['tags']:
                 for tag in nikki['tags'].split():
                     values = (id, self.conn.execute('SELECT id FROM '
@@ -106,23 +117,14 @@ class Nikki:
 
         self.commit()
 
-    def transXmlDate(self, datetime):
-        if 'T' in datetime:  # CintaNotes XML
-            d, t = datetime.split('T')
-            return (d[:4] + '/' + d[4:6] + '/' + d[6:] + ' '    # date
-                    + t[:2] + ':' + t[2:4])                     # time
-        else:  # Hazama XML
-            return datetime
-
-    def exportXml(self, xmlpath, range=None):
-        "export to XML file"
-        # TODO: add support for range
+    def exportXml(self, xmlpath):
+        "Export XML file,will not appear in main program."
         import xml.etree.ElementTree as ET
         root = ET.Element('nikkichou')
         tags = ET.SubElement(root, 'tags')
         reachedTags = set()
         formats = ET.SubElement(root, 'formats')
-        
+
         for e in enumerate(self.sorted('created'), 2):
             index, n = e  # index just connect a rich nikki to its formats
             nikki = ET.SubElement(root, 'nikki')
@@ -281,7 +283,6 @@ class Nikki:
 
 if __name__ == '__main__':
     path = os.path.split(__file__)[0] + os.sep
-    n = Nikki(path+'test.db')
+    n = Nikki(path+'nikkichou.db')
+    n.importXml(path+'out.xml')
     #n.importXml(path+'out.xml')
-    # n.exportXml(path+'out.xml')
-    for i in n.sorted('created', search='现在已经'): print(i['id'])
