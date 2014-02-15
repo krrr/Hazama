@@ -18,6 +18,31 @@ if os.sep not in sys.argv[0]:
 else:
     path = os.path.split(sys.argv[0])[0] + os.sep
 
+
+def restart_main():
+    "Restart Main Window after language changed in settings."
+    logging.debug('restart_main called')
+    global main
+    geo = main.saveGeometry()
+    # delete the only reference to old one
+    main = Main()
+    main.restoreGeometry(geo)
+    main.show()
+
+def set_trans(settings):
+    "Install translations"
+    lang = settings.value('Main/lang')
+    if lang is None:
+        settings.setValue('Main/lang', 'en')
+    else:
+        global trans, transQt
+        trans = QTranslator()
+        trans.load('lang/'+lang, directory=path)
+        transQt = QTranslator()
+        transQt.load('qt_'+lang, QLibraryInfo.location(QLibraryInfo.TranslationsPath))
+        for i in [trans, transQt]: qApp.installTranslator(i)
+
+
 class NFont(QFont):
     '''Calculate pixelSize when font set by pointSize.'''
     def __init__(self, *args, s=None):
@@ -305,12 +330,12 @@ class Editor(QWidget):
 
         self.setMinimumSize(350,200)
         # setup window geometry
-        if int(settings.value("Editor/savepos", 1)):
-            self.restoreGeometry(settings.value("Editor/windowGeo"))
-        else:
+        if int(settings.value("Editor/centeropen", 0)):
             center = main.geometry().center()
             w, h = (int(i) for i in settings.value('Editor/size', (500, 400)))
             self.setGeometry(center.x()-w/2, center.y()-h/2, w, h)
+        else:
+            self.restoreGeometry(settings.value("Editor/windowGeo"))
 
         self.titleeditor = QLineEdit(self)
         self.titleeditor.setFont(titlefont)
@@ -366,10 +391,10 @@ class Editor(QWidget):
 
     def closeEvent(self, event):
         "Save geometry information and diary(if changed)"
-        if int(settings.value('Editor/savepos', 1)):
-            settings.setValue('Editor/windowGeo', self.saveGeometry())
-        else:
+        if int(settings.value('Editor/centeropen', 0)):
             settings.setValue('Editor/size', self.size().toTuple())
+        else:
+            settings.setValue('Editor/windowGeo', self.saveGeometry())
         self.saveNikki()
         event.accept()
         del main.nlist.editors[self.id]
@@ -981,6 +1006,8 @@ class SearchBox(QLineEdit):
 
 class ConfigDialog(QDialog, ui.configdialog.Ui_Settings):
     # first try that using Qt Designer generated UI.
+    lang2index = {'en': 0, 'zh_CN': 1, 'ja': 2}  # index used in combo
+    index2lang = {b: a for (a, b) in lang2index.items()}
     def __init__(self):
         super(ConfigDialog, self).__init__()
         self.setAttribute(Qt.WA_DeleteOnClose)
@@ -988,20 +1015,26 @@ class ConfigDialog(QDialog, ui.configdialog.Ui_Settings):
         self.setFont(sysfont)
 
         self.locEdit.setText(dbPath)
-
-        self.filter_o = self.tr('CintaNotes/Hazama XML files(*.xml)')
-        self.filter_s = self.tr('Hazama XML(*.xml);;Text file(*.txt)')
+        self.aindCheck.setChecked(int(settings.value('Editor/autoindent', 1)))
+        self.copenCheck.setChecked(int(settings.value('Editor/centeropen', 0)))
+        self.langCombo.setCurrentIndex(self.lang2index[
+                                       settings.value('Main/lang', 'en')])
 
     def closeEvent(self, event):
         del main.cfgdialog
         event.accept()
 
-    @Slot()
-    def on_importBtn_clicked(self):
-        "Show File Dialog for selecting a XML file to import"
-        files, _ = QFileDialog.getOpenFileNames(parent=self, filter=self.filter_o)
+    def accept(self):
+        settings.setValue('Editor/autoindent', int(self.aindCheck.isChecked()))
+        settings.setValue('Editor/centeropen', int(self.copenCheck.isChecked()))
+        lang = self.index2lang[self.langCombo.currentIndex()]
+        if settings.value('Main/lang') != lang:
+            settings.setValue('Main/lang', lang)
+            set_trans(settings)
+            restart_main()
 
-        for f in files: nikki.importXml(f)
+        logging.info('Settings saved')
+        super(ConfigDialog, self).accept()
 
     @Slot()
     def on_exportBtn_clicked(self):
@@ -1019,14 +1052,9 @@ class ConfigDialog(QDialog, ui.configdialog.Ui_Settings):
 if __name__ == '__main__':
     timee = time.clock()
     app = QApplication(sys.argv)
-    # setup translation
     settings = QSettings(path+'config.ini', QSettings.IniFormat)
-    trans = QTranslator()
-    lang = settings.value('Main/lang', '')
-    trans.load('lang/'+lang, directory=path)
-    transQt = QTranslator()
-    transQt.load('qt_'+lang, QLibraryInfo.location(QLibraryInfo.TranslationsPath))
-    for i in [trans, transQt]: app.installTranslator(i)
+
+    set_trans(settings)
 
     # setup fonts
     titlefont = NFont(s=settings.value('/Font/title'))
