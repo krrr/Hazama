@@ -43,25 +43,13 @@ def set_trans(settings):
         for i in [trans, transQt]: qApp.installTranslator(i)
 
 
-class NFont(QFont):
-    '''Calculate pixelSize when font set by pointSize.'''
-    def __init__(self, *args, s=None):
-        super(NFont, self).__init__(*args)
-        if s: self.fromString(s)
-        w = QWidget()
-        self.DPI = w.logicalDpiY()
-
-    def pixelSize(self):
-        return int(self.pointSize() / 72 * self.DPI) - 1
-
-
 class CintaNListDelegate(QStyledItemDelegate):
     "CintaNotes like delegate for Entry(QListWidgetItem)"
     def __init__(self):
         "calculate first"
         super(CintaNListDelegate, self).__init__()
 
-        self.tr_h = titlefont.pixelSize() + 11
+        self.tr_h = QFontInfo(titlefont).pixelSize() + 11
 
         leading = txfontm.leading() if (txfontm.leading() >= 0) else 0
         self.text_h = (txfontm.height()+leading) * \
@@ -172,7 +160,7 @@ class TListDelegate(QStyledItemDelegate):
                'border: solid 0px}')
     def __init__(self):
         super(TListDelegate, self).__init__()
-        self.h = defaultfont.pixelSize()+8
+        self.h = QFontInfo(defaultfont).pixelSize()+8
 
     def paint(self, painter, option, index):
         x, y, w= option.rect.x(), option.rect.y(), option.rect.width()
@@ -541,6 +529,7 @@ class NTextEdit(QTextEdit):
         if values:  # Edit existing nikki
             text, plain, nikkiid = values
             doc.setText(text, plain, nikkiid)
+            doc.clearUndoRedoStacks()
         self.setDocument(doc)
 
         prt = self.palette()
@@ -1087,16 +1076,18 @@ if __name__ == '__main__':
     set_trans(settings)
 
     # setup fonts
-    titlefont = NFont(s=settings.value('/Font/title'))
+    titlefont = QFont()
+    titlefont.fromString(settings.value('/Font/title'))
     tfontm = QFontMetrics(titlefont)
-    datefont = NFont(s=settings.value('/Font/datetime'))
+    datefont = QFont()
+    datefont.fromString(settings.value('/Font/datetime'))
     dfontm = QFontMetrics(datefont)
-    textfont = NFont(s=settings.value('/Font/text'))  # WenQuanYi Micro Hei
+    textfont = QFont()  # WenQuanYi Micro Hei
+    textfont.fromString(settings.value('/Font/text'))
     txfontm = QFontMetrics(textfont)
 
     sysfont = app.font()
-    defaultfont = NFont('Microsoft YaHei')
-    defaultfont.setPointSize(app.font().pointSize())
+    defaultfont = QFont('Microsoft YaHei', app.font().pointSize())
     defontm = QFontMetrics(defaultfont)
     app.setFont(defaultfont)
 
