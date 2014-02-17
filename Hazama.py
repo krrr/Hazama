@@ -253,24 +253,21 @@ class NList(QListWidget):
         menu.popup(event.globalPos())
 
     def starteditor(self, item=None, new=False):
+        # called by doubleclick event or contextmenu or key-shortcut
         if not new:
-            # called by doubleclick event or contextmenu or key-shortcut
-            self.curtitem = item if item else self.selectedItems()[0]
-            row = self.curtitem.data(2)
-            id = row['id']
-            if id in self.editors:
-                self.editors[id].activateWindow()
-            else:  # create new editor
-                editor = Editor(new=False, row=row)
-                self.editors[id] = editor
-                editor.show()
+            curtitem = item if item else self.selectedItems()[0]
+            nikki = curtitem.data(2)
+            id = nikki['id']
         else:
-            if None in self.editors:
-                self.editors[None].activateWindow()
-            else:  # create new editor
-                editor = Editor(new=True, row=None)
-                self.editors[None] = editor
-                editor.show()
+            curtitem = nikki = id = None
+
+        if id in self.editors:
+            self.editors[id].activateWindow()
+        else:  # create new editor
+            editor = Editor(new=True if id is None else False, row=nikki)
+            self.editors[id] = editor
+            editor.item = curtitem
+            editor.show()
 
     def delNikki(self):
         msgbox = QMessageBox(QMessageBox.NoIcon,
@@ -320,6 +317,32 @@ class NList(QListWidget):
         order = settings.value('NList/sortOrder', 'created')
         reverse = int(settings.value('NList/sortReverse', 1))
         return order, reverse
+
+    def editorNext(self):
+        self.editorMove(1)
+
+    def editorPrevious(self):
+        self.editorMove(-1)
+
+    def editorMove(self, step):
+        '''Move to the Previous/Next Diary in Editor.Current
+        Editor will close without saving,'''
+        curtEditor = [k for k in self.editors.values()][0]
+        try:
+            index = self.row(curtEditor.item)
+        except RuntimeError:  # C++ object already deleted
+            return
+        # disabled when multi-editor or editing new diary.
+        if len(self.editors) != 1 or index is None:
+            return
+        elif step == 1 and not index < self.count()-1:
+            return
+        elif step == -1 and not 0 < index:
+            return
+        else:
+            self.setCurrentRow(index+step)
+            self.starteditor()
+            curtEditor.closeNoSave()
 
 
 class Editor(QWidget):
@@ -381,13 +404,20 @@ class Editor(QWidget):
         self.box = QDialogButtonBox(QDialogButtonBox.Save | \
                                     QDialogButtonBox.Cancel,
                                     parent=self)
-        self.box.accepted.connect(self.close)
-        self.box.rejected.connect(self.closeWithoutSaving)
         self.box_w, self.box_h = self.box.sizeHint().toTuple()
-
         self.title_h = self.titleeditor.sizeHint().height()
         self.tageditor_h = self.tageditor.sizeHint().height()
         self.timeModified = self.tagsModified = False
+        # setup shortcuts and connect signals
+        self.box.rejected.connect(self.closeNoSave)
+        self.box.accepted.connect(self.close)
+        self.closeSaveSc = QShortcut(QKeySequence.Save, self)
+        self.closeSaveSc.activated.connect(self.close)
+        if not new:
+            self.preSc = QShortcut(QKeySequence(Qt.CTRL+Qt.Key_PageUp), self)
+            self.preSc.activated.connect(main.nlist.editorPrevious)
+            self.nextSc = QShortcut(QKeySequence(Qt.CTRL+Qt.Key_PageDown), self)
+            self.nextSc.activated.connect(main.nlist.editorNext)
 
     def closeEvent(self, event):
         "Save geometry information and diary(if changed)"
@@ -399,7 +429,7 @@ class Editor(QWidget):
         event.accept()
         del main.nlist.editors[self.id]
 
-    def closeWithoutSaving(self):
+    def closeNoSave(self):
         self.hide()
         self.deleteLater()
         del main.nlist.editors[self.id]
@@ -528,11 +558,11 @@ class NTextEdit(QTextEdit):
         self.soAct = QAction(QIcon(':/fmt/strikeout.png'), self.tr('Strike out'),
                              self, shortcut=QKeySequence('Ctrl+-'))
         self.bdAct = QAction(QIcon(':/fmt/bold.png'), self.tr('Bold'),
-                             self, shortcut=QKeySequence('Ctrl+B'))
+                             self, shortcut=QKeySequence.Bold)
         self.ulAct = QAction(QIcon(':/fmt/underline.png'), self.tr('Underline'),
-                             self, shortcut=QKeySequence('Ctrl+U'))
+                             self, shortcut=QKeySequence.Underline)
         self.itaAct = QAction(QIcon(':/fmt/italic.png'), self.tr('Italic'),
-                              self, shortcut=QKeySequence('Ctrl+I'))
+                              self, shortcut=QKeySequence.Italic)
 
         self.hlAct.triggered.connect(self.setHL)
         self.soAct.triggered.connect(self.setSO)
@@ -796,17 +826,17 @@ class Main(QWidget):
 
     def creActs(self):
         self.tlistAct = QAction(QIcon(':/images/tlist.png'), self.tr('Tag List'),
-                                self, shortcut=QKeySequence('F5'))
+                                self, shortcut=QKeySequence(Qt.Key_F9))
         self.tlistAct.setCheckable(True)
-        self.creAct = QAction(QIcon(':/images/new.png'), self.tr('New'), self)
-        self.delAct = QAction(QIcon(':/images/delete.png'), self.tr('Delete'), self)
-        self.sorAct = QAction(QIcon(':/images/sort.png'), self.tr('Sort By'), self)
-        self.cfgAct = QAction(QIcon(':/images/config.png'), self.tr('Settings'), self)
-
         self.tlistAct.triggered[bool].connect(self.setTList)
-        self.creAct.triggered.connect(self.nlist.newNikki)
-        self.delAct.triggered.connect(self.nlist.delNikki)
-        self.cfgAct.triggered.connect(self.startConfigDialog)
+        self.creAct = QAction(QIcon(':/images/new.png'), self.tr('New'),
+                              self, shortcut=QKeySequence.New,
+                              triggered=self.nlist.newNikki)
+        self.delAct = QAction(QIcon(':/images/delete.png'), self.tr('Delete'),
+                              self, triggered=self.nlist.delNikki)
+        self.sorAct = QAction(QIcon(':/images/sort.png'), self.tr('Sort By'), self)
+        self.cfgAct = QAction(QIcon(':/images/config.png'), self.tr('Settings'),
+                              self, triggered=self.startConfigDialog)
 
     def startConfigDialog(self):
         self.cfgdialog = ConfigDialog()
