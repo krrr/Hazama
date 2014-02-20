@@ -3,6 +3,13 @@ import sys, os
 import richtagparser
 import logging
 
+# template used to format txt file
+default_tpl = '''***{0[title]}***
+[Created: {0[created]}, Modified: {0[modified]}]
+
+{0[text]}\n\n\n\n'''
+
+
 class Nikki:
     '''SQLite3 Database
     TABLE Nikki: id, created, modified, plaintext, text, title
@@ -150,6 +157,18 @@ class Nikki:
         tree = ET.ElementTree(root)
         tree.write(xmlpath)
 
+    def exportTxt(self, txtpath, hazamapath=None, selected=None):
+        file = open(txtpath, 'w', encoding='utf-8')
+        try:
+            with open(hazamapath+'template.txt', encoding='utf-8') as f:
+                tpl = f.read()
+        except OSError:
+            tpl = default_tpl
+        for n in (self.sorted('created', False) if selected is None
+                   else selected):
+            file.write(tpl.format(n))
+        file.close()
+
     def sorted(self, orderby, reverse=True, *, tagid=None, search=None):
         if tagid and (search is None):  # only fetch nikki which has tag(tagid)
             where = ('WHERE id IN (SELECT nikkiid FROM Nikki_Tags WHERE '
@@ -284,5 +303,5 @@ class Nikki:
 if __name__ == '__main__':
     path = os.path.split(__file__)[0] + os.sep
     n = Nikki(path+'nikkichou.db')
-    n.importXml(path+'out.xml')
     #n.importXml(path+'out.xml')
+    n.exportTxt(path+'1.txt')

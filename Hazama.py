@@ -10,7 +10,7 @@ import configparser
 import time
 import logging
 
-__version__ = 0.06
+__version__ = 0.07
 
 
 if os.sep not in sys.argv[0]:
@@ -1033,7 +1033,6 @@ class ConfigDialog(QDialog, ui.configdialog.Ui_Settings):
         self.setupUi(self)
         self.setFont(sysfont)
 
-        self.locEdit.setText(dbPath)
         self.aindCheck.setChecked(int(settings.value('Editor/autoindent', 1)))
         self.copenCheck.setChecked(int(settings.value('Editor/centeropen', 0)))
         self.langCombo.setCurrentIndex(self.lang2index[
@@ -1057,14 +1056,17 @@ class ConfigDialog(QDialog, ui.configdialog.Ui_Settings):
 
     @Slot()
     def on_exportBtn_clicked(self):
-        export_all = not bool(self._ui.exportOption.currentIndex())
-        file, t = QFileDialog.getSaveFileName(parent=self, filter=self.filter_s)
-        export_xml = True if 'xml' in t else False
-        if export_xml:
-            if export_all:
-                nikki.exportXml(file)
-            else:
-                for i in main.nlist.selectedItems(): print(i.data(2)['id'])
+        export_all = not bool(self.exportOption.currentIndex())
+        txtpath, type = QFileDialog.getSaveFileName(self,
+            self.tr('Export Diary'), path,
+            self.tr('Plain Text (*.txt);;Rich Text (*.rtf)'))
+
+        if txtpath == '': return    # dialog canceled
+        plain = True if type.startswith('Plain') else False
+        if plain:
+            selected = (None if export_all else
+                        [i.data(2) for i in main.nlist.selectedItems()])
+            nikki.exportTxt(txtpath, path, selected)
 
 
 
