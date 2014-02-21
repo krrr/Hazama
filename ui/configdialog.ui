@@ -32,7 +32,7 @@
       <enum>QTabWidget::Rounded</enum>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <property name="documentMode">
       <bool>false</bool>
@@ -147,7 +147,7 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_3">
        <item>
-        <widget class="QGroupBox" name="backupBox">
+        <widget class="QGroupBox" name="bkBox">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
            <horstretch>0</horstretch>
@@ -159,25 +159,35 @@
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_4">
           <item>
-           <widget class="QLabel" name="backupLabel">
+           <widget class="QLabel" name="bkLabel">
             <property name="text">
-             <string>...</string>
+             <string>Backup every day and keep for a week.
+</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
             </property>
            </widget>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_2">
+           <layout class="QHBoxLayout" name="horizontalLayout">
             <item>
-             <widget class="QRadioButton" name="radioButton_2">
+             <widget class="QCheckBox" name="bkCheck">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
               <property name="text">
-               <string>Off</string>
+               <string>Enable backup</string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QRadioButton" name="radioButton">
+             <widget class="QPushButton" name="rstBtn">
               <property name="text">
-               <string>RadioButton</string>
+               <string>Restore</string>
               </property>
              </widget>
             </item>
@@ -198,7 +208,8 @@
           <item>
            <widget class="QLabel" name="exportLabel">
             <property name="text">
-             <string>Export your diary to plain text file or RTF file.</string>
+             <string>Export your diary to plain text file or RTF file.
+</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>

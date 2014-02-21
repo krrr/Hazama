@@ -42,6 +42,32 @@ def set_trans(settings):
         transQt.load('qt_'+lang, QLibraryInfo.location(QLibraryInfo.TranslationsPath))
         for i in [trans, transQt]: qApp.installTranslator(i)
 
+def backupcheck(dbpath):
+    "Backup:make a copy of database every day and keep it for a week."
+    bkpath = os.path.join(path, 'backup')
+    if not os.path.isdir(bkpath): os.mkdir(bkpath)
+    dblst = sorted(os.listdir(bkpath))
+
+    fmt = '%Y-%m-%d'
+    today = time.strftime(fmt)
+    try:
+        newest = dblst[-1]
+    except IndexError:  # empty directory
+        newest = ''
+    if newest.split('_')[0] != today:  # new day
+        # make new backup
+        import shutil
+        shutil.copyfile(dbpath, os.path.join(bkpath,
+                                             today+'_%d.db' % nikki.count()))
+        logging.info('Everyday backup succeed')
+        # delete old backups
+        weekbefore = time.strftime(fmt , time.localtime(int(time.time())-604800))
+        for dname in dblst:
+            if dname < weekbefore:
+                os.remove(os.path.join(bkpath, dname))
+            else:
+                break
+
 
 class CintaNListDelegate(QStyledItemDelegate):
     "CintaNotes like delegate for Entry(QListWidgetItem)"
@@ -1035,6 +1061,7 @@ class ConfigDialog(QDialog, ui.configdialog.Ui_Settings):
 
         self.aindCheck.setChecked(int(settings.value('Editor/autoindent', 1)))
         self.copenCheck.setChecked(int(settings.value('Editor/centeropen', 0)))
+        self.bkCheck.setChecked(int(settings.value('Main/backup', 1)))
         self.langCombo.setCurrentIndex(self.lang2index[
                                        settings.value('Main/lang', 'en')])
 
@@ -1045,6 +1072,7 @@ class ConfigDialog(QDialog, ui.configdialog.Ui_Settings):
     def accept(self):
         settings.setValue('Editor/autoindent', int(self.aindCheck.isChecked()))
         settings.setValue('Editor/centeropen', int(self.copenCheck.isChecked()))
+        settings.setValue('Main/backup', int(self.bkCheck.isChecked()))
         lang = self.index2lang[self.langCombo.currentIndex()]
         if settings.value('Main/lang') != lang:
             settings.setValue('Main/lang', lang)
@@ -1115,4 +1143,6 @@ if __name__ == '__main__':
     main = Main()
     main.show()
     logging.debug('startup take %s seconds' % round(time.clock()-timee,3))
+    if int(settings.value('Main/backup', 1)):
+        backupcheck(dbPath)
     sys.exit(app.exec_())
