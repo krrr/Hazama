@@ -3,6 +3,7 @@ import sys, os
 import richtagparser
 import logging
 
+
 # template used to format txt file
 default_tpl = '''***{0[title]}***
 [Created: {0[created]}, Modified: {0[modified]}]
@@ -11,10 +12,15 @@ default_tpl = '''***{0[title]}***
 
 
 class Nikki:
-    '''SQLite3 Database
-    TABLE Nikki: id, created, modified, plaintext, text, title
+    '''This class hold a SQLite3 database,handling save/read/import/export.
+
+    Each Table's function:
+    Nikki: All diary saved here.(every one has all data except format/tag info).
+    Nikki_Tags: Connecting tags to diary.
+    Tags: All tags' body saved here.
+    TextFormat: Connecting format info to diary.Format info itself also saved here.
     
-    
+
     '''
     def __str__(self):
         return '%s nikki in database' % self.count()
@@ -40,20 +46,17 @@ class Nikki:
                           'Nikki_Tags.tagid=Tags.id)==0;  END')
 
     def __getitem__(self, id):
-        L = self.conn.execute('SELECT * FROM Nikki \
-                              WHERE id=?', (id,)).fetchone()
+        L = self.conn.execute('SELECT * FROM Nikki '
+                              'WHERE id = ?', (id,)).fetchone()
         if not L:
             raise IndexError('id is not in database')
-        tags = self.conn.execute('SELECT tagid FROM Nikki_Tags WHERE \
-                                 nikkiid = ?', (id,))
-        tagsL = [self.gettag(i[0]) for i in tags]
-        if len(tagsL) >= 1:
-            tags = ' '.join(tagsL) + ' '
-        else:
-            tags = ''
-        
-        return {'id': L[0], 'created': L[1], 'modified': L[2], \
-                'plaintext': L[3], 'text': L[4], 'title': L[5], 'tags': tags}
+        tags = self.conn.execute('SELECT tagid FROM Nikki_Tags WHERE '
+                                 'nikkiid = ?', (id,))
+        taglst = [self.gettag(i[0]) for i in tags]
+        tagstr = ' '.join(taglst) + ' ' if len(taglst)>=1 else ''
+
+        return {'id': L[0], 'created': L[1], 'modified': L[2],
+                'plaintext': L[3], 'text': L[4], 'title': L[5], 'tags': tagstr}
 
     def importXml(self, xmlpath):
         "Import CintaNotes/Hazama XML file,will not appear in main program."
@@ -92,7 +95,9 @@ class Nikki:
             # import formats if nikki has rich text
             if not plain:
                 if not Hxml:
-                    text = self.parseXMLrichtag(text,id)
+                    parser = richtagparser.RichTagParser(strict=False)
+                    parser.myfeed(id, text, self.conn)
+                    text = parser.getstriped()
                 else:
                     for f in root[1]:
                         if int(f.attrib['index']) == index:
@@ -107,7 +112,7 @@ class Nikki:
                 created, modified = (trans_date(nikki['created']),
                                      trans_date(nikki['modified']))
                 if created==modified:
-                    modified = None
+                    modified = ''
             values = (created, modified, plain, text, nikki['title'])
             self.conn.execute('INSERT INTO Nikki VALUES(NULL,?,?,?,?,?)',
                               values)
@@ -127,6 +132,7 @@ class Nikki:
     def exportXml(self, xmlpath):
         "Export XML file,will not appear in main program."
         import xml.etree.ElementTree as ET
+
         root = ET.Element('nikkichou')
         tags = ET.SubElement(root, 'tags')
         reachedTags = set()
@@ -155,9 +161,11 @@ class Nikki:
             tag.set('name', t)
 
         tree = ET.ElementTree(root)
-        tree.write(xmlpath)
+        tree.write(xmlpath, encoding='utf-8')
 
-    def exportTxt(self, txtpath, hazamapath=None, selected=None):
+    def exporttxt(self, txtpath, hazamapath=None, selected=None):
+        '''Export to TXT file using template(string format).
+        When selected is a list contains nikki data,only export diary in list.'''
         file = open(txtpath, 'w', encoding='utf-8')
         try:
             with open(hazamapath+'template.txt', encoding='utf-8') as f:
@@ -170,7 +178,7 @@ class Nikki:
         file.close()
 
     def sorted(self, orderby, reverse=True, *, tagid=None, search=None):
-        if tagid and (search is None):  # only fetch nikki which has tag(tagid)
+        if tagid and (search is None):  # only fetch nikki whose tagid matchs
             where = ('WHERE id IN (SELECT nikkiid FROM Nikki_Tags WHERE '
                      'tagid=%i) ') % tagid
         elif search and (tagid is None):
@@ -186,31 +194,28 @@ class Nikki:
 
         if orderby == 'length':
             orderby = 'LENGTH(text)'
-        comm = 'SELECT * FROM Nikki '+ where + 'ORDER BY ' + \
-               orderby + (' DESC' if reverse else '')
-        t = self.conn.execute(comm)
-        for L in t:
+        cmd = ('SELECT * FROM Nikki ' + where + 'ORDER BY ' +
+               orderby + (' DESC' if reverse else ''))
+        for L in self.conn.execute(cmd):
             tags = self.conn.execute('SELECT tagid FROM Nikki_Tags WHERE '
-                                     'nikkiid = ?', (L[0],)).fetchall()
+                                     'nikkiid = ?', (L[0],))
 
-            tagsL = [self.gettag(i[0]) for i in tags]
-            if len(tagsL) >= 1:
-                tags = ' '.join(tagsL) + ' '
-            else:
-                tags = ''
+            taglst = [self.gettag(i[0]) for i in tags]
+            tagstr = ' '.join(taglst) + ' ' if len(taglst)>=1 else ''
             yield {'id': L[0], 'created': L[1], 'modified': L[2],
                    'plaintext': L[3], 'text': L[4], 'title': L[5],
-                   'tags': tags}
+                   'tags': tagstr}
 
     def delete(self, id):
-        logging.info('Deleting Nikki(ID: %s)' % id)
         self.conn.execute('DELETE FROM Nikki WHERE id = ?', (id,))
         try:
             self.conn.execute('DELETE FROM Nikki_Tags WHERE '
                               'nikkiid=?', (id,))
         except Exception:
-            pass
-        self.commit()
+            logging.warning('Faild deleting Nikki (ID: %s)' % id)
+        else:
+            logging.info('Nikki deleted (ID: %s)' % id)
+            self.commit()
 
     def commit(self):
         self.conn.commit()
@@ -219,31 +224,23 @@ class Nikki:
         return self.conn.execute('SELECT COUNT(id) FROM Nikki').fetchone()[0]
 
     def gettag(self, tagid=None, *, getcount=False):
-        if tagid:
-            return self.conn.execute('SELECT name FROM Tags WHERE \
-                                     id = ?', (tagid,)).fetchone()[0]
-        else:
-            if getcount:  # get all tags with counts,used in TList
+        if tagid:   # get tags by id
+            return self.conn.execute('SELECT name FROM Tags WHERE '
+                                      'id = ?', (tagid,)).fetchone()[0]
+        else:   # get all tags
+            if getcount:    # get with counts.used in TList
                 result = self.conn.execute('SELECT Tags.id,Tags.name,(SELECT '
                 'COUNT(*) FROM Nikki_Tags WHERE Nikki_Tags.tagid=Tags.id) '
                 'FROM Tags ORDER BY Tags.name')
 
                 return result
-            else:  #used in tag completer
+            else:         # get without counts.used in tag completer
                 result = self.conn.execute('SELECT name FROM Tags')
                 return [n[0] for n in result]
 
-    def parseXMLrichtag(self, text, id):
-        nikkiid = id
-
-        parser = richtagparser.RichTagParser(strict=False)
-        parser.myfeed(nikkiid, text, self.conn)
-        
-        return parser.getstriped()
-
     def getformat(self, id):
         return self.conn.execute('SELECT start,length,type FROM TextFormat '
-                                 'WHERE nikkiid=?', (id,))
+                                  'WHERE nikkiid=?', (id,))
 
     def save(self, id, created, modified, html, title, tags):
         new = not bool(id)  # new is True if current nikki is new one
@@ -251,44 +248,36 @@ class Nikki:
             id = self.getnewid()
 
         parser = richtagparser.NTextParser(strict=False)
-        parser.myfeed(id, html, self.conn)
+        parser.myfeed(id, html, self.conn)  # format process done here
         text = parser.getstriped()
         plain = parser.plain
 
-        if new:
-            values = (id, created, modified, plain, text, title)
-            try:
-                self.conn.execute('INSERT INTO Nikki VALUES(?,?,?,?,?,?)',
-                                  values)
-            except Exception:
-                logging.warning('Failed saving Nikki (ID: %s)' % id)
-                return None
-            else:
-                logging.info('Nikki saved (ID: %s)' % id)
+        values = ((None, created, modified, plain, text, title) if new else
+                  (created, modified, plain, text, title, id))
+        cmd = ('INSERT INTO Nikki VALUES(?,?,?,?,?,?)' if new else
+               'UPDATE Nikki SET created=?, modified=?, plaintext=?, '
+               'text=?, title=? WHERE id=?')
+        try:
+            self.conn.execute(cmd, values)
+        except Exception:
+            logging.warning('Failed saving Nikki (ID: %s)' % id)
+            return
         else:
-            values = (created, modified, text, title, plain, id)
-            try:
-                self.conn.execute(('UPDATE Nikki SET created=?, modified=?, '
-                                   'text=?, title=?, plaintext=? '
-                                   'WHERE id=?'), values)
-            except Exception:
-                logging.warning('Failed saving Nikki (ID: %s)' % id)
-                return None
-            else:
-                logging.info('Nikki saved (ID: %s)' % id)
+            logging.info('Nikki saved (ID: %s)' % id)
+
         # tags processing
         if tags is not None:  # tags modified
-            if not new:
+            if not new:  # if diary isn't new,delete its tags first
                 self.conn.execute('DELETE FROM Nikki_Tags WHERE nikkiid=?',
                                   (id,))
-            for t in tags:  # both new and old
+            for t in tags:
                 try:
                     self.conn.execute('INSERT INTO Tags VALUES(NULL,?)', (t,))
                     self.commit()
-                except:
+                except Exception:
                     pass
-                values = (id, self.conn.execute('SELECT id FROM Tags WHERE \
-                                                name=?', (t,)).fetchone()[0])
+                values = (id, self.conn.execute('SELECT id FROM Tags WHERE '
+                                                'name=?', (t,)).fetchone()[0])
                 self.conn.execute('INSERT INTO Nikki_Tags VALUES(?,?)',
                                   values)
         
@@ -304,4 +293,3 @@ if __name__ == '__main__':
     path = os.path.split(__file__)[0] + os.sep
     n = Nikki(path+'nikkichou.db')
     #n.importXml(path+'out.xml')
-    n.exportTxt(path+'1.txt')
