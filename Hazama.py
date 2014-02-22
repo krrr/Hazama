@@ -6,7 +6,6 @@ from db import Nikki
 
 import sys, os
 import socket
-import configparser
 import time
 import logging
 
@@ -297,7 +296,7 @@ class NList(QListWidget):
             for i in self.selectedItems():
                 nikki.delete(i.data(2)['id'])
                 self.takeItem(self.row(i))
-            if main.tlist.isVisible(): self.main.tlist.load()
+            if main.tlist.isVisible(): main.tlist.load()
             main.updateCountLabel()
 
         # QWidget.destroy() doesn't work
@@ -315,7 +314,7 @@ class NList(QListWidget):
 
     def reload(self, id):
         order, reverse = self.getOrder()
-        logging.info('Nikki List reload')
+        logging.debug('Nikki List reload')
         self.clear()
         for e in nikki.sorted(order, reverse):
             if e['id'] == id:
@@ -401,6 +400,7 @@ class Editor(QWidget):
         datetime = self.tr('Created: %s\nModified: %s') % (cre, mod)
         self.timelabel = QLabel(datetime, self)
         self.timelabel.setFont(datefont)
+        self.timelabel.setCursor(Qt.PointingHandCursor)
         self.timelabel.setStyleSheet('color: rgb(115, 115, 115)')
         self.timelabel.mouseReleaseEvent = self.startTimeEditor
         self.timelabel_w = self.timelabel.sizeHint().width()
@@ -720,7 +720,7 @@ class NTextDocument(QTextDocument):
 class DateTimeDialog(QDialog):
     timeFmt = "yyyy/MM/dd HH:mm"
     def __init__(self, timestr, parent=None):
-        super(DateTimeDialog, self).__init__(parent)
+        super(DateTimeDialog, self).__init__(parent, Qt.WindowTitleHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowTitle(self.tr('Edit created time'))
         self.setMinimumWidth(100)
@@ -854,7 +854,7 @@ class Main(QWidget):
                               self, triggered=self.startConfigDialog)
 
     def startConfigDialog(self):
-        self.cfgdialog = ConfigDialog()
+        self.cfgdialog = ConfigDialog(self)
         self.cfgdialog.show()
 
     def setTList(self, checked):
@@ -1033,12 +1033,13 @@ class SearchBox(QLineEdit):
 
         self.textChanged.connect(self.update)
         self.setPlaceholderText(self.tr('Search'))
+        self.setTextMargins(QMargins(2, 0, 20, 0))
         self.update('')
 
     def resizeEvent(self, event):
         w, h = event.size().toTuple()
         pos_y = (h-18) / 2
-        self.button.move(w-16-pos_y, pos_y)
+        self.button.move(w-18-pos_y, pos_y)
 
     def update(self, text):
         iconame = 'search_clr' if text else 'search'
@@ -1053,8 +1054,8 @@ class ConfigDialog(QDialog, ui.configdialog.Ui_Settings):
     # first try that using Qt Designer generated UI.
     lang2index = {'en': 0, 'zh_CN': 1, 'ja': 2}  # index used in combo
     index2lang = {b: a for (a, b) in lang2index.items()}
-    def __init__(self):
-        super(ConfigDialog, self).__init__()
+    def __init__(self, parent=None):
+        super(ConfigDialog, self).__init__(parent, Qt.WindowTitleHint)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setupUi(self)
         self.setFont(sysfont)
@@ -1094,7 +1095,7 @@ class ConfigDialog(QDialog, ui.configdialog.Ui_Settings):
         if plain:
             selected = (None if export_all else
                         [i.data(2) for i in main.nlist.selectedItems()])
-            nikki.exportTxt(txtpath, path, selected)
+            nikki.exporttxt(txtpath, path, selected)
 
 
 
