@@ -36,4 +36,8 @@
   <qresource prefix="/fmt">
     <file>bold.png</file>
   </qresource>
+  
+  <qresource prefix="/images">
+    <file>main.png</file>
+  </qresource>
 </RCC>

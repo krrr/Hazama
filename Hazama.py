@@ -1109,6 +1109,7 @@ class ConfigDialog(QDialog, ui.configdialog.Ui_Settings):
 if __name__ == '__main__':
     timee = time.clock()
     app = QApplication(sys.argv)
+    app.setWindowIcon(QIcon(':/images/main.png'))
     settings = QSettings(path+'config.ini', QSettings.IniFormat)
 
     set_trans(settings)
