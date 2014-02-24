@@ -7,6 +7,7 @@ from db import Nikki
 import sys, os
 import socket
 import time
+import random
 import logging
 
 __version__ = 0.07
@@ -243,14 +244,15 @@ class NList(QListWidget):
 
         # Context Menu
         self.editAct = QAction(self.tr('Edit'), self,
-                                shortcut=QKeySequence('Return'),
-                                triggered=self.starteditor)
-        self.addAction(self.editAct)  # make shortcut working anytime
-        self.delAct = QAction(self.tr('Delete'), self, shortcut=QKeySequence.Delete,
+                               shortcut=QKeySequence(Qt.Key_Return),
+                               triggered=self.starteditor)
+        self.delAct = QAction(self.tr('Delete'), self,
+                              shortcut=QKeySequence.Delete,
                               triggered=self.delNikki)
-        self.addAction(self.delAct)
-        self.selAct = QAction(self.tr('Select All'), self, shortcut=QKeySequence.SelectAll,
-                              triggered=self.selectAll)
+        self.selAct = QAction(self.tr('Random'), self,
+                              shortcut=QKeySequence(Qt.Key_F7),
+                              triggered=self.selectRandomly)
+        for i in [self.editAct, self.delAct, self.selAct]: self.addAction(i)
 
     def contextMenuEvent(self, event):
         menu = QMenu(self)
@@ -260,9 +262,9 @@ class NList(QListWidget):
         menu.addAction(self.selAct)
 
         selcount = len(self.selectedItems())
-        self.editAct.setDisabled(True if (selcount>1 or selcount==0)
-                                 else False)
-        self.delAct.setDisabled(True if selcount==0 else False)
+        self.editAct.setDisabled(True if selcount!=1 else False)
+        self.delAct.setDisabled(False if selcount!=0 else True)
+        self.selAct.setDisabled(False if selcount!=0 else True)
         menu.popup(event.globalPos())
 
     def starteditor(self, item=None, new=False):
@@ -330,6 +332,9 @@ class NList(QListWidget):
         order = settings.value('NList/sortOrder', 'created')
         reverse = int(settings.value('NList/sortReverse', 1))
         return order, reverse
+
+    def selectRandomly(self):
+        self.setCurrentRow(random.randrange(0, self.count()))
 
     def editorNext(self):
         self.editorMove(1)
@@ -427,6 +432,8 @@ class Editor(QWidget):
         self.box.accepted.connect(self.close)
         self.closeSaveSc = QShortcut(QKeySequence.Save, self)
         self.closeSaveSc.activated.connect(self.close)
+        self.closeSaveSc2 = QShortcut(QKeySequence(Qt.Key_Escape), self)
+        self.closeSaveSc2.activated.connect(self.close)
         if not new:
             self.preSc = QShortcut(QKeySequence(Qt.CTRL+Qt.Key_PageUp), self)
             self.preSc.activated.connect(main.nlist.editorPrevious)
