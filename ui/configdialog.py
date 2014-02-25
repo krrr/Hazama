@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'configdialog.ui'
 #
-# Created: Fri Feb 21 08:52:43 2014
+# Created: Tue Feb 25 16:28:01 2014
 #      by: pyside-uic 0.2.15 running on PySide 1.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -79,6 +79,7 @@ class Ui_Settings(object):
         self.bkBox.setSizePolicy(sizePolicy)
         self.bkBox.setObjectName("bkBox")
         self.verticalLayout_4 = QtGui.QVBoxLayout(self.bkBox)
+        self.verticalLayout_4.setSpacing(24)
         self.verticalLayout_4.setObjectName("verticalLayout_4")
         self.bkLabel = QtGui.QLabel(self.bkBox)
         self.bkLabel.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignTop)
@@ -103,6 +104,7 @@ class Ui_Settings(object):
         self.groupBox_2.setFlat(False)
         self.groupBox_2.setObjectName("groupBox_2")
         self.verticalLayout_5 = QtGui.QVBoxLayout(self.groupBox_2)
+        self.verticalLayout_5.setSpacing(24)
         self.verticalLayout_5.setObjectName("verticalLayout_5")
         self.exportLabel = QtGui.QLabel(self.groupBox_2)
         self.exportLabel.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignTop)
@@ -164,13 +166,11 @@ class Ui_Settings(object):
         self.copenCheck.setText(QtGui.QApplication.translate("Settings", "Open in the center of main window", None, QtGui.QApplication.UnicodeUTF8))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.general), QtGui.QApplication.translate("Settings", "General", None, QtGui.QApplication.UnicodeUTF8))
         self.bkBox.setTitle(QtGui.QApplication.translate("Settings", "Backup", None, QtGui.QApplication.UnicodeUTF8))
-        self.bkLabel.setText(QtGui.QApplication.translate("Settings", "Backup every day and keep for a week.\n"
-"", None, QtGui.QApplication.UnicodeUTF8))
+        self.bkLabel.setText(QtGui.QApplication.translate("Settings", "Backup every day and keep each one for a week.", None, QtGui.QApplication.UnicodeUTF8))
         self.bkCheck.setText(QtGui.QApplication.translate("Settings", "Enable backup", None, QtGui.QApplication.UnicodeUTF8))
         self.rstBtn.setText(QtGui.QApplication.translate("Settings", "Restore", None, QtGui.QApplication.UnicodeUTF8))
         self.groupBox_2.setTitle(QtGui.QApplication.translate("Settings", "Export", None, QtGui.QApplication.UnicodeUTF8))
-        self.exportLabel.setText(QtGui.QApplication.translate("Settings", "Export your diary to plain text file or RTF file.\n"
-"", None, QtGui.QApplication.UnicodeUTF8))
+        self.exportLabel.setText(QtGui.QApplication.translate("Settings", "Export diary to single plain text file or RTF file.", None, QtGui.QApplication.UnicodeUTF8))
         self.exportOption.setItemText(0, QtGui.QApplication.translate("Settings", "All diary", None, QtGui.QApplication.UnicodeUTF8))
         self.exportOption.setItemText(1, QtGui.QApplication.translate("Settings", "Selected diary", None, QtGui.QApplication.UnicodeUTF8))
         self.exportBtn.setText(QtGui.QApplication.translate("Settings", "Save as...", None, QtGui.QApplication.UnicodeUTF8))

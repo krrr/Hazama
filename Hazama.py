@@ -286,9 +286,9 @@ class NList(QListWidget):
 
     def delNikki(self):
         msgbox = QMessageBox(QMessageBox.NoIcon,
-                             self.tr('Delete Diary'),
-                             self.tr('Are you sure you want to delete'
-                                     'the selected diary?'),
+                             self.tr('Delete selected diary'),
+                             self.tr('Selected diary will be deleted '
+                                     'permanently.Do it?'),
                              QMessageBox.Yes|QMessageBox.No,
                              parent=self)
         msgbox.setDefaultButton(QMessageBox.Cancel)
@@ -1088,7 +1088,6 @@ class ConfigDialog(QDialog, ui.configdialog.Ui_Settings):
             restart_main()
 
         logging.info('Settings saved')
-        super(ConfigDialog, self).accept()
 
     @Slot()
     def on_exportBtn_clicked(self):
