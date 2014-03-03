@@ -123,6 +123,13 @@
             </property>
            </widget>
           </item>
+          <item>
+           <widget class="QCheckBox" name="tfocusCheck">
+            <property name="text">
+             <string>Put cursor in title-edit area when start</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </widget>
        </item>

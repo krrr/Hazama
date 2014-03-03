@@ -1074,6 +1074,7 @@ class ConfigDialog(QDialog, ui.configdialog.Ui_Settings):
 
         self.aindCheck.setChecked(int(settings.value('Editor/autoindent', 1)))
         self.copenCheck.setChecked(int(settings.value('Editor/centeropen', 0)))
+        self.tfocusCheck.setChecked(int(settings.value('Editor/titlefocus', 0)))
         self.bkCheck.setChecked(int(settings.value('Main/backup', 1)))
         self.langCombo.setCurrentIndex(self.lang2index[
                                        settings.value('Main/lang', 'en')])
@@ -1085,6 +1086,7 @@ class ConfigDialog(QDialog, ui.configdialog.Ui_Settings):
     def accept(self):
         settings.setValue('Editor/autoindent', int(self.aindCheck.isChecked()))
         settings.setValue('Editor/centeropen', int(self.copenCheck.isChecked()))
+        settings.setValue('Editor/titlefocus', int(self.tfocusCheck.isChecked()))
         settings.setValue('Main/backup', int(self.bkCheck.isChecked()))
         lang = self.index2lang[self.langCombo.currentIndex()]
         if settings.value('Main/lang') != lang:
@@ -1092,6 +1094,11 @@ class ConfigDialog(QDialog, ui.configdialog.Ui_Settings):
             set_trans(settings)
             restart_main()
         logging.info('Settings saved')
+        try:
+            super(ConfigDialog, self).accept()
+        except RuntimeError:
+            # main.cfgdialog has been deleted after restart_main
+            pass
 
     @Slot()
     def on_exportBtn_clicked(self):
