@@ -350,7 +350,8 @@ class NList(QListWidget):
             index = self.row(curtEditor.item)
         except RuntimeError:  # C++ object already deleted
             return
-        # disabled when multi-editor or editing new diary.
+        # disabled when multi-editor or editing new diary(if new,
+        # shortcut would not be set) or no item to move on.
         if len(self.editors) != 1 or index is None:
             return
         elif step == 1 and not index < self.count()-1:
@@ -368,7 +369,7 @@ class Editor(QWidget):
     def __init__(self, new, row):
         super(Editor, self).__init__()
         self.setAttribute(Qt.WA_DeleteOnClose)
-
+        self.new = new
         self.setMinimumSize(350,200)
         # setup window geometry
         if int(settings.value("Editor/centeropen", 0)):
@@ -460,13 +461,16 @@ class Editor(QWidget):
         if (self.editor.document().isModified() or
         self.titleeditor.isModified() or self.timeModified or
         self.tagsModified):
-            if not self.created:  # new nikki
-                self.created = time.strftime('%Y/%m/%d %H:%M')
+            if self.new:
+                self.created = time.strftime('%Y-%m-%d %H:%M')
                 modified = ''
             else:
-                modified = time.strftime('%Y/%m/%d %H:%M')
-            tagsL = self.tageditor.text().split() if self.tagsModified else None
-            tags = filter(lambda t: tagsL.count(t)==1, tagsL) if tagsL else None
+                modified = time.strftime('%Y-%m-%d %H:%M')
+            if self.tagsModified:
+                tags = self.tageditor.text().split()
+                tags = list(filter(lambda t: tags.count(t)==1, tags))
+            else:
+                tags = None
             # realid: id returned by database
             realid = nikki.save(self.id, self.created, modified,
                                 self.editor.toHtml(), self.titleeditor.text(),
@@ -504,7 +508,8 @@ class Editor(QWidget):
         self.titleeditor.resize(w, self.title_h)
 
     def showEvent(self, event):
-        self.editor.setFocus()
+        if not int(settings.value('/Editor/titlefocus', 1)):
+            self.editor.setFocus()
         self.editor.moveCursor(QTextCursor.Start)
 
     def updateTagEditorFont(self, text):
@@ -513,7 +518,7 @@ class Editor(QWidget):
         self.tageditor.setStyleSheet('font-style: %s' % fontstyle)
 
     def startTimeEditor(self, event):
-        if self.created is None: return  # new diary
+        if self.new: return
         clicked, time = DateTimeDialog.getDateTime(self.created, self)
         if clicked and time!=self.created:
             self.created = time
@@ -1086,7 +1091,6 @@ class ConfigDialog(QDialog, ui.configdialog.Ui_Settings):
             settings.setValue('Main/lang', lang)
             set_trans(settings)
             restart_main()
-
         logging.info('Settings saved')
 
     @Slot()

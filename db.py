@@ -27,23 +27,25 @@ class Nikki:
 
     def __init__(self, dbpath):
         self.conn = sqlite3.connect(dbpath)
-
         self.conn.execute('CREATE TABLE IF NOT EXISTS Tags'
-                          '(id INTEGER PRIMARY KEY, name TEXT NOT NULL ' 'UNIQUE)')
+                          '(id INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE)')
         self.conn.execute('CREATE TABLE IF NOT EXISTS Nikki'
-                          '(id INTEGER PRIMARY KEY, created TEXT NOT NULL '
-                          'UNIQUE, modified TEXT NOT NULL, plaintext INTEGER,'
-                          'text TEXT NOT NULL, title TEXT)')
+                          '(id INTEGER PRIMARY KEY, created TEXT NOT NULL, '
+                          'modified TEXT NOT NULL, plaintext INTEGER NOT NULL,'
+                          'text TEXT NOT NULL, title TEXT NOT NULL)')
         self.conn.execute('CREATE TABLE IF NOT EXISTS Nikki_Tags'
-                          '(nikkiid INTEGER NOT NULL, tagid INTEGER NOT NULL,'
+                          '(nikkiid INTEGER NOT NULL REFERENCES Nikki(id) '
+                          'ON DELETE CASCADE, tagid INTEGER NOT NULL,'
                           'PRIMARY KEY(nikkiid, tagid))')
         self.conn.execute('CREATE TABLE IF NOT EXISTS TextFormat'
-                          '(nikkiid INTEGER, start INTEGER, '
-                          'length INTEGER, type INTEGER)')
+                          '(nikkiid INTEGER NOT NULL REFERENCES Nikki(id) '
+                          'ON DELETE CASCADE, start INTEGER NOT NULL, '
+                          'length INTEGER NOT NULL, type INTEGER NOT NULL)')
         self.conn.execute('CREATE TRIGGER IF NOT EXISTS autodeltag AFTER '
                           'DELETE ON Nikki_Tags BEGIN   DELETE FROM Tags '
                           'WHERE (SELECT COUNT(*) FROM Nikki_Tags WHERE '
                           'Nikki_Tags.tagid=Tags.id)==0;  END')
+        self.conn.execute('PRAGMA foreign_keys = ON')
 
     def __getitem__(self, id):
         L = self.conn.execute('SELECT * FROM Nikki '
@@ -92,19 +94,6 @@ class Nikki:
             nikki = root[i].attrib
             text = root[i].text if root[i].text else ' '
             plain = int(nikki.get('plainText', 0))
-            # import formats if nikki has rich text
-            if not plain:
-                if not Hxml:
-                    parser = richtagparser.RichTagParser(strict=False)
-                    parser.myfeed(id, text, self.conn)
-                    text = parser.getstriped()
-                else:
-                    for f in root[1]:
-                        if int(f.attrib['index']) == index:
-                            values = (id, f.attrib['start'],
-                                      f.attrib['length'], f.attrib['type'])
-                            self.conn.execute('INSERT INTO TextFormat VALUES '
-                                              '(?,?,?,?)', values)
             # import nikki itself into Nikki Table
             if Hxml:
                 created, modified = nikki['created'], nikki['modified']
@@ -123,7 +112,20 @@ class Nikki:
                               'Tags WHERE name=?', (tag,)).fetchone()[0])
                     self.conn.execute('INSERT INTO Nikki_Tags VALUES(?,?)',
                                       values)
-                                      
+            # import formats if nikki has rich text
+            if not plain:
+                if not Hxml:
+                    parser = richtagparser.RichTagParser(strict=False)
+                    parser.myfeed(id, text, self.conn)
+                    text = parser.getstriped()
+                else:
+                    for f in root[1]:
+                        if int(f.attrib['index']) == index:
+                            values = (id, f.attrib['start'],
+                                      f.attrib['length'], f.attrib['type'])
+                            self.conn.execute('INSERT INTO TextFormat VALUES '
+                                              '(?,?,?,?)', values)
+
             id += 1
             index += 1
 
@@ -208,14 +210,8 @@ class Nikki:
 
     def delete(self, id):
         self.conn.execute('DELETE FROM Nikki WHERE id = ?', (id,))
-        try:
-            self.conn.execute('DELETE FROM Nikki_Tags WHERE '
-                              'nikkiid=?', (id,))
-        except Exception:
-            logging.warning('Faild deleting Nikki (ID: %s)' % id)
-        else:
-            logging.info('Nikki deleted (ID: %s)' % id)
-            self.commit()
+        logging.info('Nikki deleted (ID: %s)' % id)
+        self.commit()
 
     def commit(self):
         self.conn.commit()
@@ -273,14 +269,15 @@ class Nikki:
             for t in tags:
                 try:
                     self.conn.execute('INSERT INTO Tags VALUES(NULL,?)', (t,))
-                    self.commit()
                 except Exception:
                     pass
-                values = (id, self.conn.execute('SELECT id FROM Tags WHERE '
-                                                'name=?', (t,)).fetchone()[0])
+            self.commit()
+            for t in tags:
+                tagid = self.conn.execute('SELECT id FROM Tags WHERE '
+                                          'name=?', (t,)).fetchone()[0]
+                values = (id, tagid)
                 self.conn.execute('INSERT INTO Nikki_Tags VALUES(?,?)',
                                   values)
-        
         self.commit()
         return id
 
@@ -291,5 +288,5 @@ class Nikki:
 
 if __name__ == '__main__':
     path = os.path.split(__file__)[0] + os.sep
-    n = Nikki(path+'nikkichou.db')
-    #n.importXml(path+'out.xml')
+    n = Nikki(path+'nikkichou22.db')
+    n.importXml(path+'out.xml')
