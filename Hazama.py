@@ -13,12 +13,6 @@ import logging
 __version__ = 0.07
 
 
-if os.sep not in sys.argv[0]:
-    path = ''
-else:
-    path = os.path.split(sys.argv[0])[0] + os.sep
-
-
 def restart_main():
     "Restart Main Window after language changed in settings."
     logging.debug('restart_main called')
@@ -37,16 +31,18 @@ def set_trans(settings):
     else:
         global trans, transQt
         trans = QTranslator()
-        trans.load('lang/'+lang, directory=path)
+        trans.load('lang/'+lang)
         transQt = QTranslator()
         transQt.load('qt_'+lang, QLibraryInfo.location(QLibraryInfo.TranslationsPath))
         for i in [trans, transQt]: qApp.installTranslator(i)
 
 def backupcheck(dbpath):
-    "Backup:make a copy of database every day and keep it for a week."
-    bkpath = os.path.join(path, 'backup')
+    "Check backups and do if necessary.Delete old backups."
+    bkpath = 'backup'
     if not os.path.isdir(bkpath): os.mkdir(bkpath)
     dblst = sorted(os.listdir(bkpath))
+    fil = lambda x: len(x)>10 and x[4]==x[7]=='-' and x[10]=='_'
+    dblst = list(filter(fil, dblst))
 
     fmt = '%Y-%m-%d'
     today = time.strftime(fmt)
@@ -1104,24 +1100,25 @@ class ConfigDialog(QDialog, ui.configdialog.Ui_Settings):
     def on_exportBtn_clicked(self):
         export_all = not bool(self.exportOption.currentIndex())
         txtpath, type = QFileDialog.getSaveFileName(self,
-            self.tr('Export Diary'), path,
+            self.tr('Export Diary'), os.getcwd(),
             self.tr('Plain Text (*.txt);;Rich Text (*.rtf)'))
 
         if txtpath == '': return    # dialog canceled
-        plain = True if type.startswith('Plain') else False
-        if plain:
+        if type.endswith('txt)'):
             selected = (None if export_all else
                         [i.data(2) for i in main.nlist.selectedItems()])
-            nikki.exporttxt(txtpath, path, selected)
+            nikki.exporttxt(txtpath, selected)
 
 
 
 if __name__ == '__main__':
+    program_path = os.path.dirname(os.path.realpath(__file__))
+    os.chdir(program_path)
+
     timee = time.clock()
     app = QApplication(sys.argv)
     app.setWindowIcon(QIcon(':/images/main.png'))
-    settings = QSettings(path+'config.ini', QSettings.IniFormat)
-
+    settings = QSettings('config.ini', QSettings.IniFormat)
     set_trans(settings)
 
     # setup fonts
@@ -1134,13 +1131,10 @@ if __name__ == '__main__':
     textfont = QFont()  # WenQuanYi Micro Hei
     textfont.fromString(settings.value('/Font/text'))
     txfontm = QFontMetrics(textfont)
-
     sysfont = app.font()
     defaultfont = QFont('Microsoft YaHei', app.font().pointSize())
     defontm = QFontMetrics(defaultfont)
     app.setFont(defaultfont)
-
-
 
     try:
         socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -1155,13 +1149,12 @@ if __name__ == '__main__':
         sys.exit()
 
     logging.basicConfig(level=logging.DEBUG)
-    dbPath = settings.value('/Main/dbPath', 'nikkichou.db')
-    nikki = Nikki(dbPath if os.sep in dbPath else path+dbPath)
+    dbpath = settings.value('/Main/dbpath', 'nikkichou.db')
+    nikki = Nikki(dbpath)
     logging.info(str(nikki))
 
     main = Main()
     main.show()
     logging.debug('startup take %s seconds' % round(time.clock()-timee,3))
-    if int(settings.value('Main/backup', 1)):
-        backupcheck(dbPath)
+    if int(settings.value('Main/backup', 1)): backupcheck(dbpath)
     sys.exit(app.exec_())

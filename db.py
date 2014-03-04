@@ -165,19 +165,21 @@ class Nikki:
         tree = ET.ElementTree(root)
         tree.write(xmlpath, encoding='utf-8')
 
-    def exporttxt(self, txtpath, hazamapath=None, selected=None):
+    def exporttxt(self, txtpath, selected=None):
         '''Export to TXT file using template(string format).
         When selected is a list contains nikki data,only export diary in list.'''
         file = open(txtpath, 'w', encoding='utf-8')
         try:
-            with open(hazamapath+'template.txt', encoding='utf-8') as f:
+            with open('template.txt', encoding='utf-8') as f:
                 tpl = f.read()
         except OSError:
+            logging.info('Use default template')
             tpl = default_tpl
         for n in (self.sorted('created', False) if selected is None
                    else selected):
             file.write(tpl.format(n))
         file.close()
+        logging.info('Export succeed')
 
     def sorted(self, orderby, reverse=True, *, tagid=None, search=None):
         if tagid and (search is None):  # only fetch nikki whose tagid matchs
