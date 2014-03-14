@@ -10,7 +10,7 @@ import time
 import random
 import logging
 
-__version__ = 0.07
+__version__ = 0.08
 
 
 def restart_main():
@@ -67,15 +67,16 @@ def backupcheck(dbpath):
 
 class CintaNListDelegate(QStyledItemDelegate):
     "CintaNotes like delegate for Entry(QListWidgetItem)"
+    stylesheet = ('QListWidget{background-color: rgb(173,179,180);'
+                  'border: solid 0px}')
     def __init__(self):
         "calculate first"
         super(CintaNListDelegate, self).__init__()
 
         self.tr_h = QFontInfo(titlefont).pixelSize() + 11
 
-        leading = txfontm.leading() if (txfontm.leading() >= 0) else 0
-        self.text_h = (txfontm.height()+leading) * \
-                      int(settings.value('Nlist/previewlines', 4))
+        self.text_h = (QFontMetrics(textfont).lineSpacing() *
+                       int(settings.value('Nlist/previewlines', 4)))
         self.dico_w, self.dico_h = 8, 7
         self.dico_y = self.tr_h // 2 - 3
         # for displaying text
@@ -165,7 +166,7 @@ class CintaNListDelegate(QStyledItemDelegate):
         # tags
         if self.tag_h:
             painter.setPen(QColor(161, 151, 136))
-            painter.setFont(defaultfont)
+            painter.setFont(defont)
             painter.drawText(x+16, y+self.tr_h+3,
                              200, 30, Qt.AlignLeft, row['tags'])
 
@@ -176,18 +177,103 @@ class CintaNListDelegate(QStyledItemDelegate):
         return QSize(-1, self.height+1)
 
 
+class NListDelegate(QStyledItemDelegate):
+    stylesheet = ('QListWidget{background-color: rgb(242, 241, 231);'
+                  'border: solid 0px; margin-top: 1px}')
+    def __init__(self):
+        super(NListDelegate, self).__init__()
+        self.title_h = QFontInfo(titlefont).pixelSize() + 10  # title area height
+        self.text_h = (QFontMetrics(textfont).lineSpacing() *
+                       int(settings.value('Nlist/previewlines', 4)))
+        self.tagpath_h = QFontInfo(qApp.font()).pixelSize() + 4
+        self.tag_h = self.tagpath_h + 4
+        self.dt_w = QFontMetrics(titlefont).width('2000/00/00 00:00') + 20
+        # doc is used to draw text(diary's body)
+        self.doc = NTextDocument()
+        self.doc.setDefaultFont(textfont)
+        self.doc.setUndoRedoEnabled(False)
+        self.doc.setDocumentMargin(0)
+        # setup colors
+        self.c_bg = QColor(255, 236, 176)
+        self.c_border = QColor(214, 172, 41)
+        self.c_unselbg = QColor(255, 236, 176, 40)
+        self.c_gray = QColor(93, 73, 57)
+
+    def paint(self, painter, option, index):
+        x, y, w = option.rect.x(), option.rect.y(), option.rect.width()-1
+        nikki = index.data()
+        selected = bool(option.state & QStyle.State_Selected)
+        active = bool(option.state & QStyle.State_Active)
+        # draw border and background
+        painter.setPen(self.c_border)
+        painter.setBrush(self.c_bg if selected and active else
+                         self.c_unselbg)
+        border = QRect(x+1, y, w-2, self.all_h)
+        painter.drawRect(border)
+        if selected:
+            innerborder = QRect(x+2, y+1, w-4, self.all_h-2)
+            pen = QPen()
+            pen.setStyle(Qt.DashLine)
+            pen.setColor(self.c_gray)
+            painter.setPen(pen)
+            painter.drawRect(innerborder)
+        # draw datetime and title
+        painter.setPen(self.c_gray)
+        painter.drawLine(x+10, y+self.title_h, x+w-10, y+self.title_h)
+        painter.setPen(Qt.black)
+        painter.setFont(datefont)
+        painter.drawText(x+14, y, w, self.title_h, Qt.AlignBottom, nikki['created'])
+        if nikki['title']:
+            painter.setFont(titlefont)
+            title_w = w-self.dt_w-13
+            title = ttfontm.elidedText(nikki['title'], Qt.ElideRight, title_w)
+            painter.drawText(x+self.dt_w, y, title_w, self.title_h,
+                             Qt.AlignBottom|Qt.AlignRight, title)
+        # draw text
+        painter.save()
+        self.doc.setText(nikki['text'], nikki['plaintext'], nikki['id'])
+        self.doc.setTextWidth(w-26)
+        painter.translate(x+14, y+self.title_h+2)
+        self.doc.drawContents(painter, QRect(0, 0, w-26, self.text_h))
+        painter.restore()
+        # draw tags
+        if nikki['tags']:
+            painter.save()
+            painter.setPen(self.c_gray)
+            painter.setFont(qApp.font())
+            painter.translate(x + 15, y+self.title_h+6+self.text_h)
+            for t in nikki['tags'].split():
+                w = defontm.width(t) + 4
+                tagpath = QPainterPath()
+                tagpath.moveTo(8, 0)
+                tagpath.lineTo(8+w, 0)
+                tagpath.lineTo(8+w, self.tagpath_h)
+                tagpath.lineTo(8, self.tagpath_h)
+                tagpath.lineTo(0, self.tagpath_h/2)
+                tagpath.closeSubpath()
+                painter.drawPath(tagpath)
+                painter.drawText(8, 1, w, self.tagpath_h, Qt.AlignCenter, t)
+                painter.translate(w+15, 0)  # translate by offset
+            painter.restore()
+
+    def sizeHint(self, option, index):
+        tag_h = self.tag_h if index.data()['tags'] else 0
+        self.all_h = self.title_h + self.text_h + tag_h + 10
+        return QSize(-1, self.all_h+3)  # 3 is spacing between entries
+
+
 class TListDelegate(QStyledItemDelegate):
     '''Default TagList(TList) Delegate.Also contains TList's stylesheet'''
     TListSS = ('QListWidget{background-color: rgb(234,182,138);'
                'border: solid 0px}')
     def __init__(self):
         super(TListDelegate, self).__init__()
-        self.h = QFontInfo(defaultfont).pixelSize()+8
+        self.h = QFontInfo(defont).pixelSize()+8
 
     def paint(self, painter, option, index):
         x, y, w= option.rect.x(), option.rect.y(), option.rect.width()
         tag, count = index.data(3), str(index.data(2))
-        painter.setFont(defaultfont)
+        painter.setFont(defont)
 
         selected = bool(option.state & QStyle.State_Selected)
 
@@ -234,9 +320,8 @@ class NList(QListWidget):
         self.setSelectionMode(self.ExtendedSelection)
         self.itemDoubleClicked.connect(self.starteditor)
 
-        self.setItemDelegate(CintaNListDelegate())
-        self.setStyleSheet('QListWidget{background-color: rgb(173,179,180);'
-                           'border: solid 0px}')
+        self.setItemDelegate(NListDelegate())
+        self.setStyleSheet(NListDelegate.stylesheet)
 
         # Context Menu
         self.editAct = QAction(self.tr('Edit'), self,
@@ -282,8 +367,8 @@ class NList(QListWidget):
 
     def delNikki(self):
         msgbox = QMessageBox(QMessageBox.NoIcon,
-                             self.tr('Delete selected diary'),
-                             self.tr('Selected diary will be deleted '
+                             self.tr('Delete selected diaries'),
+                             self.tr('Selected diaries will be deleted '
                                      'permanently.Do it?'),
                              QMessageBox.Yes|QMessageBox.No,
                              parent=self)
@@ -788,7 +873,7 @@ class Main(QWidget):
         self.creActs()  #create actions
         self.toolbar.setIconSize(QSize(24, 24))
         self.toolbar.setStyleSheet('QToolBar{background: rgb(242, 241, 231);'
-                                   'border-bottom: 1px solid rgb(182, 189, 197);'
+                                   'border-bottom: 1px solid rgb(181, 61, 0);'
                                    'padding: 2px; spacing: 2px}')
         self.sorAct.setMenu(SortOrderMenu())
         for a in [self.creAct, self.delAct, self.tlistAct, self.sorAct, self.cfgAct]:
@@ -873,7 +958,8 @@ class Main(QWidget):
 
     def updateCountLabel(self):
         "Only called when diary saving or deleting"
-        self.countlabel.setText(self.tr('%i diary') % nikki.count())
+        c = nikki.count()
+        if c > 1: self.countlabel.setText(self.tr('%i diaries') % c)
 
 
 class SortOrderMenu(QMenu):
@@ -1124,17 +1210,16 @@ if __name__ == '__main__':
     # setup fonts
     titlefont = QFont()
     titlefont.fromString(settings.value('/Font/title'))
-    tfontm = QFontMetrics(titlefont)
+    ttfontm = QFontMetrics(titlefont)
     datefont = QFont()
     datefont.fromString(settings.value('/Font/datetime'))
     dfontm = QFontMetrics(datefont)
     textfont = QFont()  # WenQuanYi Micro Hei
     textfont.fromString(settings.value('/Font/text'))
-    txfontm = QFontMetrics(textfont)
     sysfont = app.font()
-    defaultfont = QFont('Microsoft YaHei', app.font().pointSize())
-    defontm = QFontMetrics(defaultfont)
-    app.setFont(defaultfont)
+    defont = QFont('Microsoft YaHei', app.font().pointSize())
+    defontm = QFontMetrics(defont)
+    app.setFont(defont)
 
     try:
         socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
