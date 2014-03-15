@@ -1,7 +1,9 @@
 ﻿from PySide.QtGui import *
 from PySide.QtCore import *
 import res
-import ui.configdialog
+from ui.configdialog import Ui_Settings
+from ui.editor import Ui_Editor
+from ui.customobjects import *
 from db import Nikki
 
 import sys, os
@@ -65,118 +67,6 @@ def backupcheck(dbpath):
                 break
 
 
-class CintaNListDelegate(QStyledItemDelegate):
-    "CintaNotes like delegate for Entry(QListWidgetItem)"
-    stylesheet = ('QListWidget{background-color: rgb(173,179,180);'
-                  'border: solid 0px}')
-    def __init__(self):
-        "calculate first"
-        super(CintaNListDelegate, self).__init__()
-
-        self.tr_h = QFontInfo(titlefont).pixelSize() + 11
-
-        self.text_h = (QFontMetrics(textfont).lineSpacing() *
-                       int(settings.value('Nlist/previewlines', 4)))
-        self.dico_w, self.dico_h = 8, 7
-        self.dico_y = self.tr_h // 2 - 3
-        # for displaying text
-        self.qtd = NTextDocument()
-        self.qtd.setDefaultFont(textfont)
-        self.qtd.setUndoRedoEnabled(False)
-        self.qtd.setDocumentMargin(0)
-
-    def paint(self, painter, option, index):
-        x, y, w= option.rect.x(), option.rect.y(), option.rect.width()-2
-        row = index.data()
-
-        selected = bool(option.state & QStyle.State_Selected)
-        areafocused = bool(option.state & QStyle.State_Active)
-        is_current = bool(option.state&QStyle.State_HasFocus) and areafocused
-
-        mainrect = QRect(x, y, w, self.height)
-        painter.setPen(QColor(180, 180, 180))
-        painter.setBrush(QColor(255, 255, 255))
-        painter.drawRect(mainrect)
-
-        # titlerect and title
-        painter.setFont(titlefont)
-        titlerect = QRect(x+1, y+1, w-1, self.tr_h)
-        painter.setPen(Qt.NoPen)
-        if selected:
-            painter.setBrush(QColor(251, 225, 184) if areafocused \
-                             else QColor(251, 230, 195))
-        else:
-            painter.setBrush(QColor(254, 250, 244))
-        painter.drawRect(titlerect)
-        painter.setPen(QColor(150, 118, 64) if selected
-                       else QColor(121, 107, 85))
-        painter.drawText(x+8, y+1, w-150, self.tr_h,
-                         Qt.AlignLeft|Qt.AlignVCenter, row['title'])
-
-        # border change
-        if selected:
-            imainrect = QRect(x+1, y+1, w-2, self.height-2)
-
-            painter.setBrush(Qt.NoBrush)
-            painter.setPen(QColor(183, 161, 135) if is_current
-                           else QColor(180, 180, 180))
-            painter.drawRect(mainrect)
-            painter.setPen(QColor(172, 158, 134))
-            painter.drawRect(imainrect)
-
-            if is_current:
-                pen = QPen()
-                pen.setDashPattern([1, 1, 1, 1, 1, 1])
-                pen.setColor(QColor(23, 7, 121))
-                painter.setPen(pen)
-                painter.drawRect(mainrect)
-
-                pen.setDashPattern([1,1,1,1])
-                pen.setColor(QColor(93, 73, 57))
-                painter.setPen(pen)
-                painter.drawRect(imainrect)
-
-        # date with icon
-        painter.setFont(datefont)
-        date_w = dfontm.width(row['created'])
-        date_x = w-date_w-9
-        painter.drawText(date_x, y+1, date_w, self.tr_h,
-                         Qt.AlignVCenter, row['created'])
-        painter.setBrush(Qt.NoBrush)
-        dico = QRect(date_x-self.dico_w-4,
-                     y+self.dico_y, self.dico_w, self.dico_h)
-        painter.setPen(QColor(208, 186, 149) if selected
-                       else QColor(198, 198, 198))
-        painter.drawRoundedRect(dico, 1, 1)
-        dicop_x = date_x-self.dico_h/2 - 4
-        dicocenter_y = y + self.dico_y + 4
-        painter.setPen(QColor(191, 173, 143))
-        painter.drawLine(dicop_x, y+self.dico_y+2, dicop_x, dicocenter_y)
-        painter.drawLine(dicop_x, dicocenter_y, dicop_x+2, dicocenter_y)
-
-        # text
-        painter.setPen(QColor(0,0,0))
-        painter.save()
-        self.qtd.setText(row['text'], row['plaintext'], row['id'])
-        self.qtd.setTextWidth(w-22)
-        painter.translate(x+12, y+self.tr_h+self.tag_h+2)
-        self.qtd.drawContents(painter, QRectF(0, 0, w-21, self.text_h))
-        painter.restore()
-
-        # tags
-        if self.tag_h:
-            painter.setPen(QColor(161, 151, 136))
-            painter.setFont(defont)
-            painter.drawText(x+16, y+self.tr_h+3,
-                             200, 30, Qt.AlignLeft, row['tags'])
-
-    def sizeHint(self, option, index):
-        self.tag_h = 20 if index.data()['tags'] else 0
-        self.height = self.tag_h + self.text_h + self.tr_h + 10
-
-        return QSize(-1, self.height+1)
-
-
 class NListDelegate(QStyledItemDelegate):
     stylesheet = ('QListWidget{background-color: rgb(242, 241, 231);'
                   'border: solid 0px; margin-top: 1px}')
@@ -201,7 +91,7 @@ class NListDelegate(QStyledItemDelegate):
 
     def paint(self, painter, option, index):
         x, y, w = option.rect.x(), option.rect.y(), option.rect.width()-1
-        nikki = index.data()
+        row = index.data()
         selected = bool(option.state & QStyle.State_Selected)
         active = bool(option.state & QStyle.State_Active)
         # draw border and background
@@ -222,27 +112,28 @@ class NListDelegate(QStyledItemDelegate):
         painter.drawLine(x+10, y+self.title_h, x+w-10, y+self.title_h)
         painter.setPen(Qt.black)
         painter.setFont(datefont)
-        painter.drawText(x+14, y, w, self.title_h, Qt.AlignBottom, nikki['created'])
-        if nikki['title']:
+        painter.drawText(x+14, y, w, self.title_h, Qt.AlignBottom, row['created'])
+        if row['title']:
             painter.setFont(titlefont)
             title_w = w-self.dt_w-13
-            title = ttfontm.elidedText(nikki['title'], Qt.ElideRight, title_w)
+            title = ttfontm.elidedText(row['title'], Qt.ElideRight, title_w)
             painter.drawText(x+self.dt_w, y, title_w, self.title_h,
                              Qt.AlignBottom|Qt.AlignRight, title)
         # draw text
         painter.save()
-        self.doc.setText(nikki['text'], nikki['plaintext'], nikki['id'])
+        formats = None if row['plaintext'] else nikki.getformat(row['id'])
+        self.doc.setText(row['text'], formats)
         self.doc.setTextWidth(w-26)
         painter.translate(x+14, y+self.title_h+2)
         self.doc.drawContents(painter, QRect(0, 0, w-26, self.text_h))
         painter.restore()
         # draw tags
-        if nikki['tags']:
+        if row['tags']:
             painter.save()
             painter.setPen(self.c_gray)
             painter.setFont(qApp.font())
             painter.translate(x + 15, y+self.title_h+6+self.text_h)
-            for t in nikki['tags'].split():
+            for t in row['tags'].split():
                 w = defontm.width(t) + 4
                 tagpath = QPainterPath()
                 tagpath.moveTo(8, 0)
@@ -444,73 +335,87 @@ class NList(QListWidget):
             self.starteditor()
             curtEditor.closeNoSave()
 
+    def sortCR(self, checked):
+        if checked:
+            settings.setValue('NList/sortOrder', 'created')
+            self.clear()
+            self.load()
 
-class Editor(QWidget):
+    def sortMD(self, checked):
+        if checked:
+            settings.setValue('NList/sortOrder', 'modified')
+            self.clear()
+            self.load()
+
+    def sortTT(self, checked):
+        if checked:
+            settings.setValue('NList/sortOrder', 'title')
+            self.clear()
+            self.load()
+
+    def sortLT(self, checked):
+        if checked:
+            settings.setValue('NList/sortOrder', 'length')
+            self.clear()
+            self.load()
+
+    def sortRE(self, checked):
+        settings.setValue('NList/sortReverse', int(checked))
+        self.clear()
+        self.load()
+
+
+class Editor(QWidget, Ui_Editor):
     "Editor Window.Edit diary's contents,title,tag,modified time here."
     def __init__(self, new, row):
         super(Editor, self).__init__()
         self.setAttribute(Qt.WA_DeleteOnClose)
+        self.setupUi(self)
         self.new = new
-        self.setMinimumSize(350,200)
         # setup window geometry
         if int(settings.value("Editor/centeropen", 0)):
             center = main.geometry().center()
-            w, h = (int(i) for i in settings.value('Editor/size', (500, 400)))
-            self.setGeometry(center.x()-w/2, center.y()-h/2, w, h)
+            w, h = settings.value('Editor/size', (500,400))
+            self.setGeometry(center.x()-w/2, center.y()-h/2, int(w), int(h))
         else:
             self.restoreGeometry(settings.value("Editor/windowGeo"))
-
-        self.titleeditor = QLineEdit(self)
-        self.titleeditor.setFont(titlefont)
-        # load data & set up nikki editor
-        if not new:  # existing nikki
+        # setup texteditor and titleeditor, set title
+        if not new:
             self.id = row['id']
             self.created = row['created']
             self.modified = row['modified']  # is '' when not modified
             self.titleeditor.setText(row['title'])
-            self.editor = NTextEdit(row['text'],
-                                    row['plaintext'],
-                                    row['id'],
-                                    parent=self)
+            formats = None if row['plaintext'] else nikki.getformat(row['id'])
+            self.texteditor.setText(row['text'], formats)
         else:
-            self.modified = self.created = self.id = None
-            self.editor = NTextEdit(parent=self)
-
+            self.id = self.created = self.created = None
+        self.titleeditor.setFont(titlefont)
+        self.texteditor.setFont(textfont)
         titlehint = (row['title'] if row else None) or \
                     (self.created.split()[0] if self.created else None) or \
                     self.tr('New Diary')
         self.setWindowTitle("%s - Hazama" % titlehint)
-
         # setup timelabel(display created,modified datetime)
         cre = self.created if self.created is not None else ''
         mod = self.modified if self.modified is not None else ''
         datetime = self.tr('Created: %s\nModified: %s') % (cre, mod)
-        self.timelabel = QLabel(datetime, self)
+        self.timelabel.setText(datetime)
         self.timelabel.setFont(datefont)
         self.timelabel.setCursor(Qt.PointingHandCursor)
         self.timelabel.setStyleSheet('color: rgb(115, 115, 115)')
         self.timelabel.mouseReleaseEvent = self.startTimeEditor
         self.timelabel_w = self.timelabel.sizeHint().width()
         # set up tageditor 
-        self.tageditor = QLineEdit(self)
-        self.tageditor.setPlaceholderText(self.tr('Tags separated by space'))
         self.tageditor.textChanged.connect(self.updateTagEditorFont)
-        self.updateTagEditorFont('')
-        if not new: self.tageditor.setText(row['tags'])
+        if new:
+            self.updateTagEditorFont('')
+        else:
+            self.tageditor.setText(row['tags'])
         completer = TagCompleter(nikki.gettag(), self)
         self.tageditor.setCompleter(completer)
         self.tageditor.textChanged.connect(self.setTagsModified)
-        # setup dialog buttons
-        self.box = QDialogButtonBox(QDialogButtonBox.Save | \
-                                    QDialogButtonBox.Cancel,
-                                    parent=self)
-        self.box_w, self.box_h = self.box.sizeHint().toTuple()
-        self.title_h = self.titleeditor.sizeHint().height()
-        self.tageditor_h = self.tageditor.sizeHint().height()
         self.timeModified = self.tagsModified = False
-        # setup shortcuts and connect signals
-        self.box.rejected.connect(self.closeNoSave)
-        self.box.accepted.connect(self.close)
+        # setup shortcuts
         self.closeSaveSc = QShortcut(QKeySequence.Save, self)
         self.closeSaveSc.activated.connect(self.close)
         self.closeSaveSc2 = QShortcut(QKeySequence(Qt.Key_Escape), self)
@@ -538,7 +443,7 @@ class Editor(QWidget):
 
     def saveNikki(self):
         "Save when necessary;Refresh NList and TList when necessary"
-        if (self.editor.document().isModified() or
+        if (self.texteditor.document().isModified() or
         self.titleeditor.isModified() or self.timeModified or
         self.tagsModified):
             if self.new:
@@ -553,8 +458,8 @@ class Editor(QWidget):
                 tags = None
             # realid: id returned by database
             realid = nikki.save(self.id, self.created, modified,
-                                self.editor.toHtml(), self.titleeditor.text(),
-                                tags)
+                                self.texteditor.toHtml(),
+                                self.titleeditor.text(), tags)
             if realid is not None:  # save existed diary
                 main.nlist.reload(realid)
                 main.updateCountLabel()
@@ -566,31 +471,10 @@ class Editor(QWidget):
         # tageditor.isModified() will be reset by completer.So this instead.
         self.tagsModified = True
 
-    def paintEvent(self, event):
-        w, h = self.size().toTuple()
-        painter = QPainter(self)
-        painter.setPen(Qt.NoPen)
-        painter.setBrush(QColor(247, 241, 231))  # 199,199,233
-        painter.drawRect(0, h-self.box_h-20, w, self.box_h+20)
-
-        painter.setBrush(QColor(249,245,238))  # 77,199,145
-        painter.drawRect(0, h-self.box_h-70, w, 50)
-
-    def resizeEvent(self, event):
-        w, h = event.size().toTuple()
-        # from buttom to top
-        self.timelabel.setGeometry(10, h-self.box_h-20, self.timelabel_w,
-                                   self.box_h+20)
-        box_x, box_y = w-self.box_w-10, h-self.box_h-10
-        self.box.move(box_x, box_y)
-        self.tageditor.setGeometry(20, box_y-35, w-40, self.tageditor_h)
-        self.editor.setGeometry(0, self.title_h, w, box_y-60)
-        self.titleeditor.resize(w, self.title_h)
-
     def showEvent(self, event):
         if not int(settings.value('/Editor/titlefocus', 1)):
-            self.editor.setFocus()
-        self.editor.moveCursor(QTextCursor.Start)
+            self.texteditor.setFocus()
+        self.texteditor.moveCursor(QTextCursor.Start)
 
     def updateTagEditorFont(self, text):
         "Set tageditor's placeHoderFont to italic"
@@ -603,212 +487,6 @@ class Editor(QWidget):
         if clicked and time!=self.created:
             self.created = time
             self.timeModified = True
-
-
-class TagCompleter(QCompleter):
-    def __init__(self, tagL, parent=None):
-        self.tagL = tagL
-        super(TagCompleter, self).__init__(tagL, parent)
-        self.setCaseSensitivity(Qt.CaseInsensitive)
-
-    def pathFromIndex(self, index):
-        # path is current matched tag.
-        path = QCompleter.pathFromIndex(self, index)
-        # a list like [tag1, tag2, tag3(maybe a part)]
-        L = self.widget().text().split()
-        if len(L) > 1:
-            path = '%s %s ' % (' '.join(L[:-1]), path)
-        else:
-            path += ' '
-        return path
-
-    def splitPath(self, path):
-        # path is tag string like "tag1 tag2 tag3(maybe a part) "
-        path = path.split()[-1] if path.split() else None
-        if (path in self.tagL) or (path == None):
-            return ' '
-        else:
-            return [path,]
-
-
-class TextFormatter:
-    '''All methods of this class are used in NTextDocument to set format.
-    NTextEdit also use those to set format(called from context-menu).
-    If used in NTextDocumment,pre should be True.
-    '''
-    def setHL(self, pre=False):
-        fmt = self.textCursor().charFormat()
-        if pre:  # called by NTextDocument
-            hasFormat = False
-        else:  # called by NTextEdit(Editor's context menu)
-            hasFormat = (fmt.background().color() == QColor(255, 250, 160))
-
-        fmt.setBackground(QBrush(Qt.white if hasFormat
-                                 else QColor(255, 250, 160)))
-        self.textCursor().mergeCharFormat(fmt)
-
-    def setBD(self, pre=False):
-        fmt = self.textCursor().charFormat()
-        if pre:
-            hasFormat = False
-        else:
-            hasFormat = (fmt.fontWeight() == QFont.Bold)
-
-        fmt.setFontWeight(QFont.Normal if hasFormat else QFont.Bold)
-        self.textCursor().mergeCharFormat(fmt)
-
-    def setSO(self, pre=False):
-        fmt = self.textCursor().charFormat()
-        if pre:
-            hasFormat = False
-        else:
-            hasFormat = fmt.fontStrikeOut()
-
-        fmt.setFontStrikeOut(not hasFormat)
-        self.textCursor().mergeCharFormat(fmt)
-
-    def setUL(self, pre=False):
-        fmt = self.textCursor().charFormat()
-        if pre:
-            hasFormat = False
-        else:
-            hasFormat = fmt.fontUnderline()
-
-        fmt.setFontUnderline(not hasFormat)
-        self.textCursor().mergeCharFormat(fmt)
-
-    def setIta(self, pre=False):
-        fmt = self.textCursor().charFormat()
-        if pre:
-            hasFormat = False
-        else:
-            hasFormat = fmt.fontItalic()
-
-        fmt.setFontItalic(not hasFormat)
-        self.textCursor().mergeCharFormat(fmt)
-
-
-class NTextEdit(QTextEdit, TextFormatter):
-    '''The widget used to edit diary contents in Editor window.
-    '''
-    def __init__(self, *values, parent=None):
-        super(NTextEdit, self).__init__(parent)
-        self.setTabChangesFocus(True)
-        self.autoIndent = int(settings.value('Editor/autoindent', 0))
-
-        doc = NTextDocument()
-        doc.setDefaultFont(textfont)
-        if values:  # Edit existing nikki
-            text, plain, nikkiid = values
-            doc.setText(text, plain, nikkiid)
-            doc.clearUndoRedoStacks()
-        self.setDocument(doc)
-
-        prt = self.palette()
-        prt.setColor(prt.Highlight, QColor(180, 180, 180))
-        prt.setColor(prt.HighlightedText, QColor(0, 0, 0))
-        self.setPalette(prt)
-
-        self.creActs()
-        self.setModified(False)
-
-    def creActs(self):
-        self.submenu = QMenu(self.tr('Format'))
-        self.hlAct = QAction(QIcon(':/fmt/highlight.png'), self.tr('Highlight'),
-                             self, shortcut=QKeySequence('Ctrl+H'))
-        self.soAct = QAction(QIcon(':/fmt/strikeout.png'), self.tr('Strike out'),
-                             self, shortcut=QKeySequence('Ctrl+-'))
-        self.bdAct = QAction(QIcon(':/fmt/bold.png'), self.tr('Bold'),
-                             self, shortcut=QKeySequence.Bold)
-        self.ulAct = QAction(QIcon(':/fmt/underline.png'), self.tr('Underline'),
-                             self, shortcut=QKeySequence.Underline)
-        self.itaAct = QAction(QIcon(':/fmt/italic.png'), self.tr('Italic'),
-                              self, shortcut=QKeySequence.Italic)
-
-        self.hlAct.triggered.connect(self.setHL)
-        self.soAct.triggered.connect(self.setSO)
-        self.bdAct.triggered.connect(self.setBD)
-        self.ulAct.triggered.connect(self.setUL)
-        self.itaAct.triggered.connect(self.setIta)
-
-        for a in (self.hlAct, self.bdAct, self.soAct, self.bdAct,
-                  self.ulAct, self.itaAct):
-            self.addAction(a)
-            self.submenu.addAction(a)
-            a.setCheckable(True)
-
-        self.submenu.addSeparator()
-        self.clrAct = QAction(self.tr('Clear format'), self,
-                              shortcut=QKeySequence('Ctrl+D'))
-        self.addAction(self.clrAct)
-        self.submenu.addAction(self.clrAct)
-        self.clrAct.triggered.connect(self.clearformat)
-
-    def contextMenuEvent(self, event):
-        menu = self.createStandardContextMenu(event.globalPos())
-        before = menu.actions()[2]
-
-        cur = self.textCursor()
-        if cur.hasSelection():
-            curtfmt = cur.charFormat()
-            self.hlAct.setChecked(True if curtfmt.background().color() == \
-                                  QColor(255, 250, 160) else False)
-            self.bdAct.setChecked(True if curtfmt.fontWeight() == QFont.Bold \
-                                  else False)
-            self.soAct.setChecked(curtfmt.fontStrikeOut())
-            self.ulAct.setChecked(curtfmt.fontUnderline())
-            self.itaAct.setChecked(curtfmt.fontItalic())
-            self.submenu.setEnabled(True)
-        else:
-            self.submenu.setEnabled(False)
-
-        menu.insertSeparator(before)
-        menu.insertMenu(before, self.submenu)
-        menu.exec_(event.globalPos())
-
-    def clearformat(self):
-        fmt = QTextCharFormat()
-        self.textCursor().setCharFormat(fmt)
-
-    def keyPressEvent(self, event):
-        "Auto-indent support"
-        if event.key() == Qt.Key_Return and self.autoIndent:
-            spacecount = 0
-            cur = self.textCursor()
-            savedpos = cur.position()
-            cur.movePosition(QTextCursor.StartOfBlock)
-            cur.movePosition(QTextCursor.Right, QTextCursor.KeepAnchor)
-            while cur.selectedText() == ' ':
-                spacecount += 1
-                cur.clearSelection()
-                cur.movePosition(QTextCursor.Right, QTextCursor.KeepAnchor)
-
-            cur.setPosition(savedpos)
-            super(NTextEdit, self).keyPressEvent(event)
-            cur.insertText(' '*spacecount)
-        else:
-            return super(NTextEdit, self).keyPressEvent(event)
-
-    def insertFromMimeData(self, source):
-        "Disable some unsuportted types"
-        self.insertHtml(source.html() or source.text())
-
-
-class NTextDocument(QTextDocument, TextFormatter):
-    '''Read format info from database and apply it.'''
-    typedic = {1: 'setBD', 2: 'setHL', 3: 'setIta', 4: 'setSO', 5: 'setUL'}
-    def setText(self, text, plain, nikkiid=None):
-        self.setPlainText(text)
-        if not plain:
-            self.cur = QTextCursor(self)
-            for r in nikki.getformat(nikkiid):
-                self.cur.setPosition(r[0])
-                self.cur.setPosition(r[0]+r[1], mode=self.cur.KeepAnchor)
-                getattr(self, self.typedic[r[2]])(pre=True)
-
-    def textCursor(self):
-        "Make NTextEdit.setXX use NTextDocument.cur as textCursor"
-        return self.cur
 
 
 class DateTimeDialog(QDialog):
@@ -876,7 +554,7 @@ class Main(QWidget):
         self.toolbar.setStyleSheet('QToolBar{background: rgb(242, 241, 231);'
                                    'border-bottom: 1px solid rgb(181, 61, 0);'
                                    'padding: 2px; spacing: 2px}')
-        self.sorAct.setMenu(SortOrderMenu())
+        self.sorAct.setMenu(SortOrderMenu(nlist=self.nlist))
         for a in [self.creAct, self.delAct, self.tlistAct, self.sorAct, self.cfgAct]:
             self.toolbar.addAction(a)
         #label
@@ -961,70 +639,6 @@ class Main(QWidget):
         "Only called when diary saving or deleting"
         c = nikki.count()
         if c > 1: self.countlabel.setText(self.tr('%i diaries') % c)
-
-
-class SortOrderMenu(QMenu):
-    '''Menu used to Change sort order of NList.'''
-    def __init__(self):
-        super(SortOrderMenu, self).__init__()
-        self.aboutToShow.connect(self.setActs)
-
-        self.bycreated = QAction(self.tr('Created Date'), self)
-        self.bymodified = QAction(self.tr('Modified Date'), self)
-        self.bytitle = QAction(self.tr('Title'), self)
-        self.bylength = QAction(self.tr('Length'), self)
-        self.reverse = QAction(self.tr('Reverse'), self)
-        self.reverse.setCheckable(True)
-
-        self.ordertypes = [self.bycreated, self.bymodified, self.bytitle, self.bylength]
-        for a in self.ordertypes:
-            a.setCheckable(True)
-            self.addAction(a)
-        self.addSeparator()
-        self.addAction(self.reverse)
-
-        self.bycreated.triggered[bool].connect(self.setCR)
-        self.bymodified.triggered[bool].connect(self.setMD)
-        self.bytitle.triggered[bool].connect(self.setTT)
-        self.bylength.triggered[bool].connect(self.setLT)
-        self.reverse.triggered[bool].connect(self.setRE)
-
-    def setActs(self):
-        "Set actions checked/unchecked before showing"
-        order, reverse = main.nlist.getOrder()
-        for a in self.ordertypes: a.setChecked(False)
-        enabled = getattr(self, 'by'+order)
-        enabled.setChecked(True)
-        self.reverse.setChecked(reverse)
-
-    def setCR(self, checked):
-        if checked:
-            settings.setValue('NList/sortOrder', 'created')
-            main.nlist.clear()
-            main.nlist.load()
-
-    def setMD(self, checked):
-        if checked:
-            settings.setValue('NList/sortOrder', 'modified')
-            main.nlist.clear()
-            main.nlist.load()
-
-    def setTT(self, checked):
-        if checked:
-            settings.setValue('NList/sortOrder', 'title')
-            main.nlist.clear()
-            main.nlist.load()
-
-    def setLT(self, checked):
-        if checked:
-            settings.setValue('NList/sortOrder', 'length')
-            main.nlist.clear()
-            main.nlist.load()
-
-    def setRE(self, checked):
-        settings.setValue('NList/sortReverse', int(checked))
-        main.nlist.clear()
-        main.nlist.load()
 
 
 class TList(QListWidget):
@@ -1117,35 +731,7 @@ class TSplitterHandle(QSplitterHandle):
         painter.fillRect(w-1, 0, 1, h, QColor(181, 61, 0))
 
 
-class SearchBox(QLineEdit):
-    def __init__(self, parent=None):
-        super(SearchBox, self).__init__(parent)
-
-        self.button = QToolButton(self)
-        self.button.setFixedSize(18, 18)
-        self.button.setCursor(Qt.ArrowCursor)
-        self.button.clicked.connect(self.clear)
-
-        self.textChanged.connect(self.update)
-        self.setPlaceholderText(self.tr('Search'))
-        self.setTextMargins(QMargins(2, 0, 20, 0))
-        self.update('')
-
-    def resizeEvent(self, event):
-        w, h = event.size().toTuple()
-        pos_y = (h-18) / 2
-        self.button.move(w-18-pos_y, pos_y)
-
-    def update(self, text):
-        iconame = 'search_clr' if text else 'search'
-        fontstyle = 'normal' if text else 'italic'
-        self.button.setStyleSheet('QToolButton{border: none;'
-                                  'background: url(:/images/%s.png);'
-                                  'background-position: center}' % iconame)
-        self.setStyleSheet('QLineEdit{font-style: %s}' % fontstyle)
-
-
-class ConfigDialog(QDialog, ui.configdialog.Ui_Settings):
+class ConfigDialog(QDialog, Ui_Settings):
     # first try that using Qt Designer generated UI.
     lang2index = {'en': 0, 'zh_CN': 1, 'ja': 2}  # index used in combo
     index2lang = {b: a for (a, b) in lang2index.items()}

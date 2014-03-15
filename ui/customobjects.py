@@ -1,0 +1,138 @@
+from PySide.QtCore import *
+from PySide.QtGui import *
+
+
+class TagCompleter(QCompleter):
+    def __init__(self, tagL, parent=None):
+        self.tagL = tagL
+        super(TagCompleter, self).__init__(tagL, parent)
+        self.setCaseSensitivity(Qt.CaseInsensitive)
+
+    def pathFromIndex(self, index):
+        # path is current matched tag.
+        path = QCompleter.pathFromIndex(self, index)
+        # a list like [tag1, tag2, tag3(maybe a part)]
+        L = self.widget().text().split()
+        if len(L) > 1:
+            path = '%s %s ' % (' '.join(L[:-1]), path)
+        else:
+            path += ' '
+        return path
+
+    def splitPath(self, path):
+        # path is tag string like "tag1 tag2 tag3(maybe a part) "
+        path = path.split()[-1] if path.split() else None
+        if (path in self.tagL) or (path == None):
+            return ' '
+        else:
+            return [path,]
+
+
+class TextFormatter:
+    '''All methods of this class are used in NTextDocument to set format.
+    NTextEdit also use those to set format(called from context-menu).
+    If used in NTextDocumment,pre should be True.
+    '''
+    def setHL(self, pre=False):
+        fmt = self.textCursor().charFormat()
+        if pre:  # called by NTextDocument
+            hasFormat = False
+        else:  # called by NTextEdit(Editor's context menu)
+            hasFormat = (fmt.background().color() == QColor(255, 250, 160))
+
+        fmt.setBackground(QBrush(Qt.white if hasFormat
+                                 else QColor(255, 250, 160)))
+        self.textCursor().mergeCharFormat(fmt)
+
+    def setBD(self, pre=False):
+        fmt = self.textCursor().charFormat()
+        if pre:
+            hasFormat = False
+        else:
+            hasFormat = (fmt.fontWeight() == QFont.Bold)
+
+        fmt.setFontWeight(QFont.Normal if hasFormat else QFont.Bold)
+        self.textCursor().mergeCharFormat(fmt)
+
+    def setSO(self, pre=False):
+        fmt = self.textCursor().charFormat()
+        if pre:
+            hasFormat = False
+        else:
+            hasFormat = fmt.fontStrikeOut()
+
+        fmt.setFontStrikeOut(not hasFormat)
+        self.textCursor().mergeCharFormat(fmt)
+
+    def setUL(self, pre=False):
+        fmt = self.textCursor().charFormat()
+        if pre:
+            hasFormat = False
+        else:
+            hasFormat = fmt.fontUnderline()
+
+        fmt.setFontUnderline(not hasFormat)
+        self.textCursor().mergeCharFormat(fmt)
+
+    def setIta(self, pre=False):
+        fmt = self.textCursor().charFormat()
+        if pre:
+            hasFormat = False
+        else:
+            hasFormat = fmt.fontItalic()
+
+        fmt.setFontItalic(not hasFormat)
+        self.textCursor().mergeCharFormat(fmt)
+
+
+class SortOrderMenu(QMenu):
+    '''Menu used to Change sort order of NList.'''
+    def __init__(self, nlist):
+        super(SortOrderMenu, self).__init__()
+        self.nlist = nlist
+        self.aboutToShow.connect(self.setActs)
+        # create actions
+        self.bycreated = QAction(self.tr('Created Date'), self)
+        self.bymodified = QAction(self.tr('Modified Date'), self)
+        self.bytitle = QAction(self.tr('Title'), self)
+        self.bylength = QAction(self.tr('Length'), self)
+        self.reverse = QAction(self.tr('Reverse'), self)
+        self.reverse.setCheckable(True)
+        self.ordertypes = [self.bycreated, self.bymodified, self.bytitle, self.bylength]
+        for a in self.ordertypes:
+            a.setCheckable(True)
+            self.addAction(a)
+        self.addSeparator()
+        self.addAction(self.reverse)
+
+        self.bycreated.triggered[bool].connect(nlist.sortCR)
+        self.bymodified.triggered[bool].connect(nlist.sortMD)
+        self.bytitle.triggered[bool].connect(nlist.sortTT)
+        self.bylength.triggered[bool].connect(nlist.sortLT)
+        self.reverse.triggered[bool].connect(nlist.sortRE)
+
+    def setActs(self):
+        "Set actions checked/unchecked before showing"
+        order, reverse = self.nlist.getOrder()
+        for a in self.ordertypes: a.setChecked(False)
+        enabled = getattr(self, 'by'+order)
+        enabled.setChecked(True)
+        self.reverse.setChecked(reverse)
+
+
+class NTextDocument(QTextDocument, TextFormatter):
+    '''Read format info from database and apply it.'''
+    typedic = {1: 'setBD', 2: 'setHL', 3: 'setIta', 4: 'setSO', 5: 'setUL'}
+    def setText(self, text, formats=None):
+        self.setPlainText(text)
+        if formats:
+            self.cur = QTextCursor(self)
+            for r in formats:
+                self.cur.setPosition(r[0])
+                self.cur.setPosition(r[0]+r[1], mode=self.cur.KeepAnchor)
+                getattr(self, self.typedic[r[2]])(pre=True)
+
+    def textCursor(self):
+        "Make TextFormatter's methods to get right cursor"
+        return self.cur
+
