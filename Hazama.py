@@ -497,7 +497,6 @@ class Editor(QWidget):
         self.tageditor.textChanged.connect(self.updateTagEditorFont)
         self.updateTagEditorFont('')
         if not new: self.tageditor.setText(row['tags'])
-        self.tageditor.setFont(defaultfont)
         completer = TagCompleter(nikki.gettag(), self)
         self.tageditor.setCompleter(completer)
         self.tageditor.textChanged.connect(self.setTagsModified)
@@ -632,11 +631,65 @@ class TagCompleter(QCompleter):
             return [path,]
 
 
-class NTextEdit(QTextEdit):
-    '''The widget used to edit diary contents in Editor window.
+class TextFormatter:
+    '''All methods of this class are used in NTextDocument to set format.
+    NTextEdit also use those to set format(called from context-menu).
+    If used in NTextDocumment,pre should be True.
+    '''
+    def setHL(self, pre=False):
+        fmt = self.textCursor().charFormat()
+        if pre:  # called by NTextDocument
+            hasFormat = False
+        else:  # called by NTextEdit(Editor's context menu)
+            hasFormat = (fmt.background().color() == QColor(255, 250, 160))
 
-    setXX methods are used in NTextDocument(in NikkiList preview),
-    first load of NTextEdit,NTextEdit's context-menu.
+        fmt.setBackground(QBrush(Qt.white if hasFormat
+                                 else QColor(255, 250, 160)))
+        self.textCursor().mergeCharFormat(fmt)
+
+    def setBD(self, pre=False):
+        fmt = self.textCursor().charFormat()
+        if pre:
+            hasFormat = False
+        else:
+            hasFormat = (fmt.fontWeight() == QFont.Bold)
+
+        fmt.setFontWeight(QFont.Normal if hasFormat else QFont.Bold)
+        self.textCursor().mergeCharFormat(fmt)
+
+    def setSO(self, pre=False):
+        fmt = self.textCursor().charFormat()
+        if pre:
+            hasFormat = False
+        else:
+            hasFormat = fmt.fontStrikeOut()
+
+        fmt.setFontStrikeOut(not hasFormat)
+        self.textCursor().mergeCharFormat(fmt)
+
+    def setUL(self, pre=False):
+        fmt = self.textCursor().charFormat()
+        if pre:
+            hasFormat = False
+        else:
+            hasFormat = fmt.fontUnderline()
+
+        fmt.setFontUnderline(not hasFormat)
+        self.textCursor().mergeCharFormat(fmt)
+
+    def setIta(self, pre=False):
+        fmt = self.textCursor().charFormat()
+        if pre:
+            hasFormat = False
+        else:
+            hasFormat = fmt.fontItalic()
+
+        fmt.setFontItalic(not hasFormat)
+        self.textCursor().mergeCharFormat(fmt)
+
+
+class NTextEdit(QTextEdit, TextFormatter):
+    '''The widget used to edit diary contents in Editor window.
     '''
     def __init__(self, *values, parent=None):
         super(NTextEdit, self).__init__(parent)
@@ -713,57 +766,6 @@ class NTextEdit(QTextEdit):
         menu.insertMenu(before, self.submenu)
         menu.exec_(event.globalPos())
 
-    def setHL(self, pre=False):
-        fmt = self.textCursor().charFormat()
-        if pre:  # called by NTextDocument
-            hasFormat = False
-        else:  # called by NTextEdit(Editor's context menu)
-            hasFormat = (fmt.background().color() == QColor(255, 250, 160))
-
-        fmt.setBackground(QBrush(Qt.white if hasFormat
-                                 else QColor(255, 250, 160)))
-        self.textCursor().mergeCharFormat(fmt)
-
-    def setBD(self, pre=False):
-        fmt = self.textCursor().charFormat()
-        if pre:
-            hasFormat = False
-        else:
-            hasFormat = (fmt.fontWeight() == QFont.Bold)
-
-        fmt.setFontWeight(QFont.Normal if hasFormat else QFont.Bold)
-        self.textCursor().mergeCharFormat(fmt)
-
-    def setSO(self, pre=False):
-        fmt = self.textCursor().charFormat()
-        if pre:
-            hasFormat = False
-        else:
-            hasFormat = fmt.fontStrikeOut()
-
-        fmt.setFontStrikeOut(not hasFormat)
-        self.textCursor().mergeCharFormat(fmt)
-
-    def setUL(self, pre=False):
-        fmt = self.textCursor().charFormat()
-        if pre:
-            hasFormat = False
-        else:
-            hasFormat = fmt.fontUnderline()
-
-        fmt.setFontUnderline(not hasFormat)
-        self.textCursor().mergeCharFormat(fmt)
-
-    def setIta(self, pre=False):
-        fmt = self.textCursor().charFormat()
-        if pre:
-            hasFormat = False
-        else:
-            hasFormat = fmt.fontItalic()
-
-        fmt.setFontItalic(not hasFormat)
-        self.textCursor().mergeCharFormat(fmt)
-
     def clearformat(self):
         fmt = QTextCharFormat()
         self.textCursor().setCharFormat(fmt)
@@ -792,7 +794,7 @@ class NTextEdit(QTextEdit):
         self.insertHtml(source.html() or source.text())
 
 
-class NTextDocument(QTextDocument):
+class NTextDocument(QTextDocument, TextFormatter):
     '''Read format info from database and apply it.'''
     typedic = {1: 'setBD', 2: 'setHL', 3: 'setIta', 4: 'setSO', 5: 'setUL'}
     def setText(self, text, plain, nikkiid=None):
@@ -802,8 +804,7 @@ class NTextDocument(QTextDocument):
             for r in nikki.getformat(nikkiid):
                 self.cur.setPosition(r[0])
                 self.cur.setPosition(r[0]+r[1], mode=self.cur.KeepAnchor)
-                richfunc = getattr(NTextEdit, self.typedic[r[2]])
-                richfunc(self, True)
+                getattr(self, self.typedic[r[2]])(pre=True)
 
     def textCursor(self):
         "Make NTextEdit.setXX use NTextDocument.cur as textCursor"
