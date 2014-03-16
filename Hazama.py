@@ -3,6 +3,7 @@ from PySide.QtCore import *
 import res
 from ui.configdialog import Ui_Settings
 from ui.editor import Ui_Editor
+from ui.customwidgets import SearchBox
 from ui.customobjects import *
 from db import Nikki
 
@@ -366,7 +367,7 @@ class NList(QListWidget):
 
 
 class Editor(QWidget, Ui_Editor):
-    "Editor Window.Edit diary's contents,title,tag,modified time here."
+    "Widget used to edit diary's body,title,tag, datetime."
     def __init__(self, new, row):
         super(Editor, self).__init__()
         self.setAttribute(Qt.WA_DeleteOnClose)
@@ -379,41 +380,34 @@ class Editor(QWidget, Ui_Editor):
             self.setGeometry(center.x()-w/2, center.y()-h/2, int(w), int(h))
         else:
             self.restoreGeometry(settings.value("Editor/windowGeo"))
-        # setup texteditor and titleeditor, set title
+        # setup texteditor and titleeditor, set window title
         if not new:
             self.id = row['id']
             self.created = row['created']
             self.modified = row['modified']  # is '' when not modified
-            self.titleeditor.setText(row['title'])
+            self.titleEditor.setText(row['title'])
             formats = None if row['plaintext'] else nikki.getformat(row['id'])
-            self.texteditor.setText(row['text'], formats)
+            self.textEditor.setText(row['text'], formats)
         else:
             self.id = self.created = self.created = None
-        self.titleeditor.setFont(titlefont)
-        self.texteditor.setFont(textfont)
+        self.textEditor.setFont(textfont)
+        self.textEditor.setAutoIndent(int(settings.value(':/Editor/autoindent', 1)))
+        self.titleEditor.setFont(titlefont)
         titlehint = (row['title'] if row else None) or \
                     (self.created.split()[0] if self.created else None) or \
                     self.tr('New Diary')
         self.setWindowTitle("%s - Hazama" % titlehint)
-        # setup timelabel(display created,modified datetime)
-        cre = self.created if self.created is not None else ''
-        mod = self.modified if self.modified is not None else ''
-        datetime = self.tr('Created: %s\nModified: %s') % (cre, mod)
-        self.timelabel.setText(datetime)
-        self.timelabel.setFont(datefont)
-        self.timelabel.setCursor(Qt.PointingHandCursor)
-        self.timelabel.setStyleSheet('color: rgb(115, 115, 115)')
-        self.timelabel.mouseReleaseEvent = self.startTimeEditor
-        self.timelabel_w = self.timelabel.sizeHint().width()
-        # set up tageditor 
-        self.tageditor.textChanged.connect(self.updateTagEditorFont)
-        if new:
-            self.updateTagEditorFont('')
-        else:
-            self.tageditor.setText(row['tags'])
+        # setup datetime display
+        self.dtLabel.setText(self.created if self.created is not None else '')
+        self.dtLabel.setFont(datefont)
+        self.dtBtn.setIcon(QIcon(':/editor/clock.png'))
+        sz = min(dfontm.ascent(), 16)
+        self.dtBtn.setIconSize(QSize(sz, sz))
+        # set up tageditor
+        self.tagEditor.textChanged.connect(self.updateTagEditorFont)
+        self.tagEditor.setText(row['tags'] if not new else '')
         completer = TagCompleter(nikki.gettag(), self)
-        self.tageditor.setCompleter(completer)
-        self.tageditor.textChanged.connect(self.setTagsModified)
+        self.tagEditor.setCompleter(completer)
         self.timeModified = self.tagsModified = False
         # setup shortcuts
         self.closeSaveSc = QShortcut(QKeySequence.Save, self)
@@ -443,54 +437,53 @@ class Editor(QWidget, Ui_Editor):
 
     def saveNikki(self):
         "Save when necessary;Refresh NList and TList when necessary"
-        if (self.texteditor.document().isModified() or
-        self.titleeditor.isModified() or self.timeModified or
+        if (self.textEditor.document().isModified() or
+        self.titleEditor.isModified() or self.timeModified or
         self.tagsModified):
-            if self.new:
+            if self.created is None:
                 self.created = time.strftime('%Y-%m-%d %H:%M')
-                modified = ''
-            else:
-                modified = time.strftime('%Y-%m-%d %H:%M')
+            modified = time.strftime('%Y-%m-%d %H:%M')
+            # TODO: remove modified column from db
             if self.tagsModified:
-                tags = self.tageditor.text().split()
+                tags = self.tagEditor.text().split()
                 tags = list(filter(lambda t: tags.count(t)==1, tags))
             else:
                 tags = None
             # realid: id returned by database
             realid = nikki.save(self.id, self.created, modified,
-                                self.texteditor.toHtml(),
-                                self.titleeditor.text(), tags)
-            if realid is not None:  # save existed diary
-                main.nlist.reload(realid)
-                main.updateCountLabel()
+                                self.textEditor.toHtml(),
+                                self.titleEditor.text(), tags)
+            main.nlist.reload(realid)
+            if self.new: main.updateCountLabel()
 
         if self.tagsModified and main.tlist.isVisible():
             main.tlist.load()
 
-    def setTagsModified(self):
+    @Slot()
+    def on_tagEditor_textEdited(self):
         # tageditor.isModified() will be reset by completer.So this instead.
         self.tagsModified = True
 
-    def showEvent(self, event):
-        if not int(settings.value('/Editor/titlefocus', 1)):
-            self.texteditor.setFocus()
-        self.texteditor.moveCursor(QTextCursor.Start)
-
-    def updateTagEditorFont(self, text):
-        "Set tageditor's placeHoderFont to italic"
-        fontstyle = 'normal' if text else 'italic'
-        self.tageditor.setStyleSheet('font-style: %s' % fontstyle)
-
-    def startTimeEditor(self, event):
-        if self.new: return
-        clicked, time = DateTimeDialog.getDateTime(self.created, self)
-        if clicked and time!=self.created:
+    @Slot()
+    def on_dtBtn_clicked(self):
+        time = DateTimeDialog.getDateTime(self.created, self)
+        if time is not None and time!=self.created:
             self.created = time
             self.timeModified = True
 
+    def showEvent(self, event):
+        if not int(settings.value('/Editor/titlefocus', 1)):
+            self.textEditor.setFocus()
+        self.textEditor.moveCursor(QTextCursor.Start)
+
+    def updateTagEditorFont(self, text):
+        "Set tagEditor's placeHoderFont to italic"
+        fontstyle = 'normal' if text else 'italic'
+        self.tagEditor.setStyleSheet('font-style: %s' % fontstyle)
+
 
 class DateTimeDialog(QDialog):
-    timeFmt = "yyyy/MM/dd HH:mm"
+    timeFmt = "yyyy-MM-dd HH:mm"
     def __init__(self, timestr, parent=None):
         super(DateTimeDialog, self).__init__(parent, Qt.WindowTitleHint)
         self.setWindowModality(Qt.WindowModal)
@@ -499,6 +492,8 @@ class DateTimeDialog(QDialog):
 
         self.verticalLayout = QVBoxLayout(self)
 
+        if timestr is None:
+            timestr = time.strftime('%Y-%m-%d %H:%M')
         dt = QDateTime.fromString(timestr, self.timeFmt)
         self.dtEdit = QDateTimeEdit(dt)
         self.dtEdit.setDisplayFormat(self.timeFmt)
@@ -516,10 +511,9 @@ class DateTimeDialog(QDialog):
     @staticmethod
     def getDateTime(timestr, parent):
         "Run Dialog,return None if canceled,otherwise return timestr"
-        dtDialog = DateTimeDialog(timestr, parent)
-        # result code is 1 if OK clicked else 0
-        code = dtDialog.exec_()
-        return (code, dtDialog.dtEdit.dateTime().toString(dtDialog.timeFmt))
+        dialog = DateTimeDialog(timestr, parent)
+        code = dialog.exec_()
+        return dialog.dtEdit.dateTime().toString(dialog.timeFmt) if code else None
 
 
 class Main(QWidget):

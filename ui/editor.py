@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'editor.ui'
 #
-# Created: Sat Mar 15 22:37:12 2014
+# Created: Sun Mar 16 19:02:02 2014
 #      by: pyside-uic 0.2.15 running on PySide 1.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -18,36 +18,42 @@ class Ui_Editor(object):
         self.verticalLayout.setSpacing(0)
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout.setObjectName("verticalLayout")
-        self.titleeditor = QtGui.QLineEdit(Editor)
-        self.titleeditor.setObjectName("titleeditor")
-        self.verticalLayout.addWidget(self.titleeditor)
-        self.texteditor = NTextEdit(Editor)
-        self.texteditor.setObjectName("texteditor")
-        self.verticalLayout.addWidget(self.texteditor)
+        self.titleEditor = QtGui.QLineEdit(Editor)
+        self.titleEditor.setObjectName("titleEditor")
+        self.verticalLayout.addWidget(self.titleEditor)
+        self.textEditor = NTextEdit(Editor)
+        self.textEditor.setObjectName("textEditor")
+        self.verticalLayout.addWidget(self.textEditor)
         spacerItem = QtGui.QSpacerItem(30, 4, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
         self.verticalLayout.addItem(spacerItem)
         self.horizontalLayout_2 = QtGui.QHBoxLayout()
         self.horizontalLayout_2.setSpacing(0)
         self.horizontalLayout_2.setContentsMargins(20, -1, 20, -1)
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
-        self.tageditor = QtGui.QLineEdit(Editor)
-        self.tageditor.setObjectName("tageditor")
-        self.horizontalLayout_2.addWidget(self.tageditor)
+        self.tagEditor = QtGui.QLineEdit(Editor)
+        self.tagEditor.setObjectName("tagEditor")
+        self.horizontalLayout_2.addWidget(self.tagEditor)
         self.verticalLayout.addLayout(self.horizontalLayout_2)
         self.horizontalLayout = QtGui.QHBoxLayout()
+        self.horizontalLayout.setSpacing(2)
         self.horizontalLayout.setContentsMargins(9, 9, 9, 9)
         self.horizontalLayout.setObjectName("horizontalLayout")
-        self.timelabel = QtGui.QLabel(Editor)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Preferred)
+        self.dtBtn = QtGui.QToolButton(Editor)
+        self.dtBtn.setStyleSheet("QToolButton {border: none;}")
+        self.dtBtn.setObjectName("dtBtn")
+        self.horizontalLayout.addWidget(self.dtBtn)
+        self.dtLabel = QtGui.QLabel(Editor)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Maximum, QtGui.QSizePolicy.Maximum)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.timelabel.sizePolicy().hasHeightForWidth())
-        self.timelabel.setSizePolicy(sizePolicy)
-        self.timelabel.setText("")
-        self.timelabel.setObjectName("timelabel")
-        self.horizontalLayout.addWidget(self.timelabel)
+        sizePolicy.setHeightForWidth(self.dtLabel.sizePolicy().hasHeightForWidth())
+        self.dtLabel.setSizePolicy(sizePolicy)
+        self.dtLabel.setStyleSheet("color: rgb(80, 80, 80);")
+        self.dtLabel.setText("")
+        self.dtLabel.setObjectName("dtLabel")
+        self.horizontalLayout.addWidget(self.dtLabel)
         self.box = QtGui.QDialogButtonBox(Editor)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Fixed)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.box.sizePolicy().hasHeightForWidth())
@@ -62,11 +68,12 @@ class Ui_Editor(object):
         self.retranslateUi(Editor)
         QtCore.QObject.connect(self.box, QtCore.SIGNAL("rejected()"), Editor.closeNoSave)
         QtCore.QObject.connect(self.box, QtCore.SIGNAL("accepted()"), Editor.close)
+        QtCore.QObject.connect(self.tagEditor, QtCore.SIGNAL("textChanged(QString)"), Editor.updateTagEditorFont)
         QtCore.QMetaObject.connectSlotsByName(Editor)
 
     def retranslateUi(self, Editor):
         Editor.setWindowTitle(QtGui.QApplication.translate("Editor", "Form", None, QtGui.QApplication.UnicodeUTF8))
-        self.tageditor.setPlaceholderText(QtGui.QApplication.translate("Editor", "Tags separated by space", None, QtGui.QApplication.UnicodeUTF8))
+        self.tagEditor.setPlaceholderText(QtGui.QApplication.translate("Editor", "Tags separated by space", None, QtGui.QApplication.UnicodeUTF8))
 
 from .customwidgets import NTextEdit
 

@@ -40,4 +40,8 @@
   <qresource prefix="/images">
     <file>main.png</file>
   </qresource>
+
+  <qresource prefix="/editor">
+    <file>clock.png</file>
+  </qresource>
 </RCC>
