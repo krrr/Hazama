@@ -113,7 +113,7 @@ class NListDelegate(QStyledItemDelegate):
         painter.drawLine(x+10, y+self.title_h, x+w-10, y+self.title_h)
         painter.setPen(Qt.black)
         painter.setFont(datefont)
-        painter.drawText(x+14, y, w, self.title_h, Qt.AlignBottom, row['created'])
+        painter.drawText(x+14, y, w, self.title_h, Qt.AlignBottom, row['datetime'])
         if row['title']:
             painter.setFont(titlefont)
             title_w = w-self.dt_w-13
@@ -302,7 +302,7 @@ class NList(QListWidget):
 
     def getOrder(self):
         "get sort order(str) and reverse(int) from settings file"
-        order = settings.value('NList/sortOrder', 'created')
+        order = settings.value('NList/sortOrder', 'datetime')
         reverse = int(settings.value('NList/sortReverse', 1))
         return order, reverse
 
@@ -336,15 +336,9 @@ class NList(QListWidget):
             self.starteditor()
             curtEditor.closeNoSave()
 
-    def sortCR(self, checked):
+    def sortDT(self, checked):
         if checked:
-            settings.setValue('NList/sortOrder', 'created')
-            self.clear()
-            self.load()
-
-    def sortMD(self, checked):
-        if checked:
-            settings.setValue('NList/sortOrder', 'modified')
+            settings.setValue('NList/sortOrder', 'datetime')
             self.clear()
             self.load()
 
@@ -383,29 +377,28 @@ class Editor(QWidget, Ui_Editor):
         # setup texteditor and titleeditor, set window title
         if not new:
             self.id = row['id']
-            self.created = row['created']
-            self.modified = row['modified']  # is '' when not modified
+            self.datetime = row['datetime']
             self.titleEditor.setText(row['title'])
             formats = None if row['plaintext'] else nikki.getformat(row['id'])
             self.textEditor.setText(row['text'], formats)
         else:
-            self.id = self.created = self.created = None
+            self.id = self.datetime = None
         self.textEditor.setFont(textfont)
         self.textEditor.setAutoIndent(int(settings.value(':/Editor/autoindent', 1)))
         self.titleEditor.setFont(titlefont)
         titlehint = (row['title'] if row else None) or \
-                    (self.created.split()[0] if self.created else None) or \
+                    (self.datetime.split()[0] if self.datetime else None) or \
                     self.tr('New Diary')
         self.setWindowTitle("%s - Hazama" % titlehint)
         # setup datetime display
-        self.dtLabel.setText(self.created if self.created is not None else '')
+        self.dtLabel.setText(self.datetime if self.datetime is not None else '')
         self.dtLabel.setFont(datefont)
         self.dtBtn.setIcon(QIcon(':/editor/clock.png'))
         sz = min(dfontm.ascent(), 16)
         self.dtBtn.setIconSize(QSize(sz, sz))
         # set up tageditor
-        self.tagEditor.textChanged.connect(self.updateTagEditorFont)
-        self.tagEditor.setText(row['tags'] if not new else '')
+        self.updateTagEditorFont('')
+        if not new: self.tagEditor.setText(row['tags'])
         completer = TagCompleter(nikki.gettag(), self)
         self.tagEditor.setCompleter(completer)
         self.timeModified = self.tagsModified = False
@@ -440,17 +433,15 @@ class Editor(QWidget, Ui_Editor):
         if (self.textEditor.document().isModified() or
         self.titleEditor.isModified() or self.timeModified or
         self.tagsModified):
-            if self.created is None:
-                self.created = time.strftime('%Y-%m-%d %H:%M')
-            modified = time.strftime('%Y-%m-%d %H:%M')
-            # TODO: remove modified column from db
+            if self.datetime is None:
+                self.datetime = time.strftime('%Y-%m-%d %H:%M')
             if self.tagsModified:
                 tags = self.tagEditor.text().split()
                 tags = list(filter(lambda t: tags.count(t)==1, tags))
             else:
                 tags = None
             # realid: id returned by database
-            realid = nikki.save(self.id, self.created, modified,
+            realid = nikki.save(self.id, self.datetime,
                                 self.textEditor.toHtml(),
                                 self.titleEditor.text(), tags)
             main.nlist.reload(realid)
@@ -466,9 +457,9 @@ class Editor(QWidget, Ui_Editor):
 
     @Slot()
     def on_dtBtn_clicked(self):
-        time = DateTimeDialog.getDateTime(self.created, self)
-        if time is not None and time!=self.created:
-            self.created = time
+        time = DateTimeDialog.getDateTime(self.datetime, self)
+        if time is not None and time!=self.datetime:
+            self.datetime = time
             self.timeModified = True
 
     def showEvent(self, event):
@@ -487,7 +478,7 @@ class DateTimeDialog(QDialog):
     def __init__(self, timestr, parent=None):
         super(DateTimeDialog, self).__init__(parent, Qt.WindowTitleHint)
         self.setWindowModality(Qt.WindowModal)
-        self.setWindowTitle(self.tr('Edit created time'))
+        self.setWindowTitle(self.tr('Edit datetime'))
         self.setMinimumWidth(100)
 
         self.verticalLayout = QVBoxLayout(self)

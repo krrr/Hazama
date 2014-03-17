@@ -92,21 +92,19 @@ class SortOrderMenu(QMenu):
         self.nlist = nlist
         self.aboutToShow.connect(self.setActs)
         # create actions
-        self.bycreated = QAction(self.tr('Created Date'), self)
-        self.bymodified = QAction(self.tr('Modified Date'), self)
+        self.bydatetime = QAction(self.tr('Date'), self)
         self.bytitle = QAction(self.tr('Title'), self)
         self.bylength = QAction(self.tr('Length'), self)
         self.reverse = QAction(self.tr('Reverse'), self)
         self.reverse.setCheckable(True)
-        self.ordertypes = [self.bycreated, self.bymodified, self.bytitle, self.bylength]
+        self.ordertypes = [self.bydatetime, self.bytitle, self.bylength]
         for a in self.ordertypes:
             a.setCheckable(True)
             self.addAction(a)
         self.addSeparator()
         self.addAction(self.reverse)
 
-        self.bycreated.triggered[bool].connect(nlist.sortCR)
-        self.bymodified.triggered[bool].connect(nlist.sortMD)
+        self.bydatetime.triggered[bool].connect(nlist.sortDT)
         self.bytitle.triggered[bool].connect(nlist.sortTT)
         self.bylength.triggered[bool].connect(nlist.sortLT)
         self.reverse.triggered[bool].connect(nlist.sortRE)

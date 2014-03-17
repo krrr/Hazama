@@ -6,7 +6,7 @@ import logging
 
 # template used to format txt file
 default_tpl = '''***{0[title]}***
-[Created: {0[created]}, Modified: {0[modified]}]
+[Date: {0[datetime]}]
 
 {0[text]}\n\n\n\n'''
 
@@ -30,9 +30,9 @@ class Nikki:
         self.conn.execute('CREATE TABLE IF NOT EXISTS Tags'
                           '(id INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE)')
         self.conn.execute('CREATE TABLE IF NOT EXISTS Nikki'
-                          '(id INTEGER PRIMARY KEY, created TEXT NOT NULL, '
-                          'modified TEXT NOT NULL, plaintext INTEGER NOT NULL,'
-                          'text TEXT NOT NULL, title TEXT NOT NULL)')
+                          '(id INTEGER PRIMARY KEY, datetime TEXT NOT NULL, '
+                          'plaintext INTEGER NOT NULL, text TEXT NOT NULL, '
+                          'title TEXT NOT NULL)')
         self.conn.execute('CREATE TABLE IF NOT EXISTS Nikki_Tags'
                           '(nikkiid INTEGER NOT NULL REFERENCES Nikki(id) '
                           'ON DELETE CASCADE, tagid INTEGER NOT NULL,'
@@ -57,8 +57,8 @@ class Nikki:
         taglst = [self.gettag(i[0]) for i in tags]
         tagstr = ' '.join(taglst) + ' ' if len(taglst)>=1 else ''
 
-        return {'id': L[0], 'created': L[1], 'modified': L[2],
-                'plaintext': L[3], 'text': L[4], 'title': L[5], 'tags': tagstr}
+        return {'id': L[0], 'datetime': L[1], 'plaintext': L[2],
+                 'text': L[3], 'title': L[4], 'tags': tagstr}
 
     def importXml(self, xmlpath):
         "Import CintaNotes/Hazama XML file,will not appear in main program."
@@ -95,15 +95,9 @@ class Nikki:
             text = root[i].text if root[i].text else ' '
             plain = int(nikki.get('plainText', 0))
             # import nikki itself into Nikki Table
-            if Hxml:
-                created, modified = nikki['created'], nikki['modified']
-            else:
-                created, modified = (trans_date(nikki['created']),
-                                     trans_date(nikki['modified']))
-                if created==modified:
-                    modified = ''
-            values = (created, modified, plain, text, nikki['title'])
-            self.conn.execute('INSERT INTO Nikki VALUES(NULL,?,?,?,?,?)',
+            datetime = nikki['datetime'] if Hxml else trans_date(nikki['created'])
+            values = (datetime, plain, text, nikki['title'])
+            self.conn.execute('INSERT INTO Nikki VALUES(NULL,?,?,?,?)',
                               values)
             # import tags if nikki has
             if nikki['tags']:
@@ -140,10 +134,10 @@ class Nikki:
         reachedTags = set()
         formats = ET.SubElement(root, 'formats')
 
-        for e in enumerate(self.sorted('created'), 2):
+        for e in enumerate(self.sorted('datetime'), 2):
             index, n = e  # index just connect a rich nikki to its formats
             nikki = ET.SubElement(root, 'nikki')
-            for attr in ['title', 'created', 'modified', 'tags']:
+            for attr in ['title', 'datetime', 'tags']:
                 nikki.set(attr, n[attr])
             nikki.set('plainText', str(n['plaintext']))
             nikki.text = n['text']
@@ -175,7 +169,7 @@ class Nikki:
         except OSError:
             logging.info('Use default template')
             tpl = default_tpl
-        for n in (self.sorted('created', False) if selected is None
+        for n in (self.sorted('datetime', False) if selected is None
                    else selected):
             file.write(tpl.format(n))
         file.close()
@@ -186,11 +180,11 @@ class Nikki:
             where = ('WHERE id IN (SELECT nikkiid FROM Nikki_Tags WHERE '
                      'tagid=%i) ') % tagid
         elif search and (tagid is None):
-            where = ('WHERE created LIKE "%%%s%%" OR text LIKE "%%%s%%" '
+            where = ('WHERE datetime LIKE "%%%s%%" OR text LIKE "%%%s%%" '
                      'OR title LIKE "%%%s%%"') % ((search,)*3)
         elif search and tagid:
             where = ('WHERE (id IN (SELECT nikkiid FROM Nikki_Tags WHERE '
-                     'tagid=%i)) AND (created LIKE "%%%s%%" OR '
+                     'tagid=%i)) AND (datetime LIKE "%%%s%%" OR '
                      'text LIKE "%%%s%%" OR title LIKE "%%%s%%")' %
                      ((tagid,) + (search,)*3))
         else:
@@ -206,9 +200,8 @@ class Nikki:
 
             taglst = [self.gettag(i[0]) for i in tags]
             tagstr = ' '.join(taglst) + ' ' if len(taglst)>=1 else ''
-            yield {'id': L[0], 'created': L[1], 'modified': L[2],
-                   'plaintext': L[3], 'text': L[4], 'title': L[5],
-                   'tags': tagstr}
+            yield {'id': L[0], 'datetime': L[1], 'plaintext': L[2],
+                    'text': L[3], 'title': L[4], 'tags': tagstr}
 
     def delete(self, id):
         self.conn.execute('DELETE FROM Nikki WHERE id = ?', (id,))
@@ -240,7 +233,7 @@ class Nikki:
         return self.conn.execute('SELECT start,length,type FROM TextFormat '
                                   'WHERE nikkiid=?', (id,))
 
-    def save(self, id, created, modified, html, title, tags):
+    def save(self, id, datetime, html, title, tags):
         new = not bool(id)  # new is True if current nikki is new one
         if new:
             id = self.getnewid()
@@ -250,10 +243,10 @@ class Nikki:
         text = parser.getstriped()
         plain = parser.plain
 
-        values = ((None, created, modified, plain, text, title) if new else
-                  (created, modified, plain, text, title, id))
-        cmd = ('INSERT INTO Nikki VALUES(?,?,?,?,?,?)' if new else
-               'UPDATE Nikki SET created=?, modified=?, plaintext=?, '
+        values = ((None, datetime, plain, text, title) if new else
+                  (datetime, plain, text, title, id))
+        cmd = ('INSERT INTO Nikki VALUES(?,?,?,?,?)' if new else
+               'UPDATE Nikki SET datetime=?, plaintext=?, '
                'text=?, title=? WHERE id=?')
         try:
             self.conn.execute(cmd, values)
@@ -290,5 +283,5 @@ class Nikki:
 
 if __name__ == '__main__':
     path = os.path.split(__file__)[0] + os.sep
-    n = Nikki(path+'nikkichou22.db')
+    n = Nikki(path+'nikkichou.db')
     n.importXml(path+'out.xml')
