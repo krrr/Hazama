@@ -126,7 +126,7 @@
           <item>
            <widget class="QCheckBox" name="tfocusCheck">
             <property name="text">
-             <string>Put cursor in title-edit area when start</string>
+             <string>Put cursor in title-edit area after showing</string>
             </property>
            </widget>
           </item>

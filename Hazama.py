@@ -460,6 +460,7 @@ class Editor(QWidget, Ui_Editor):
         time = DateTimeDialog.getDateTime(self.datetime, self)
         if time is not None and time!=self.datetime:
             self.datetime = time
+            self.dtLabel.setText(time)
             self.timeModified = True
 
     def showEvent(self, event):

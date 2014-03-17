@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'editor.ui'
 #
-# Created: Sun Mar 16 19:02:02 2014
+# Created: Sun Mar 16 21:54:28 2014
 #      by: pyside-uic 0.2.15 running on PySide 1.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -72,7 +72,6 @@ class Ui_Editor(object):
         QtCore.QMetaObject.connectSlotsByName(Editor)
 
     def retranslateUi(self, Editor):
-        Editor.setWindowTitle(QtGui.QApplication.translate("Editor", "Form", None, QtGui.QApplication.UnicodeUTF8))
         self.tagEditor.setPlaceholderText(QtGui.QApplication.translate("Editor", "Tags separated by space", None, QtGui.QApplication.UnicodeUTF8))
 
 from .customwidgets import NTextEdit

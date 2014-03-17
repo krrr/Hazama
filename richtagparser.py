@@ -38,14 +38,8 @@ class NTextParser(HTMLParser):
                'font-style:italic': 3, 'text-decoration: line-through': 4,
                'text-decoration: underline': 5}
     
-    
     def myfeed(self, nikkiid, html, conn):
         self.conn, self.nikkiid = conn, nikkiid
-        try:     # avoid repeating record
-            self.conn.execute('DELETE FROM TextFormat WHERE nikkiid=?',
-                              (nikkiid,))
-        except Exception:
-            pass
         self.html = ''.join(html.partition('<p style')[1:])
         self.striped = strip.sub('', self.html)
         self.feed(self.html)

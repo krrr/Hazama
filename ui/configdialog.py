@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'configdialog.ui'
 #
-# Created: Sun Mar  2 15:25:39 2014
+# Created: Sun Mar 16 21:54:27 2014
 #      by: pyside-uic 0.2.15 running on PySide 1.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -167,7 +167,7 @@ class Ui_Settings(object):
         self.editorBox.setTitle(QtGui.QApplication.translate("Settings", "Editor", None, QtGui.QApplication.UnicodeUTF8))
         self.aindCheck.setText(QtGui.QApplication.translate("Settings", "Auto indent", None, QtGui.QApplication.UnicodeUTF8))
         self.copenCheck.setText(QtGui.QApplication.translate("Settings", "Open in the center of main window", None, QtGui.QApplication.UnicodeUTF8))
-        self.tfocusCheck.setText(QtGui.QApplication.translate("Settings", "Put cursor in title-edit area when start", None, QtGui.QApplication.UnicodeUTF8))
+        self.tfocusCheck.setText(QtGui.QApplication.translate("Settings", "Put cursor in title-edit area after showing", None, QtGui.QApplication.UnicodeUTF8))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.general), QtGui.QApplication.translate("Settings", "General", None, QtGui.QApplication.UnicodeUTF8))
         self.bkBox.setTitle(QtGui.QApplication.translate("Settings", "Backup", None, QtGui.QApplication.UnicodeUTF8))
         self.bkLabel.setText(QtGui.QApplication.translate("Settings", "Backup every day and keep each one for a week.", None, QtGui.QApplication.UnicodeUTF8))
