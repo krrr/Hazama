@@ -1,0 +1,14 @@
+*.bat
+*.pyc
+*.db
+*.ini
+demo
+xmlsample
+.idea
+*.jpg
+test.py
+ui/ui2py.py
+ui/configdialog.py
+ui/editor.py
+res.py
+lang/*.qm

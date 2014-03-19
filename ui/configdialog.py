@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'configdialog.ui'
 #
-# Created: Sun Mar 16 21:54:27 2014
+# Created: Wed Mar 19 12:53:59 2014
 #      by: pyside-uic 0.2.15 running on PySide 1.2.1
 #
 # WARNING! All changes made in this file will be lost!
