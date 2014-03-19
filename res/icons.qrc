@@ -37,8 +37,11 @@
     <file>bold.png</file>
   </qresource>
   
-  <qresource prefix="/images">
-    <file>main.png</file>
+  <qresource prefix="/">
+    <file>appicon16.png</file>
+  </qresource>
+  <qresource prefix="/">
+    <file>appicon32.png</file>
   </qresource>
 
   <qresource prefix="/editor">

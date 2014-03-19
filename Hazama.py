@@ -776,7 +776,10 @@ if __name__ == '__main__':
 
     timee = time.clock()
     app = QApplication(sys.argv)
-    app.setWindowIcon(QIcon(':/images/main.png'))
+    appicon = QIcon(':/appicon16.png')
+    appicon.addFile(':/appicon32.png')
+    appicon.addFile(':/appicon64.png')
+    app.setWindowIcon(appicon)
     settings = QSettings('config.ini', QSettings.IniFormat)
     set_trans(settings)
 
