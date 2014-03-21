@@ -237,8 +237,13 @@ class Nikki:
         new = not bool(id)  # new is True if current nikki is new one
         if new:
             id = self.getnewid()
-
         parser = richtagparser.NTextParser(strict=False)
+        if not new:
+            try:     # avoid repeating record
+                self.conn.execute('DELETE FROM TextFormat WHERE nikkiid=?',
+                                  (id,))
+            except Exception:
+                pass
         parser.myfeed(id, html, self.conn)  # format process done here
         text = parser.getstriped()
         plain = parser.plain
