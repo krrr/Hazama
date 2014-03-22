@@ -30,65 +30,35 @@ class RichTagParser(HTMLParser):
         self.curttag = None
 
 
-class NTextParser(HTMLParser):
-    "Parse the output HTML of QTextDocument(NText)"
-    plain = True
-    curttype = None
+class QtHtmlParser(HTMLParser):
+    "Parse HTML of QTextDocument,return formats information"
     typedic = {'font-weight:600': 1, 'background-color:#fffaa0' : 2,
                'font-style:italic': 3, 'text-decoration: line-through': 4,
                'text-decoration: underline': 5}
     
-    def myfeed(self, nikkiid, html, conn):
-        self.conn, self.nikkiid = conn, nikkiid
-        self.html = ''.join(html.partition('<p style')[1:])
-        self.striped = strip.sub('', self.html)
+    def myfeed(self, html):
+        self.curttype = None
+        self.formats = []
+        self.pos_plain = 0
+        self.html = html.split('</head>')[1]
         self.feed(self.html)
+        return self.formats
 
-    def getstriped(self):
-        return self.striped
-        
     def handle_starttag(self, tag, attrs):
         if tag == 'span':
             self.curttype = [self.typedic[t] for t in self.typedic 
                              if t in attrs[0][1]]
-    def handle_data(self, data):
-        if self.curttype:
-            posInHtml = self.getindex()
-            start = posInHtml - \
-                    len(''.join(strip.findall(self.html[:posInHtml+1])))
-            
-            for type in self.curttype:
-                self.conn.execute('INSERT INTO TextFormat VALUES(?,?,?,?)',
-                                  (self.nikkiid, start, len(data), type))
-            self.plain = False
-        self.curttype = None
 
-    def getindex(self):
-        "transform line number and offset into index"
-        line, offset = self.getpos()
-        linesbefore = len(''.join(self.html.split('\n')[:line-1]))
-        lfs = line-1
-        
-        return linesbefore + lfs + offset
-        
-        
-        
-if __name__ == '__main__':
-     
-    text = '''<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
-<html><head><meta name="qrichtext" content="1" /><style type="text/css">
-p, li { white-space: pre-wrap; }
-</style></head><body style=" font-family:'SimSun'; font-size:13px; font-weight:4
-00; font-style:normal;">
-<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px;
- -qt-block-indent:0; text-indent:0px;"><span style=" text-decoration: line-throu
-gh; background-color:#fffaa0;">TEST</span><span style=" background-color:#fffaa0
-;">,TEST,TEST.</span></p>
-<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px;
- -qt-block-indent:0; text-indent:0px;"><span style=" text-decoration: underline;">TEST</span>.</p></body></html>'''
-    html = ''.join(text.partition('<p style')[1:])
-    
-    n = NTextParser(strict=False)
-    n.html = html
-    n.striped = strip.sub('', html)
-    n.feed(html)
+    def handle_data(self, data):
+        length = len(data)
+        if self.curttype:
+            for type in self.curttype:
+                # (start, length, type)
+                self.formats.append((self.pos_plain-1, length, type))
+            self.curttype = None
+        self.pos_plain += length
+
+    def handle_entityref(self, name):
+        # handle_data will ignore &,<,>
+        self.pos_plain += 1
+

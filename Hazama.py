@@ -441,9 +441,11 @@ class Editor(QWidget, Ui_Editor):
             else:
                 tags = None
             # realid: id returned by database
-            realid = nikki.save(self.id, self.datetime,
-                                self.textEditor.toHtml(),
-                                self.titleEditor.text(), tags)
+            realid = nikki.save(id=self.id, datetime=self.datetime,
+                                html=self.textEditor.toHtml(),
+                                plaintxt=self.textEditor.toPlainText(),
+                                title=self.titleEditor.text(),
+                                tags=tags, new=self.new)
             main.nlist.reload(realid)
             if self.new: main.updateCountLabel()
 

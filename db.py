@@ -27,6 +27,7 @@ class Nikki:
 
     def __init__(self, dbpath):
         self.conn = sqlite3.connect(dbpath)
+        self.exe = self.conn.execute
         self.conn.execute('CREATE TABLE IF NOT EXISTS Tags'
                           '(id INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE)')
         self.conn.execute('CREATE TABLE IF NOT EXISTS Nikki'
@@ -233,51 +234,47 @@ class Nikki:
         return self.conn.execute('SELECT start,length,type FROM TextFormat '
                                   'WHERE nikkiid=?', (id,))
 
-    def save(self, id, datetime, html, title, tags):
-        new = not bool(id)  # new is True if current nikki is new one
-        if new:
-            id = self.getnewid()
-        parser = richtagparser.NTextParser(strict=False)
-        if not new:
-            try:     # avoid repeating record
-                self.conn.execute('DELETE FROM TextFormat WHERE nikkiid=?',
-                                  (id,))
-            except Exception:
-                pass
-        parser.myfeed(id, html, self.conn)  # format process done here
-        text = parser.getstriped()
-        plain = parser.plain
+    def save(self, new, id, datetime, html, title, tags, plaintxt):
+        id = self.getnewid() if new else id
 
-        values = ((None, datetime, plain, text, title) if new else
-                  (datetime, plain, text, title, id))
+        parser = richtagparser.QtHtmlParser()
+        formats = parser.myfeed(html)
+        plain = not formats
+        values = ((None, datetime, plain, plaintxt, title) if new else
+                  (datetime, plain, plaintxt, title, id))
         cmd = ('INSERT INTO Nikki VALUES(?,?,?,?,?)' if new else
                'UPDATE Nikki SET datetime=?, plaintext=?, '
                'text=?, title=? WHERE id=?')
         try:
-            self.conn.execute(cmd, values)
+            self.exe(cmd, values)
         except Exception:
             logging.warning('Failed saving Nikki (ID: %s)' % id)
             return
         else:
             logging.info('Nikki saved (ID: %s)' % id)
-
+        # formats processing
+        if not new:   # delete existed format information
+            try:
+                self.exe('DELETE FROM TextFormat WHERE nikkiid=?', (id,))
+            except Exception:
+                pass
+        for i in formats:
+            cmd = 'INSERT INTO TextFormat VALUES(?,?,?,?)'
+            self.exe(cmd, (id,)+i)
         # tags processing
         if tags is not None:  # tags modified
             if not new:  # if diary isn't new,delete its tags first
-                self.conn.execute('DELETE FROM Nikki_Tags WHERE nikkiid=?',
-                                  (id,))
+                self.exe('DELETE FROM Nikki_Tags WHERE nikkiid=?', (id,))
             for t in tags:
                 try:
-                    self.conn.execute('INSERT INTO Tags VALUES(NULL,?)', (t,))
+                    self.exe('INSERT INTO Tags VALUES(NULL,?)', (t,))
                 except Exception:
                     pass
             self.commit()
             for t in tags:
-                tagid = self.conn.execute('SELECT id FROM Tags WHERE '
-                                          'name=?', (t,)).fetchone()[0]
-                values = (id, tagid)
-                self.conn.execute('INSERT INTO Nikki_Tags VALUES(?,?)',
-                                  values)
+                cmd = 'SELECT id FROM Tags WHERE name=?'
+                tagid = self.exe(cmd, (t,)).fetchone()[0]
+                self.exe('INSERT INTO Nikki_Tags VALUES(?,?)', (id,tagid))
         self.commit()
         return id
 
