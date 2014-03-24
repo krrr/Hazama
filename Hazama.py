@@ -3,7 +3,7 @@ from PySide.QtCore import *
 import res
 from ui.configdialog import Ui_Settings
 from ui.editor import Ui_Editor
-from ui.customwidgets import SearchBox
+from ui.customwidgets import *
 from ui.customobjects import *
 from db import Nikki
 
@@ -12,6 +12,7 @@ import socket
 import time
 import random
 import logging
+import locale
 
 __version__ = 0.08
 
@@ -38,6 +39,9 @@ def set_trans(settings):
         transQt = QTranslator()
         transQt.load('qt_'+lang, QLibraryInfo.location(QLibraryInfo.TranslationsPath))
         for i in [trans, transQt]: qApp.installTranslator(i)
+        windowslangstr = {'zh_CN': 'chinese-simplified', 'en': 'english',
+                          'ja_JP': 'japanese'}
+        locale.setlocale(locale.LC_ALL, windowslangstr[lang])
 
 def backupcheck(dbpath):
     "Check backups and do if necessary.Delete old backups."
@@ -66,6 +70,25 @@ def backupcheck(dbpath):
                 os.remove(os.path.join(bkpath, dname))
             else:
                 break
+
+def currentdt_str():
+    return time.strftime('%Y-%m-%d %H:%M')
+
+def dt_trans_gen():
+    dtfmt = settings.value('Main/datetimefmt')
+    dfmt = settings.value('Main/datefmt')
+    if dtfmt and dfmt:
+        def dt_trans(s, dateonly=False):
+            try:
+                dt = time.strptime(s, '%Y-%m-%d %H:%M')
+                return time.strftime(dfmt if dateonly else dtfmt, dt)
+            except Exception:
+                logging.warning('Failed to translate datetime string')
+                return s
+    else:
+        def dt_trans(s, dateonly=False):
+            return s.split()[0] if dateonly else s
+    return dt_trans
 
 
 class NListDelegate(QStyledItemDelegate):
@@ -113,7 +136,8 @@ class NListDelegate(QStyledItemDelegate):
         painter.drawLine(x+10, y+self.title_h, x+w-10, y+self.title_h)
         painter.setPen(Qt.black)
         painter.setFont(datefont)
-        painter.drawText(x+14, y, w, self.title_h, Qt.AlignBottom, row['datetime'])
+        painter.drawText(x+14, y, w, self.title_h, Qt.AlignBottom,
+                         dt_trans(row['datetime']))
         if row['title']:
             painter.setFont(titlefont)
             title_w = w-self.dt_w-13
@@ -387,11 +411,12 @@ class Editor(QWidget, Ui_Editor):
         self.textEditor.setAutoIndent(int(settings.value(':/Editor/autoindent', 1)))
         self.titleEditor.setFont(titlefont)
         titlehint = (row['title'] if row else None) or \
-                    (self.datetime.split()[0] if self.datetime else None) or \
+                    (dt_trans(self.datetime,True) if self.datetime else None) or \
                     self.tr('New Diary')
         self.setWindowTitle("%s - Hazama" % titlehint)
         # setup datetime display
-        self.dtLabel.setText(self.datetime if self.datetime is not None else '')
+        self.dtLabel.setText('' if self.datetime is None
+                             else dt_trans(self.datetime))
         self.dtLabel.setFont(datefont)
         self.dtBtn.setIcon(QIcon(':/editor/clock.png'))
         sz = min(dfontm.ascent(), 16)
@@ -434,7 +459,7 @@ class Editor(QWidget, Ui_Editor):
         self.titleEditor.isModified() or self.timeModified or
         self.tagsModified):
             if self.datetime is None:
-                self.datetime = time.strftime('%Y-%m-%d %H:%M')
+                self.datetime = currentdt_str()
             if self.tagsModified:
                 tags = self.tagEditor.text().split()
                 tags = list(filter(lambda t: tags.count(t)==1, tags))
@@ -459,10 +484,11 @@ class Editor(QWidget, Ui_Editor):
 
     @Slot()
     def on_dtBtn_clicked(self):
-        time = DateTimeDialog.getDateTime(self.datetime, self)
-        if time is not None and time!=self.datetime:
-            self.datetime = time
-            self.dtLabel.setText(time)
+        dt = currentdt_str() if self.datetime is None else self.datetime
+        new_dt = DateTimeDialog.getDateTime(dt, self)
+        if new_dt is not None and new_dt!=self.datetime:
+            self.datetime = new_dt
+            self.dtLabel.setText(dt_trans(new_dt))
             self.timeModified = True
 
     def showEvent(self, event):
@@ -474,40 +500,6 @@ class Editor(QWidget, Ui_Editor):
         "Set tagEditor's placeHoderFont to italic"
         fontstyle = 'normal' if text else 'italic'
         self.tagEditor.setStyleSheet('font-style: %s' % fontstyle)
-
-
-class DateTimeDialog(QDialog):
-    timeFmt = "yyyy-MM-dd HH:mm"
-    def __init__(self, timestr, parent=None):
-        super(DateTimeDialog, self).__init__(parent, Qt.WindowTitleHint)
-        self.setWindowModality(Qt.WindowModal)
-        self.setWindowTitle(self.tr('Edit datetime'))
-        self.setMinimumWidth(100)
-
-        self.verticalLayout = QVBoxLayout(self)
-
-        if timestr is None:
-            timestr = time.strftime('%Y-%m-%d %H:%M')
-        dt = QDateTime.fromString(timestr, self.timeFmt)
-        self.dtEdit = QDateTimeEdit(dt)
-        self.dtEdit.setDisplayFormat(self.timeFmt)
-        self.verticalLayout.addWidget(self.dtEdit)
-
-        self.btnBox = QDialogButtonBox()
-        self.btnBox.setOrientation(Qt.Horizontal)
-        self.btnBox.setStandardButtons(QDialogButtonBox.Ok |
-                                       QDialogButtonBox.Cancel)
-        self.verticalLayout.addWidget(self.btnBox)
-
-        self.btnBox.accepted.connect(self.accept)
-        self.btnBox.rejected.connect(self.reject)
-
-    @staticmethod
-    def getDateTime(timestr, parent):
-        "Run Dialog,return None if canceled,otherwise return timestr"
-        dialog = DateTimeDialog(timestr, parent)
-        code = dialog.exec_()
-        return dialog.dtEdit.dateTime().toString(dialog.timeFmt) if code else None
 
 
 class Main(QWidget):
@@ -783,7 +775,9 @@ if __name__ == '__main__':
     appicon.addFile(':/appicon64.png')
     app.setWindowIcon(appicon)
     settings = QSettings('config.ini', QSettings.IniFormat)
+    settings.setIniCodec('UTF-8')
     set_trans(settings)
+    dt_trans = dt_trans_gen()
 
     # setup fonts
     titlefont = QFont()

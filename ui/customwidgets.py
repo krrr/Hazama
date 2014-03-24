@@ -137,9 +137,32 @@ class SearchBox(QLineEdit):
         self.setStyleSheet('QLineEdit{font-style: %s}' % fontstyle)
 
 
+class DateTimeDialog(QDialog):
+    timeFmt = "yyyy-MM-dd HH:mm"
+    def __init__(self, timestr, parent=None):
+        super(DateTimeDialog, self).__init__(parent, Qt.WindowTitleHint)
+        self.setWindowModality(Qt.WindowModal)
+        self.setWindowTitle(self.tr('Edit datetime'))
+        self.setMinimumWidth(100)
+        self.verticalLayout = QVBoxLayout(self)
+        dt = QDateTime.fromString(timestr, self.timeFmt)
+        self.dtEdit = QDateTimeEdit(dt)
+        self.dtEdit.setDisplayFormat(self.timeFmt)
+        self.verticalLayout.addWidget(self.dtEdit)
+        self.btnBox = QDialogButtonBox()
+        self.btnBox.setOrientation(Qt.Horizontal)
+        self.btnBox.setStandardButtons(QDialogButtonBox.Ok |
+                                       QDialogButtonBox.Cancel)
+        self.verticalLayout.addWidget(self.btnBox)
+        self.btnBox.accepted.connect(self.accept)
+        self.btnBox.rejected.connect(self.reject)
 
-
-
+    @staticmethod
+    def getDateTime(timestr, parent):
+        "Run Dialog,return None if canceled,otherwise return timestr"
+        dialog = DateTimeDialog(timestr, parent)
+        code = dialog.exec_()
+        return dialog.dtEdit.dateTime().toString(dialog.timeFmt) if code else None
 
 
 
