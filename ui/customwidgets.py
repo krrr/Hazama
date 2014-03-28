@@ -66,10 +66,8 @@ class NTextEdit(QTextEdit, TextFormatter):
         cur = self.textCursor()
         if cur.hasSelection():
             curtfmt = cur.charFormat()
-            self.hlAct.setChecked(True if curtfmt.background().color() == \
-                                  QColor(255, 250, 160) else False)
-            self.bdAct.setChecked(True if curtfmt.fontWeight() == QFont.Bold \
-                                  else False)
+            self.hlAct.setChecked(curtfmt.background().color()==self.hl_color)
+            self.bdAct.setChecked(curtfmt.fontWeight()==QFont.Bold)
             self.soAct.setChecked(curtfmt.fontStrikeOut())
             self.ulAct.setChecked(curtfmt.fontUnderline())
             self.itaAct.setChecked(curtfmt.fontItalic())

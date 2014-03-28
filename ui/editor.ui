@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="styleSheet">
-   <string notr="true">QWidget::Editor{background-color: rgb(249, 245, 238);}</string>
+   <string notr="true">QWidget#Editor {background-color: rgb(232, 245, 255);}</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="spacing">

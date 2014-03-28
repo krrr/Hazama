@@ -32,7 +32,7 @@ class RichTagParser(HTMLParser):
 
 class QtHtmlParser(HTMLParser):
     "Parse HTML of QTextDocument,return formats information"
-    typedic = {'font-weight:600': 1, 'background-color:#fffaa0' : 2,
+    typedic = {'font-weight:600': 1, 'background-color:' : 2,
                'font-style:italic': 3, 'text-decoration: line-through': 4,
                'text-decoration: underline': 5}
     

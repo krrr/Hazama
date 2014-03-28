@@ -33,15 +33,14 @@ class TextFormatter:
     NTextEdit also use those to set format(called from context-menu).
     If used in NTextDocumment,pre should be True.
     '''
+    hl_color = QColor(248, 162, 109, 100)
     def setHL(self, pre=False):
         fmt = self.textCursor().charFormat()
         if pre:  # called by NTextDocument
             hasFormat = False
         else:  # called by NTextEdit(Editor's context menu)
-            hasFormat = (fmt.background().color() == QColor(255, 250, 160))
-
-        fmt.setBackground(QBrush(Qt.white if hasFormat
-                                 else QColor(255, 250, 160)))
+            hasFormat = (fmt.background().color()==self.hl_color)
+        fmt.setBackground(QBrush(Qt.white if hasFormat else self.hl_color))
         self.textCursor().mergeCharFormat(fmt)
 
     def setBD(self, pre=False):
