@@ -180,7 +180,7 @@ class NListDelegate(QStyledItemDelegate):
 
 class TListDelegate(QStyledItemDelegate):
     '''Default TagList(TList) Delegate.Also contains TList's stylesheet'''
-    TListSS = ('QListWidget{background-color: rgb(234,182,138);'
+    stylesheet = ('QListWidget{background-color: rgb(234,182,138);'
                'border: solid 0px}')
     def __init__(self):
         super(TListDelegate, self).__init__()
@@ -190,13 +190,12 @@ class TListDelegate(QStyledItemDelegate):
         x, y, w= option.rect.x(), option.rect.y(), option.rect.width()
         tag, count = index.data(3), str(index.data(2))
         painter.setFont(defont)
-
         selected = bool(option.state & QStyle.State_Selected)
-
+        textarea = QRect(x+4, y, w-8, self.h)
         if index.row() == 0:  # row 0 is always All(clear tag filter)
             painter.setPen(QColor(80, 80, 80))
-            painter.drawText(x+4, y+1, w-8, self.h-1,
-                             Qt.AlignLeft|Qt.AlignLeft,
+            painter.drawText(textarea,
+                             Qt.AlignVCenter|Qt.AlignLeft,
                              qApp.translate('TList', 'All'))
         else:
             painter.setPen(QColor(209, 109, 63))
@@ -206,11 +205,9 @@ class TListDelegate(QStyledItemDelegate):
                 painter.setPen(QColor(181, 61, 0))
                 painter.setBrush(QColor(250, 250, 250))
                 painter.drawRect(trect)
-
             # draw tag
             painter.setPen(QColor(20, 20, 20) if selected else
                            QColor(80, 80, 80))
-            textarea = QRect(x+4, y, w-8, self.h)
             tag = defontm.elidedText(tag, Qt.ElideRight, w-dfontm.width(count)-12)
             painter.drawText(textarea, Qt.AlignVCenter|Qt.AlignLeft, tag)
             # draw tag count
@@ -616,7 +613,7 @@ class TList(QListWidget):
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollMode(QAbstractItemView.ScrollPerPixel)
         self.setUniformItemSizes(True)
-        self.setStyleSheet(TListDelegate.TListSS)
+        self.setStyleSheet(TListDelegate.stylesheet)
 
     def load(self):
         logging.info('Tag List load')
@@ -740,12 +737,16 @@ if __name__ == '__main__':
     datefont = QFont()
     datefont.fromString(settings.value('/Font/datetime'))
     dfontm = QFontMetrics(datefont)
-    textfont = QFont()  # WenQuanYi Micro Hei
+    textfont = QFont()
     textfont.fromString(settings.value('/Font/text'))
     sysfont = app.font()
-    defont = QFont('Microsoft YaHei', app.font().pointSize())
+    if settings.value('/Font/default'):
+        defont = QFont()
+        defont.fromString(settings.value('/Font/default'))
+        app.setFont(defont)
+    else:
+        defont = sysfont
     defontm = QFontMetrics(defont)
-    app.setFont(defont)
 
     try:
         socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
