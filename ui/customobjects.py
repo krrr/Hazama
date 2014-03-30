@@ -133,3 +133,11 @@ class NTextDocument(QTextDocument, TextFormatter):
         "Make TextFormatter's methods to get right cursor"
         return self.cur
 
+
+class NSplitter(QSplitter):
+    '''Fix default "Split Horizontal" old cursor on split handle'''
+    def createHandle(self):
+        handle = QSplitterHandle(Qt.Horizontal, self)
+        handle.setCursor(Qt.SizeHorCursor)
+        return handle
+

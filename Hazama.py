@@ -221,12 +221,6 @@ class TListDelegate(QStyledItemDelegate):
         return QSize(-1, self.h)
 
 
-class Entry(QListWidgetItem):
-    def __init__(self, row, parent=None):
-        super(Entry, self).__init__(parent)
-        self.setData(2, row)
-
-
 class NList(QListWidget):
     def __init__(self):
         super(NList, self).__init__()
@@ -306,20 +300,20 @@ class NList(QListWidget):
 
     def load(self, *, tagid=None, search=None):
         order, reverse = self.getOrder()
-        for e in nikki.sorted(order, reverse, tagid=tagid, search=search):
-            Entry(e, self)
-
+        for row in nikki.sorted(order, reverse, tagid=tagid, search=search):
+            item = QListWidgetItem(self)
+            item.setData(2, row)
         self.setCurrentRow(0)
 
     def reload(self, id):
         order, reverse = self.getOrder()
         logging.debug('Nikki List reload')
         self.clear()
-        for e in nikki.sorted(order, reverse):
-            if e['id'] == id:
+        for row in nikki.sorted(order, reverse):
+            if row['id'] == id:
                 rownum = self.count()
-            Entry(e, self)
-
+            item = QListWidgetItem(self)
+            item.setData(2, row)
         main.searchbox.clear()
         main.tlist.setCurrentRow(0)
         self.setCurrentRow(rownum)
@@ -505,13 +499,13 @@ class Editor(QWidget, Ui_Editor):
 class Main(QWidget):
     def __init__(self):
         super(Main, self).__init__()
-        self.restoreGeometry(settings.value("Main/windowGeo"))
+        self.restoreGeometry(settings.value("Main/windowgeo"))
         self.setWindowTitle('Hazama Prototype Ver'+str(__version__))
 
         self.nlist = NList()
         self.nlist.load()
         self.tlist = TList()
-        self.splitter = MainSplitter()
+        self.splitter = NSplitter()
         self.toolbar = QToolBar()
         self.searchbox = SearchBox()
         self.countlabel = QLabel()
@@ -520,13 +514,17 @@ class Main(QWidget):
         layout.setContentsMargins(0,0,0,0)
         layout.setSpacing(0)
 
-        # setuo MainSplitter
-        self.splitter.splitterMoved.connect(self.keepTList)
         self.searchbox.textChanged.connect(self.filter)
+        # setuo Splitter
+        self.splitter.setHandleWidth(1)
+        self.splitter.setStyleSheet('QSplitter::handle{background: rgb(181,61,0)}')
         self.splitter.addWidget(self.tlist)
         self.splitter.addWidget(self.nlist)
-        for i in range(2):
-            self.splitter.setCollapsible(i, False)
+        self.splitter.setChildrenCollapsible(False)
+        self.splitter.setStretchFactor(0, 1)
+        self.splitter.setStretchFactor(1, 4)
+        tlist_w = int(settings.value('Main/taglistwidth', 0))
+        self.splitter.setSizes([tlist_w, -1])
 
         # setup ToolBar
         self.creActs()  #create actions
@@ -554,26 +552,16 @@ class Main(QWidget):
         layout.addWidget(self.toolbar)
         layout.addWidget(self.splitter)
         self.setLayout(layout)
-        if not int(settings.value('Main/TListVisible', 0)): self.tlist.hide()
+        if int(settings.value('Main/taglistvisible', 0)):
+            self.tlistAct.setChecked(True)
+        else:
+            self.tlist.hide()
 
     def closeEvent(self, event):
-        settings.setValue('Main/windowGeo', self.saveGeometry())
-        TListWidth = self.splitter.sizes()[0]
-        if TListWidth == 0:
-            settings.setValue('Main/TListVisible', 0)
-        else:
-            settings.setValue('Main/TListVisible', 1)
-
+        settings.setValue('Main/windowgeo', self.saveGeometry())
+        settings.setValue('Main/taglistvisible', int(self.tlist.isVisible()))
         event.accept()
         qApp.quit()
-
-    def keepTList(self, pos=None, index=None, init=False):
-        "keep TList's size when reducing window's width"
-        if init:
-            self.setMinimumWidth(int(settings.value('Main/TListWidth'))+350+2)
-        else:
-            if self.tlist.isVisible():
-                self.setMinimumWidth(pos+350+2)
 
     def filter(self, text=None):
         "Connected to SearchBox and TList.text belongs to SearchBox's event"
@@ -643,21 +631,17 @@ class TList(QListWidget):
 
     def showEvent(self, event):
         self.load()
-        main.keepTList(init=True)
         self.setCurrentRow(0)
         # avoid refreshing nlist by unexpected signal
         self.itemSelectionChanged.connect(main.filter)
-        main.tlistAct.setChecked(True)
 
     def hideEvent(self, event):
-        # Reset minimumWidth which set by Main.keepTList
-        main.setMinimumWidth(350)
         # currentItem is None when tag deleted
-        if self.currentItem() is None or self.currentItem().data(1)!='All':
+        if self.currentItem() is None or self.currentRow()!=0:
             self.setCurrentRow(0)
         # avoid refreshing nlist by unexpected signal
         self.itemSelectionChanged.disconnect(main.filter)
-        settings.setValue('Main/TListWidth', main.splitter.sizes()[0])
+        settings.setValue('Main/taglistwidth', main.splitter.sizes()[0])
 
     # all three events below for drag scroll
     def mousePressEvent(self, event):
@@ -682,37 +666,7 @@ class TList(QListWidget):
         self.tracklst = None
 
 
-class MainSplitter(QSplitter):
-    def __init__(self, parent=None):
-        super(MainSplitter, self).__init__(parent)
-        self.setHandleWidth(2)
-
-    def resizeEvent(self, event):
-        # reference: stackoverflow.com/questions/14397653
-        if event.oldSize().width() != -1:
-            TListWidth = self.sizes()[0]
-            self.setSizes([TListWidth, event.size().width()-2-TListWidth])
-        else:
-            # init, set taglist to saved size
-            w = int(settings.value('Main/TListWidth', 0))
-            self.setSizes([w, event.size().width()-2-w])
-
-    def createHandle(self):
-        handle = TSplitterHandle(Qt.Horizontal, self)
-        handle.setCursor(Qt.SizeHorCursor)
-        return handle
-
-
-class TSplitterHandle(QSplitterHandle):
-    def paintEvent(self, event):
-        w, h = self.size().toTuple()
-        painter = QPainter(self)
-        painter.fillRect(0, 0, w-1, h, QColor(234, 182, 138))  # same as bg of TList
-        painter.fillRect(w-1, 0, 1, h, QColor(181, 61, 0))
-
-
 class ConfigDialog(QDialog, Ui_Settings):
-    # first try that using Qt Designer generated UI.
     lang2index = {'en': 0, 'zh_CN': 1, 'ja': 2}  # index used in combo
     index2lang = {b: a for (a, b) in lang2index.items()}
     def __init__(self, parent=None):
