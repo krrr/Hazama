@@ -382,13 +382,7 @@ class Editor(QWidget, Ui_Editor):
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setupUi(self)
         self.new = new
-        # setup window geometry
-        if int(settings.value("Editor/centeropen", 0)):
-            center = main.geometry().center()
-            w, h = settings.value('Editor/size', (500,400))
-            self.setGeometry(center.x()-w/2, center.y()-h/2, int(w), int(h))
-        else:
-            self.restoreGeometry(settings.value("Editor/windowGeo"))
+        self.restoreGeometry(settings.value("Editor/windowGeo"))
         # setup texteditor and titleeditor, set window title
         if not new:
             self.id = row['id']
@@ -671,7 +665,6 @@ class ConfigDialog(QDialog, Ui_Settings):
         self.setFont(sysfont)
 
         self.aindCheck.setChecked(int(settings.value('Editor/autoindent', 1)))
-        self.copenCheck.setChecked(int(settings.value('Editor/centeropen', 0)))
         self.tfocusCheck.setChecked(int(settings.value('Editor/titlefocus', 0)))
         self.bkCheck.setChecked(int(settings.value('Main/backup', 1)))
         self.langCombo.setCurrentIndex(self.lang2index[
@@ -683,7 +676,6 @@ class ConfigDialog(QDialog, Ui_Settings):
 
     def accept(self):
         settings.setValue('Editor/autoindent', int(self.aindCheck.isChecked()))
-        settings.setValue('Editor/centeropen', int(self.copenCheck.isChecked()))
         settings.setValue('Editor/titlefocus', int(self.tfocusCheck.isChecked()))
         settings.setValue('Main/backup', int(self.bkCheck.isChecked()))
         lang = self.index2lang[self.langCombo.currentIndex()]
@@ -745,18 +737,6 @@ if __name__ == '__main__':
     else:
         defont = sysfont
     defontm = QFontMetrics(defont)
-
-    try:
-        socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        socket.bind(('127.0.0.1', 5002))
-    except OSError:
-        logging.warning('already running,exit')
-        msgbox = QMessageBox()
-        msgbox.setText(qApp.translate('FailStart',
-                                      'Hazama is already running'))
-        msgbox.setWindowTitle('Hazama')
-        msgbox.exec_()
-        sys.exit()
 
     logging.basicConfig(level=logging.DEBUG)
     dbpath = settings.value('/Main/dbpath', 'nikkichou.db')

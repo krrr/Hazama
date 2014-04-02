@@ -117,13 +117,6 @@
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="copenCheck">
-            <property name="text">
-             <string>Open in the center of main window</string>
-            </property>
-           </widget>
-          </item>
-          <item>
            <widget class="QCheckBox" name="tfocusCheck">
             <property name="text">
              <string>Put cursor in title-edit area after showing</string>
