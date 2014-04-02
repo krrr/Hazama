@@ -219,6 +219,7 @@ class TListDelegate(QStyledItemDelegate):
 
 class NList(QListWidget):
     reloaded = Signal()
+    needRefresh = Signal(bool, bool)  # (countlabel, taglist)
     def __init__(self):
         super(NList, self).__init__()
         self.setMinimumSize(350,200)
@@ -257,7 +258,8 @@ class NList(QListWidget):
 
     def starteditor(self, item=None, new=False):
         if new:  # called by newNikki method
-            curtitem = row = id = None
+            curtitem = row = None
+            id = -1
         else:  # called by doubleclick event or contextmenu or key-shortcut
             curtitem = item if item else self.selectedItems()[0]
             row = curtitem.data(2)
@@ -265,13 +267,21 @@ class NList(QListWidget):
         if id in self.editors:
             self.editors[id].activateWindow()
         else:  # create new editor
-            editor = Editor(new=id is None, row=row)
+            editor = Editor(new=new, row=row)
+            editor.closed.connect(self.on_editor_closed)
             self.editors[id] = editor
+            editor.setEditorId(id)
             editor.item = curtitem
             if not new:
                 editor.nextSc.activated.connect(self.editorNext)
                 editor.preSc.activated.connect(self.editorPrevious)
             editor.show()
+
+    def on_editor_closed(self, editorid, nikkiid, tagsModified):
+        if nikkiid != -1:
+            self.reload(nikkiid)
+            self.needRefresh.emit(editorid==-1, tagsModified)
+        del self.editors[editorid]
 
     def delNikki(self):
         msgbox = QMessageBox(QMessageBox.NoIcon,
@@ -282,14 +292,11 @@ class NList(QListWidget):
                              parent=self)
         msgbox.setDefaultButton(QMessageBox.Cancel)
         ret = msgbox.exec_()
-
         if ret == QMessageBox.Yes:
             for i in self.selectedItems():
                 nikki.delete(i.data(2)['id'])
                 self.takeItem(self.row(i))
-            if main.tlist.isVisible(): main.tlist.load()
-            main.updateCountLabel()
-
+            self.needRefresh.emit(True, True)
         # QWidget.destroy() doesn't work
         msgbox.deleteLater()
 
@@ -376,7 +383,11 @@ class NList(QListWidget):
 
 
 class Editor(QWidget, Ui_Editor):
-    "Widget used to edit diary's body,title,tag, datetime."
+    '''Widget used to edit diary's body,title,tag,datetime.
+    Signal closed: (editorid, nikkiid, tagsModified),nikkiid is -1
+    if canceled or no need to save.
+    '''
+    closed = Signal(int, int, bool)
     def __init__(self, new, row):
         super(Editor, self).__init__()
         self.setAttribute(Qt.WA_DeleteOnClose)
@@ -385,13 +396,12 @@ class Editor(QWidget, Ui_Editor):
         self.restoreGeometry(settings.value("Editor/windowGeo"))
         # setup texteditor and titleeditor, set window title
         if not new:
-            self.id = row['id']
             self.datetime = row['datetime']
             self.titleEditor.setText(row['title'])
             formats = None if row['plaintext'] else nikki.getformat(row['id'])
             self.textEditor.setText(row['text'], formats)
         else:
-            self.id = self.datetime = None
+            self.datetime = None
         self.textEditor.setFont(textfont)
         self.textEditor.setAutoIndent(int(settings.value(':/Editor/autoindent', 1)))
         self.titleEditor.setFont(titlefont)
@@ -421,22 +431,20 @@ class Editor(QWidget, Ui_Editor):
         self.nextSc = QShortcut(QKeySequence(Qt.CTRL+Qt.Key_PageDown), self)
 
     def closeEvent(self, event):
-        "Save geometry information and diary(if changed)"
-        if int(settings.value('Editor/centeropen', 0)):
-            settings.setValue('Editor/size', self.size().toTuple())
-        else:
-            settings.setValue('Editor/windowGeo', self.saveGeometry())
-        self.saveNikki()
+        "Save geometry information and diary"
+        settings.setValue('Editor/windowGeo', self.saveGeometry())
+        nikkiid = self.saveNikki()
         event.accept()
-        del main.nlist.editors[self.id]
+        self.closed.emit(self.id, nikkiid, self.tagsModified)
 
     def closeNoSave(self):
+        settings.setValue('Editor/windowGeo', self.saveGeometry())
         self.hide()
         self.deleteLater()
-        del main.nlist.editors[self.id]
+        self.closed.emit(self.id, -1, False)
 
     def saveNikki(self):
-        "Save when necessary;Refresh NList and TList when necessary"
+        "Save if changed and return nikkiid,else return -1"
         if (self.textEditor.document().isModified() or
         self.titleEditor.isModified() or self.timeModified or
         self.tagsModified):
@@ -453,11 +461,9 @@ class Editor(QWidget, Ui_Editor):
                                 plaintxt=self.textEditor.toPlainText(),
                                 title=self.titleEditor.text(),
                                 tags=tags, new=self.new)
-            main.nlist.reload(realid)
-            if self.new: main.updateCountLabel()
-
-        if self.tagsModified and main.tlist.isVisible():
-            main.tlist.load()
+            return realid
+        else:
+            return -1
 
     @Slot()
     def on_tagEditor_textEdited(self):
@@ -483,6 +489,9 @@ class Editor(QWidget, Ui_Editor):
         fontstyle = 'normal' if text else 'italic'
         self.tagEditor.setStyleSheet('font-style: %s' % fontstyle)
 
+    def setEditorId(self, id):
+        self.id = id
+
 
 class Main(QWidget):
     def __init__(self):
@@ -503,6 +512,7 @@ class Main(QWidget):
         layout.setSpacing(0)
 
         self.searchbox.textChanged.connect(self.filter)
+        self.nlist.needRefresh.connect(self.on_nlist_needRefresh)
         # setuo Splitter
         self.splitter.setHandleWidth(1)
         self.splitter.setStyleSheet('QSplitter::handle{background: rgb(181,61,0)}')
@@ -609,7 +619,10 @@ class Main(QWidget):
     def on_nlist_reloaded(self):
         self.searchbox.clear()
         self.tlist.setCurrentRow(0)
-        self.updateCountLabel()
+
+    def on_nlist_needRefresh(self, label, tlist):
+        if label: self.updateCountLabel()
+        if tlist and self.tlist.isVisible(): self.tlist.load()
 
 
 class TList(QListWidget):
