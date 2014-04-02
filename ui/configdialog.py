@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'configdialog.ui'
 #
-# Created: Wed Mar 19 12:53:59 2014
+# Created: Wed Apr  2 19:27:17 2014
 #      by: pyside-uic 0.2.15 running on PySide 1.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -60,9 +60,6 @@ class Ui_Settings(object):
         self.aindCheck = QtGui.QCheckBox(self.editorBox)
         self.aindCheck.setObjectName("aindCheck")
         self.verticalLayout_7.addWidget(self.aindCheck)
-        self.copenCheck = QtGui.QCheckBox(self.editorBox)
-        self.copenCheck.setObjectName("copenCheck")
-        self.verticalLayout_7.addWidget(self.copenCheck)
         self.tfocusCheck = QtGui.QCheckBox(self.editorBox)
         self.tfocusCheck.setObjectName("tfocusCheck")
         self.verticalLayout_7.addWidget(self.tfocusCheck)
@@ -166,7 +163,6 @@ class Ui_Settings(object):
         self.langCombo.setItemText(2, QtGui.QApplication.translate("Settings", "日本語", None, QtGui.QApplication.UnicodeUTF8))
         self.editorBox.setTitle(QtGui.QApplication.translate("Settings", "Editor", None, QtGui.QApplication.UnicodeUTF8))
         self.aindCheck.setText(QtGui.QApplication.translate("Settings", "Auto indent", None, QtGui.QApplication.UnicodeUTF8))
-        self.copenCheck.setText(QtGui.QApplication.translate("Settings", "Open in the center of main window", None, QtGui.QApplication.UnicodeUTF8))
         self.tfocusCheck.setText(QtGui.QApplication.translate("Settings", "Put cursor in title-edit area after showing", None, QtGui.QApplication.UnicodeUTF8))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.general), QtGui.QApplication.translate("Settings", "General", None, QtGui.QApplication.UnicodeUTF8))
         self.bkBox.setTitle(QtGui.QApplication.translate("Settings", "Backup", None, QtGui.QApplication.UnicodeUTF8))

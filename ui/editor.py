@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'editor.ui'
 #
-# Created: Wed Mar 19 12:54:00 2014
+# Created: Wed Apr  2 19:27:18 2014
 #      by: pyside-uic 0.2.15 running on PySide 1.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -13,7 +13,7 @@ class Ui_Editor(object):
     def setupUi(self, Editor):
         Editor.setObjectName("Editor")
         Editor.resize(400, 300)
-        Editor.setStyleSheet("QWidget::Editor{background-color: rgb(249, 245, 238);}")
+        Editor.setStyleSheet("QWidget#Editor {background-color: rgb(232, 245, 255);}")
         self.verticalLayout = QtGui.QVBoxLayout(Editor)
         self.verticalLayout.setSpacing(0)
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)

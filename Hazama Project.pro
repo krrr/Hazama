@@ -1,6 +1,4 @@
 ﻿SOURCES = Hazama.py \
-	      ui/configdialog.py \
-		  ui/editor.py \
 		  ui/customwidgets.py \
 		  ui/customobjects.py
 TRANSLATIONS = lang/zh_CN.ts

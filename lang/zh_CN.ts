@@ -1,15 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
-<TS version="2.0" language="zh">
+<!DOCTYPE TS><TS version="1.1" language="zh">
 <context>
     <name>ConfigDialog</name>
     <message>
-        <location filename="Hazama.py" line="761"/>
+        <location filename="Hazama.py" line="697"/>
         <source>Export Diary</source>
         <translation>导出日记</translation>
     </message>
     <message>
-        <location filename="Hazama.py" line="762"/>
+        <location filename="Hazama.py" line="698"/>
         <source>Plain Text (*.txt);;Rich Text (*.rtf)</source>
         <translation>纯文本 (*.txt);;富文本 (*.rtf)</translation>
     </message>
@@ -22,7 +21,7 @@
         <translation type="obsolete">修改创建时间</translation>
     </message>
     <message>
-        <location filename="Hazama.py" line="481"/>
+        <location filename="ui/customwidgets.py" line="143"/>
         <source>Edit datetime</source>
         <translation>修改日期</translation>
     </message>
@@ -30,7 +29,7 @@
 <context>
     <name>Editor</name>
     <message>
-        <location filename="Hazama.py" line="392"/>
+        <location filename="Hazama.py" line="401"/>
         <source>New Diary</source>
         <translation>新的日记</translation>
     </message>
@@ -44,7 +43,7 @@ Modified: %s</source>
     <message>
         <location filename="ui/editor.py" line="75"/>
         <source>Tags separated by space</source>
-        <translation>被空格分开的标签们</translation>
+        <translation type="obsolete">被空格分开的标签们</translation>
     </message>
 </context>
 <context>
@@ -75,35 +74,35 @@ Modified: %s</source>
 <context>
     <name>FailStart</name>
     <message>
-        <location filename="Hazama.py" line="803"/>
+        <location filename="Hazama.py" line="809"/>
         <source>Hazama is already running</source>
-        <translation>Hazama已经在运行</translation>
+        <translation type="obsolete">Hazama已经在运行</translation>
     </message>
 </context>
 <context>
     <name>Main</name>
     <message>
-        <location filename="Hazama.py" line="600"/>
+        <location filename="Hazama.py" line="569"/>
         <source>Tag List</source>
         <translation>标签侧边栏</translation>
     </message>
     <message>
-        <location filename="Hazama.py" line="604"/>
+        <location filename="Hazama.py" line="573"/>
         <source>New</source>
         <translation>新的日记</translation>
     </message>
     <message>
-        <location filename="Hazama.py" line="607"/>
+        <location filename="Hazama.py" line="576"/>
         <source>Delete</source>
         <translation>删除</translation>
     </message>
     <message>
-        <location filename="Hazama.py" line="609"/>
+        <location filename="Hazama.py" line="578"/>
         <source>Sort By</source>
         <translation>排序方式</translation>
     </message>
     <message>
-        <location filename="Hazama.py" line="610"/>
+        <location filename="Hazama.py" line="579"/>
         <source>Settings</source>
         <translation>设置</translation>
     </message>
@@ -113,7 +112,7 @@ Modified: %s</source>
         <translation type="obsolete">%i 篇日记</translation>
     </message>
     <message>
-        <location filename="Hazama.py" line="626"/>
+        <location filename="Hazama.py" line="607"/>
         <source>%i diaries</source>
         <translation>%i 篇日记</translation>
     </message>
@@ -121,12 +120,12 @@ Modified: %s</source>
 <context>
     <name>NList</name>
     <message>
-        <location filename="Hazama.py" line="219"/>
+        <location filename="Hazama.py" line="234"/>
         <source>Edit</source>
         <translation>编辑</translation>
     </message>
     <message>
-        <location filename="Hazama.py" line="222"/>
+        <location filename="Hazama.py" line="237"/>
         <source>Delete</source>
         <translation>删除</translation>
     </message>
@@ -151,7 +150,7 @@ Modified: %s</source>
         <translation type="obsolete">全选</translation>
     </message>
     <message>
-        <location filename="Hazama.py" line="225"/>
+        <location filename="Hazama.py" line="240"/>
         <source>Random</source>
         <translation>随机</translation>
     </message>
@@ -166,12 +165,12 @@ Modified: %s</source>
         <translation type="obsolete">选中的日记将被永久删除，确认码？</translation>
     </message>
     <message>
-        <location filename="Hazama.py" line="262"/>
+        <location filename="Hazama.py" line="278"/>
         <source>Delete selected diaries</source>
         <translation>删除选中的日记</translation>
     </message>
     <message>
-        <location filename="Hazama.py" line="264"/>
+        <location filename="Hazama.py" line="280"/>
         <source>Selected diaries will be deleted permanently.Do it?</source>
         <translation>选中的日记将被永久删除，确认码？</translation>
     </message>
@@ -217,7 +216,7 @@ Modified: %s</source>
 <context>
     <name>SearchBox</name>
     <message>
-        <location filename="ui/customwidgets.py" line="122"/>
+        <location filename="ui/customwidgets.py" line="120"/>
         <source>Search</source>
         <translation>搜索</translation>
     </message>
@@ -227,17 +226,17 @@ Modified: %s</source>
     <message>
         <location filename="ui/configdialog.py" line="162"/>
         <source>Settings</source>
-        <translation>设置</translation>
+        <translation type="obsolete">设置</translation>
     </message>
     <message>
         <location filename="ui/configdialog.py" line="171"/>
         <source>General</source>
-        <translation>常规</translation>
+        <translation type="obsolete">常规</translation>
     </message>
     <message>
         <location filename="ui/configdialog.py" line="172"/>
         <source>Backup</source>
-        <translation>备份</translation>
+        <translation type="obsolete">备份</translation>
     </message>
     <message>
         <location filename="ui/configration.py" line="171"/>
@@ -252,12 +251,12 @@ Modified: %s</source>
     <message>
         <location filename="ui/configdialog.py" line="178"/>
         <source>All diary</source>
-        <translation>全部日记</translation>
+        <translation type="obsolete">全部日记</translation>
     </message>
     <message>
         <location filename="ui/configdialog.py" line="179"/>
         <source>Selected diary</source>
-        <translation>选中的日记</translation>
+        <translation type="obsolete">选中的日记</translation>
     </message>
     <message>
         <location filename="ui/configration.py" line="179"/>
@@ -267,12 +266,7 @@ Modified: %s</source>
     <message>
         <location filename="ui/configdialog.py" line="163"/>
         <source>Language:</source>
-        <translation>语言:</translation>
-    </message>
-    <message>
-        <location filename="ui/configdialog.py" line="164"/>
-        <source>English</source>
-        <translation>英语</translation>
+        <translation type="obsolete">语言:</translation>
     </message>
     <message>
         <location filename="ui/configdialog.py" line="180"/>
@@ -287,42 +281,32 @@ Modified: %s</source>
     <message>
         <location filename="ui/configdialog.py" line="167"/>
         <source>Editor</source>
-        <translation>编辑器</translation>
+        <translation type="obsolete">编辑器</translation>
     </message>
     <message>
         <location filename="ui/configdialog.py" line="168"/>
         <source>Auto indent</source>
-        <translation>自动缩进</translation>
+        <translation type="obsolete">自动缩进</translation>
     </message>
     <message>
         <location filename="ui/configdialog.py" line="169"/>
         <source>Open in the center of main window</source>
-        <translation>相对于主窗口居中打开</translation>
+        <translation type="obsolete">相对于主窗口居中打开</translation>
     </message>
     <message>
         <location filename="ui/configdialog.py" line="176"/>
         <source>Export</source>
-        <translation>导出</translation>
+        <translation type="obsolete">导出</translation>
     </message>
     <message>
         <location filename="ui/configdialog.py" line="181"/>
         <source>Diary</source>
-        <translation>日记本</translation>
+        <translation type="obsolete">日记本</translation>
     </message>
     <message>
         <location filename="ui/configdialog.py" line="182"/>
         <source>Appearance</source>
-        <translation>外观</translation>
-    </message>
-    <message utf8="true">
-        <location filename="ui/configdialog.py" line="165"/>
-        <source>简体中文</source>
-        <translation></translation>
-    </message>
-    <message utf8="true">
-        <location filename="ui/configdialog.py" line="166"/>
-        <source>日本語</source>
-        <translation></translation>
+        <translation type="obsolete">外观</translation>
     </message>
     <message>
         <location filename="ui/configdialog.py" line="168"/>
@@ -333,12 +317,12 @@ Modified: %s</source>
     <message>
         <location filename="ui/configdialog.py" line="174"/>
         <source>Enable backup</source>
-        <translation>启用备份</translation>
+        <translation type="obsolete">启用备份</translation>
     </message>
     <message>
         <location filename="ui/configdialog.py" line="175"/>
         <source>Restore</source>
-        <translation>恢复</translation>
+        <translation type="obsolete">恢复</translation>
     </message>
     <message>
         <location filename="ui/configdialog.py" line="173"/>
@@ -349,12 +333,12 @@ Modified: %s</source>
     <message>
         <location filename="ui/configdialog.py" line="180"/>
         <source>Save as...</source>
-        <translation>另存为...</translation>
+        <translation type="obsolete">另存为...</translation>
     </message>
     <message>
         <location filename="ui/configdialog.py" line="173"/>
         <source>Backup every day and keep each one for a week.</source>
-        <translation>每天备份，每份保留一个星期。</translation>
+        <translation type="obsolete">每天备份，每份保留一个星期。</translation>
     </message>
     <message>
         <location filename="ui/configdialog.py" line="173"/>
@@ -364,12 +348,12 @@ Modified: %s</source>
     <message>
         <location filename="ui/configdialog.py" line="177"/>
         <source>Export diary to single plain text file or RTF file.</source>
-        <translation>导出日记到单个纯文本文件或富文本文件。</translation>
+        <translation type="obsolete">导出日记到单个纯文本文件或富文本文件。</translation>
     </message>
     <message>
         <location filename="ui/configdialog.py" line="170"/>
         <source>Put cursor in title-edit area after showing</source>
-        <translation>打开时使光标位于标题编辑区域</translation>
+        <translation type="obsolete">打开时使光标位于标题编辑区域</translation>
     </message>
 </context>
 <context>
@@ -385,7 +369,7 @@ Modified: %s</source>
         <translation type="obsolete">修改日期</translation>
     </message>
     <message>
-        <location filename="ui/customobjects.py" line="96"/>
+        <location filename="ui/customobjects.py" line="95"/>
         <source>Title</source>
         <translation>标题</translation>
     </message>
@@ -395,17 +379,17 @@ Modified: %s</source>
         <translation type="obsolete">大小</translation>
     </message>
     <message>
-        <location filename="ui/customobjects.py" line="98"/>
+        <location filename="ui/customobjects.py" line="97"/>
         <source>Reverse</source>
         <translation>倒序排列</translation>
     </message>
     <message>
-        <location filename="ui/customobjects.py" line="97"/>
+        <location filename="ui/customobjects.py" line="96"/>
         <source>Length</source>
         <translation>长度</translation>
     </message>
     <message>
-        <location filename="ui/customobjects.py" line="95"/>
+        <location filename="ui/customobjects.py" line="94"/>
         <source>Date</source>
         <translation>日期</translation>
     </message>
@@ -413,7 +397,7 @@ Modified: %s</source>
 <context>
     <name>TList</name>
     <message>
-        <location filename="Hazama.py" line="176"/>
+        <location filename="Hazama.py" line="198"/>
         <source>All</source>
         <translation>全部</translation>
     </message>
