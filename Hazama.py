@@ -8,7 +8,6 @@ from ui.customobjects import *
 from db import Nikki
 
 import sys, os
-import socket
 import time
 import random
 import logging
@@ -219,6 +218,7 @@ class TListDelegate(QStyledItemDelegate):
 
 
 class NList(QListWidget):
+    reloaded = Signal()
     def __init__(self):
         super(NList, self).__init__()
         self.setMinimumSize(350,200)
@@ -256,20 +256,21 @@ class NList(QListWidget):
         menu.popup(event.globalPos())
 
     def starteditor(self, item=None, new=False):
-        # called by doubleclick event or contextmenu or key-shortcut
-        if not new:
+        if new:  # called by newNikki method
+            curtitem = row = id = None
+        else:  # called by doubleclick event or contextmenu or key-shortcut
             curtitem = item if item else self.selectedItems()[0]
-            nikki = curtitem.data(2)
-            id = nikki['id']
-        else:
-            curtitem = nikki = id = None
-
+            row = curtitem.data(2)
+            id = row['id']
         if id in self.editors:
             self.editors[id].activateWindow()
         else:  # create new editor
-            editor = Editor(new=True if id is None else False, row=nikki)
+            editor = Editor(new=id is None, row=row)
             self.editors[id] = editor
             editor.item = curtitem
+            if not new:
+                editor.nextSc.activated.connect(self.editorNext)
+                editor.preSc.activated.connect(self.editorPrevious)
             editor.show()
 
     def delNikki(self):
@@ -311,9 +312,8 @@ class NList(QListWidget):
                 rownum = self.count()
             item = QListWidgetItem(self)
             item.setData(2, row)
-        main.searchbox.clear()
-        main.tlist.setCurrentRow(0)
         self.setCurrentRow(rownum)
+        self.reloaded.emit()
 
     def getOrder(self):
         "get sort order(str) and reverse(int) from settings file"
@@ -423,11 +423,8 @@ class Editor(QWidget, Ui_Editor):
         self.closeSaveSc.activated.connect(self.close)
         self.closeSaveSc2 = QShortcut(QKeySequence(Qt.Key_Escape), self)
         self.closeSaveSc2.activated.connect(self.close)
-        if not new:
-            self.preSc = QShortcut(QKeySequence(Qt.CTRL+Qt.Key_PageUp), self)
-            self.preSc.activated.connect(main.nlist.editorPrevious)
-            self.nextSc = QShortcut(QKeySequence(Qt.CTRL+Qt.Key_PageDown), self)
-            self.nextSc.activated.connect(main.nlist.editorNext)
+        self.preSc = QShortcut(QKeySequence(Qt.CTRL+Qt.Key_PageUp), self)
+        self.nextSc = QShortcut(QKeySequence(Qt.CTRL+Qt.Key_PageDown), self)
 
     def closeEvent(self, event):
         "Save geometry information and diary(if changed)"
@@ -550,37 +547,35 @@ class Main(QWidget):
         layout.addWidget(self.splitter)
         self.setLayout(layout)
         if int(settings.value('Main/taglistvisible', 0)):
-            self.tlistAct.setChecked(True)
+            self.tlistAct.trigger()
         else:
             self.tlist.hide()
 
     def closeEvent(self, event):
         settings.setValue('Main/windowgeo', self.saveGeometry())
-        settings.setValue('Main/taglistvisible', int(self.tlist.isVisible()))
+        taglistvisible = self.tlist.isVisible()
+        settings.setValue('Main/taglistvisible', int(taglistvisible))
+        if taglistvisible:
+            settings.setValue('Main/taglistwidth', self.splitter.sizes()[0])
         event.accept()
         qApp.quit()
 
     def filter(self, text=None):
-        "Connected to SearchBox and TList.text belongs to SearchBox's event"
-        text = self.searchbox.text()
+        '''Connected to SearchBox and TagList.Argument "text" belongs to SearchBox'''
+        text = self.searchbox.text() if text is None else text
         try:
-            tagid = self.tlist.currentItem().data(1)
-        except AttributeError:  # TList hidden
+            data = self.tlist.currentItem().data(1)
+            tagid = None if data=='All' else data
+        except AttributeError:  # TagList hidden
             tagid = None
-        search = text if text else None
-
-        if tagid == 'All':
-            self.nlist.clear()
-            self.nlist.load(search=search)
-        else:
-            self.nlist.clear()
-            self.nlist.load(tagid=tagid, search=search)
+        self.nlist.clear()
+        self.nlist.load(tagid=tagid, search=text if text else None)
 
     def creActs(self):
         self.tlistAct = QAction(QIcon(':/images/tlist.png'), self.tr('Tag List'),
                                 self, shortcut=QKeySequence(Qt.Key_F9))
         self.tlistAct.setCheckable(True)
-        self.tlistAct.triggered[bool].connect(self.setTList)
+        self.tlistAct.triggered[bool].connect(self.toggleTagList)
         self.creAct = QAction(QIcon(':/images/new.png'), self.tr('New'),
                               self, shortcut=QKeySequence.New,
                               triggered=self.nlist.newNikki)
@@ -594,8 +589,20 @@ class Main(QWidget):
         self.cfgdialog = ConfigDialog(self)
         self.cfgdialog.show()
 
-    def setTList(self, checked):
-        self.tlist.setVisible(checked)
+    def toggleTagList(self, checked):
+        lst = self.tlist
+        lst.setVisible(checked)
+        if checked:
+            lst.load()
+            lst.setCurrentRow(0)
+            lst.itemSelectionChanged.connect(self.filter)
+        else:
+            # currentItem is None when tag deleted
+            if lst.currentItem() is None or lst.currentRow()!=0:
+                lst.setCurrentRow(0)  # reset filter
+            # avoid refreshing nlist by unexpected signal
+            lst.itemSelectionChanged.disconnect(self.filter)
+            settings.setValue('Main/taglistwidth', self.splitter.sizes()[0])
 
     def showEvent(self, event):
         self.nlist.setFocus()
@@ -604,6 +611,11 @@ class Main(QWidget):
         "Only called when diary saving or deleting"
         c = nikki.count()
         if c > 1: self.countlabel.setText(self.tr('%i diaries') % c)
+
+    def on_nlist_reloaded(self):
+        self.searchbox.clear()
+        self.tlist.setCurrentRow(0)
+        self.updateCountLabel()
 
 
 class TList(QListWidget):
@@ -625,20 +637,6 @@ class TList(QListWidget):
             item.setData(3, t[1])
             item.setData(2, t[2])
             item.setData(1, t[0])
-
-    def showEvent(self, event):
-        self.load()
-        self.setCurrentRow(0)
-        # avoid refreshing nlist by unexpected signal
-        self.itemSelectionChanged.connect(main.filter)
-
-    def hideEvent(self, event):
-        # currentItem is None when tag deleted
-        if self.currentItem() is None or self.currentRow()!=0:
-            self.setCurrentRow(0)
-        # avoid refreshing nlist by unexpected signal
-        self.itemSelectionChanged.disconnect(main.filter)
-        settings.setValue('Main/taglistwidth', main.splitter.sizes()[0])
 
     # all three events below for drag scroll
     def mousePressEvent(self, event):
