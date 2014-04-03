@@ -16,19 +16,10 @@ import locale
 __version__ = 0.08
 
 
-def restart_main():
-    "Restart Main Window after language changed in settings."
-    logging.debug('restart_main called')
-    global main
-    geo = main.saveGeometry()
-    # delete the only reference to old one
-    main = Main()
-    main.restoreGeometry(geo)
-    main.show()
-
-def set_trans(settings):
+def set_trans():
     "Install translations"
     lang = settings.value('Main/lang')
+    logging.info('Set translation(%s)', lang)
     if lang is None:
         settings.setValue('Main/lang', 'en')
     else:
@@ -178,7 +169,7 @@ class NListDelegate(QStyledItemDelegate):
 
 
 class TListDelegate(QStyledItemDelegate):
-    '''Default TagList(TList) Delegate.Also contains TList's stylesheet'''
+    '''Default TagList Delegate.Also contains TList's stylesheet'''
     stylesheet = ('QListWidget{background-color: rgb(234,182,138);'
                'border: solid 0px}')
     def __init__(self):
@@ -217,11 +208,11 @@ class TListDelegate(QStyledItemDelegate):
         return QSize(-1, self.h)
 
 
-class NList(QListWidget):
+class NikkiList(QListWidget):
     reloaded = Signal()
     needRefresh = Signal(bool, bool)  # (countlabel, taglist)
     def __init__(self):
-        super(NList, self).__init__()
+        super(NikkiList, self).__init__()
         self.setMinimumSize(350,200)
         self.editors = {}
 
@@ -281,6 +272,7 @@ class NList(QListWidget):
         if nikkiid != -1:
             self.reload(nikkiid)
             self.needRefresh.emit(editorid==-1, tagsModified)
+        self.editors[editorid].destroy()
         del self.editors[editorid]
 
     def delNikki(self):
@@ -340,18 +332,16 @@ class NList(QListWidget):
     def editorMove(self, step):
         '''Move to the Previous/Next Diary in Editor.Current
         Editor will close without saving,'''
-        curtEditor = [k for k in self.editors.values()][0]
+        curtEditor = list(self.editors.values())[0]
         try:
             index = self.row(curtEditor.item)
         except RuntimeError:  # C++ object already deleted
             return
         # disabled when multi-editor or editing new diary(if new,
         # shortcut would not be set) or no item to move on.
-        if len(self.editors) != 1 or index is None:
-            return
-        elif step == 1 and not index < self.count()-1:
-            return
-        elif step == -1 and not 0 < index:
+        if (len(self.editors) != 1 or index is None or
+            (step == 1 and index >= self.count()-1) or
+            (step == -1 and 0 >= index)):
             return
         else:
             self.setCurrentRow(index+step)
@@ -390,10 +380,9 @@ class Editor(QWidget, Ui_Editor):
     closed = Signal(int, int, bool)
     def __init__(self, new, row):
         super(Editor, self).__init__()
-        self.setAttribute(Qt.WA_DeleteOnClose)
         self.setupUi(self)
         self.new = new
-        self.restoreGeometry(settings.value("Editor/windowGeo"))
+        self.restoreGeometry(settings.value('Editor/windowgeo'))
         # setup texteditor and titleeditor, set window title
         if not new:
             self.datetime = row['datetime']
@@ -403,7 +392,7 @@ class Editor(QWidget, Ui_Editor):
         else:
             self.datetime = None
         self.textEditor.setFont(textfont)
-        self.textEditor.setAutoIndent(int(settings.value(':/Editor/autoindent', 1)))
+        self.textEditor.setAutoIndent(int(settings.value('Editor/autoindent', 1)))
         self.titleEditor.setFont(titlefont)
         titlehint = (row['title'] if row else None) or \
                     (dt_trans(self.datetime,True) if self.datetime else None) or \
@@ -432,15 +421,14 @@ class Editor(QWidget, Ui_Editor):
 
     def closeEvent(self, event):
         "Save geometry information and diary"
-        settings.setValue('Editor/windowGeo', self.saveGeometry())
+        settings.setValue('Editor/windowgeo', self.saveGeometry())
         nikkiid = self.saveNikki()
         event.accept()
         self.closed.emit(self.id, nikkiid, self.tagsModified)
 
     def closeNoSave(self):
-        settings.setValue('Editor/windowGeo', self.saveGeometry())
+        settings.setValue('Editor/windowgeo', self.saveGeometry())
         self.hide()
-        self.deleteLater()
         self.closed.emit(self.id, -1, False)
 
     def saveNikki(self):
@@ -493,15 +481,17 @@ class Editor(QWidget, Ui_Editor):
         self.id = id
 
 
-class Main(QWidget):
+class MainWindow(QWidget):
+    closed = Signal()
+    needRestart = Signal()
     def __init__(self):
-        super(Main, self).__init__()
+        super(MainWindow, self).__init__()
         self.restoreGeometry(settings.value("Main/windowgeo"))
         self.setWindowTitle('Hazama Prototype Ver'+str(__version__))
 
-        self.nlist = NList()
+        self.nlist = NikkiList()
         self.nlist.load()
-        self.tlist = TList()
+        self.tlist = TagList()
         self.splitter = NSplitter()
         self.toolbar = QToolBar()
         self.searchbox = SearchBox()
@@ -561,8 +551,8 @@ class Main(QWidget):
         settings.setValue('Main/taglistvisible', int(taglistvisible))
         if taglistvisible:
             settings.setValue('Main/taglistwidth', self.splitter.sizes()[0])
+        self.closed.emit()
         event.accept()
-        qApp.quit()
 
     def filter(self, text=None):
         '''Connected to SearchBox and TagList.Argument "text" belongs to SearchBox'''
@@ -590,8 +580,11 @@ class Main(QWidget):
                               self, triggered=self.startConfigDialog)
 
     def startConfigDialog(self):
-        self.cfgdialog = ConfigDialog(self)
-        self.cfgdialog.show()
+        try:
+            self.cfgdialog.activateWindow()
+        except (AttributeError, RuntimeError):
+            self.cfgdialog = ConfigDialog(self)
+            self.cfgdialog.show()
 
     def toggleTagList(self, checked):
         lst = self.tlist
@@ -625,9 +618,9 @@ class Main(QWidget):
         if tlist and self.tlist.isVisible(): self.tlist.load()
 
 
-class TList(QListWidget):
+class TagList(QListWidget):
     def __init__(self):
-        super(TList, self).__init__()
+        super(TagList, self).__init__()
         self.setItemDelegate(TListDelegate())
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollMode(QAbstractItemView.ScrollPerPixel)
@@ -673,19 +666,16 @@ class ConfigDialog(QDialog, Ui_Settings):
     index2lang = {b: a for (a, b) in lang2index.items()}
     def __init__(self, parent=None):
         super(ConfigDialog, self).__init__(parent, Qt.WindowTitleHint)
+        self.parent = parent
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setupUi(self)
         self.setFont(sysfont)
-
+        # load settings
         self.aindCheck.setChecked(int(settings.value('Editor/autoindent', 1)))
         self.tfocusCheck.setChecked(int(settings.value('Editor/titlefocus', 0)))
         self.bkCheck.setChecked(int(settings.value('Main/backup', 1)))
         self.langCombo.setCurrentIndex(self.lang2index[
                                        settings.value('Main/lang', 'en')])
-
-    def closeEvent(self, event):
-        del main.cfgdialog
-        event.accept()
 
     def accept(self):
         settings.setValue('Editor/autoindent', int(self.aindCheck.isChecked()))
@@ -694,14 +684,12 @@ class ConfigDialog(QDialog, Ui_Settings):
         lang = self.index2lang[self.langCombo.currentIndex()]
         if settings.value('Main/lang') != lang:
             settings.setValue('Main/lang', lang)
-            set_trans(settings)
-            restart_main()
-        logging.info('Settings saved')
-        try:
-            super(ConfigDialog, self).accept()
-        except RuntimeError:
-            # main.cfgdialog has been deleted after restart_main
-            pass
+            logging.info('Settings saved')
+            self.parent.needRestart.emit()
+            del self.parent
+        else:
+            logging.info('Settings saved')
+            self.close()
 
     @Slot()
     def on_exportBtn_clicked(self):
@@ -709,18 +697,39 @@ class ConfigDialog(QDialog, Ui_Settings):
         txtpath, type = QFileDialog.getSaveFileName(self,
             self.tr('Export Diary'), os.getcwd(),
             self.tr('Plain Text (*.txt);;Rich Text (*.rtf)'))
-
         if txtpath == '': return    # dialog canceled
         if type.endswith('txt)'):
             selected = (None if export_all else
-                        [i.data(2) for i in main.nlist.selectedItems()])
+                        [i.data(2) for i in self.parent.nlist.selectedItems()])
             nikki.exporttxt(txtpath, selected)
+
+
+class Hazama:
+    def __init__(self):
+        self.setMainWindow()
+
+    def quit(self):
+        qApp.quit()
+
+    def restartMainWindow(self):
+        "Restart after language changed in settings."
+        set_trans()
+        geo = self.mainw.saveGeometry()
+        self.setMainWindow()
+        self.mainw.restoreGeometry(geo)
+
+    def setMainWindow(self):
+        self.mainw = MainWindow()
+        self.mainw.closed.connect(self.quit)
+        self.mainw.needRestart.connect(self.restartMainWindow)
+        self.mainw.show()
 
 
 
 if __name__ == '__main__':
     program_path = os.path.dirname(os.path.realpath(__file__))
     os.chdir(program_path)
+    logging.basicConfig(level=logging.DEBUG)
 
     timee = time.clock()
     app = QApplication(sys.argv)
@@ -730,7 +739,7 @@ if __name__ == '__main__':
     app.setWindowIcon(appicon)
     settings = QSettings('config.ini', QSettings.IniFormat)
     settings.setIniCodec('UTF-8')
-    set_trans(settings)
+    set_trans()
     dt_trans = dt_trans_gen()
 
     # setup fonts
@@ -751,13 +760,11 @@ if __name__ == '__main__':
         defont = sysfont
     defontm = QFontMetrics(defont)
 
-    logging.basicConfig(level=logging.DEBUG)
     dbpath = settings.value('/Main/dbpath', 'nikkichou.db')
     nikki = Nikki(dbpath)
     logging.info(str(nikki))
 
-    main = Main()
-    main.show()
+    hazama = Hazama()
     logging.debug('startup take %s seconds' % round(time.clock()-timee,3))
     if int(settings.value('Main/backup', 1)): backupcheck(dbpath)
     sys.exit(app.exec_())
