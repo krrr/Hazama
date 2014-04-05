@@ -6,6 +6,7 @@ from ui.editor import Ui_Editor
 from ui.customwidgets import *
 from ui.customobjects import *
 from db import Nikki
+from config import settings
 
 import sys, os
 import time
@@ -18,11 +19,9 @@ __version__ = 0.08
 
 def set_trans():
     "Install translations"
-    lang = settings.value('Main/lang')
-    logging.info('Set translation(%s)', lang)
-    if lang is None:
-        settings.setValue('Main/lang', 'en')
-    else:
+    lang = settings['Main'].get('lang')
+    if lang:
+        logging.info('Set translation(%s)', lang)
         global trans, transQt
         trans = QTranslator()
         trans.load('lang/'+lang)
@@ -65,8 +64,8 @@ def currentdt_str():
     return time.strftime('%Y-%m-%d %H:%M')
 
 def dt_trans_gen():
-    dtfmt = settings.value('Main/datetimefmt')
-    dfmt = settings.value('Main/datefmt')
+    dtfmt = settings['Main'].get('datetimefmt')
+    dfmt = settings['Main'].get('datefmt')
     if dtfmt and dfmt:
         def dt_trans(s, dateonly=False):
             try:
@@ -88,7 +87,7 @@ class NListDelegate(QStyledItemDelegate):
         super(NListDelegate, self).__init__()
         self.title_h = QFontInfo(titlefont).pixelSize() + 10  # title area height
         self.text_h = (QFontMetrics(textfont).lineSpacing() *
-                       int(settings.value('Nlist/previewlines', 4)))
+                       settings['Main'].getint('previewlines', 4))
         self.tagpath_h = QFontInfo(qApp.font()).pixelSize() + 4
         self.tag_h = self.tagpath_h + 4
         self.dt_w = QFontMetrics(titlefont).width('2000/00/00 00:00') + 20
@@ -316,8 +315,8 @@ class NikkiList(QListWidget):
 
     def getOrder(self):
         "get sort order(str) and reverse(int) from settings file"
-        order = settings.value('NList/sortOrder', 'datetime')
-        reverse = int(settings.value('NList/sortReverse', 1))
+        order = settings['Main'].get('listorder', 'datetime')
+        reverse = settings['Main'].getint('listreverse', 1)
         return order, reverse
 
     def selectRandomly(self):
@@ -350,24 +349,24 @@ class NikkiList(QListWidget):
 
     def sortDT(self, checked):
         if checked:
-            settings.setValue('NList/sortOrder', 'datetime')
+            settings['Main']['listorder'] = 'datetime'
             self.clear()
             self.load()
 
     def sortTT(self, checked):
         if checked:
-            settings.setValue('NList/sortOrder', 'title')
+            settings['Main']['listorder'] = 'title'
             self.clear()
             self.load()
 
     def sortLT(self, checked):
         if checked:
-            settings.setValue('NList/sortOrder', 'length')
+            settings['Main']['listorder'] = 'length'
             self.clear()
             self.load()
 
     def sortRE(self, checked):
-        settings.setValue('NList/sortReverse', int(checked))
+        settings['Main']['listreverse'] = str(checked.real)
         self.clear()
         self.load()
 
@@ -382,7 +381,8 @@ class Editor(QWidget, Ui_Editor):
         super(Editor, self).__init__()
         self.setupUi(self)
         self.new = new
-        self.restoreGeometry(settings.value('Editor/windowgeo'))
+        geo = settings['Editor'].get('windowgeo')
+        self.restoreGeometry(QByteArray.fromHex(geo))
         # setup texteditor and titleeditor, set window title
         if not new:
             self.datetime = row['datetime']
@@ -392,7 +392,7 @@ class Editor(QWidget, Ui_Editor):
         else:
             self.datetime = None
         self.textEditor.setFont(textfont)
-        self.textEditor.setAutoIndent(int(settings.value('Editor/autoindent', 1)))
+        self.textEditor.setAutoIndent(settings['Editor'].getint('autoindent', 1))
         self.titleEditor.setFont(titlefont)
         titlehint = (row['title'] if row else None) or \
                     (dt_trans(self.datetime,True) if self.datetime else None) or \
@@ -421,13 +421,13 @@ class Editor(QWidget, Ui_Editor):
 
     def closeEvent(self, event):
         "Save geometry information and diary"
-        settings.setValue('Editor/windowgeo', self.saveGeometry())
+        settings['Editor']['windowgeo'] = str(self.saveGeometry().toHex())
         nikkiid = self.saveNikki()
         event.accept()
         self.closed.emit(self.id, nikkiid, self.tagsModified)
 
     def closeNoSave(self):
-        settings.setValue('Editor/windowgeo', self.saveGeometry())
+        settings['Editor']['windowgeo'] = str(self.saveGeometry().toHex())
         self.hide()
         self.closed.emit(self.id, -1, False)
 
@@ -468,7 +468,7 @@ class Editor(QWidget, Ui_Editor):
             self.timeModified = True
 
     def showEvent(self, event):
-        if not int(settings.value('/Editor/titlefocus', 1)):
+        if not settings['Editor'].getint('titlefocus', 0):
             self.textEditor.setFocus()
         self.textEditor.moveCursor(QTextCursor.Start)
 
@@ -486,7 +486,8 @@ class MainWindow(QWidget):
     needRestart = Signal()
     def __init__(self):
         super(MainWindow, self).__init__()
-        self.restoreGeometry(settings.value("Main/windowgeo"))
+        geo = settings['Main'].get('windowgeo')
+        self.restoreGeometry(QByteArray.fromHex(geo))
         self.setWindowTitle('Hazama Prototype Ver'+str(__version__))
 
         self.nlist = NikkiList()
@@ -511,7 +512,7 @@ class MainWindow(QWidget):
         self.splitter.setChildrenCollapsible(False)
         self.splitter.setStretchFactor(0, 1)
         self.splitter.setStretchFactor(1, 4)
-        tlist_w = int(settings.value('Main/taglistwidth', 0))
+        tlist_w = settings['Main'].getint('taglistwidth', 0)
         self.splitter.setSizes([tlist_w, -1])
 
         # setup ToolBar
@@ -540,17 +541,17 @@ class MainWindow(QWidget):
         layout.addWidget(self.toolbar)
         layout.addWidget(self.splitter)
         self.setLayout(layout)
-        if int(settings.value('Main/taglistvisible', 0)):
+        if settings['Main'].getint('taglistvisible', 0):
             self.tlistAct.trigger()
         else:
             self.tlist.hide()
 
     def closeEvent(self, event):
-        settings.setValue('Main/windowgeo', self.saveGeometry())
+        settings['Main']['windowgeo'] = str(self.saveGeometry().toHex())
         taglistvisible = self.tlist.isVisible()
-        settings.setValue('Main/taglistvisible', int(taglistvisible))
+        settings['Main']['taglistvisible'] = str(taglistvisible.real)
         if taglistvisible:
-            settings.setValue('Main/taglistwidth', self.splitter.sizes()[0])
+            settings['Main']['taglistwidth'] = str(self.splitter.sizes()[0])
         self.closed.emit()
         event.accept()
 
@@ -599,7 +600,7 @@ class MainWindow(QWidget):
                 lst.setCurrentRow(0)  # reset filter
             # avoid refreshing nlist by unexpected signal
             lst.itemSelectionChanged.disconnect(self.filter)
-            settings.setValue('Main/taglistwidth', self.splitter.sizes()[0])
+            settings['Main']['taglistwidth'] = str(self.splitter.sizes()[0])
 
     def showEvent(self, event):
         self.nlist.setFocus()
@@ -671,19 +672,19 @@ class ConfigDialog(QDialog, Ui_Settings):
         self.setupUi(self)
         self.setFont(sysfont)
         # load settings
-        self.aindCheck.setChecked(int(settings.value('Editor/autoindent', 1)))
-        self.tfocusCheck.setChecked(int(settings.value('Editor/titlefocus', 0)))
-        self.bkCheck.setChecked(int(settings.value('Main/backup', 1)))
+        self.aindCheck.setChecked(settings['Editor'].getint('autoindent', 1))
+        self.tfocusCheck.setChecked(settings['Editor'].getint('titlefocus', 0))
+        self.bkCheck.setChecked(settings['Main'].getint('backup', 1))
         self.langCombo.setCurrentIndex(self.lang2index[
-                                       settings.value('Main/lang', 'en')])
+                                       settings['Main'].get('lang', 'en')])
 
     def accept(self):
-        settings.setValue('Editor/autoindent', int(self.aindCheck.isChecked()))
-        settings.setValue('Editor/titlefocus', int(self.tfocusCheck.isChecked()))
-        settings.setValue('Main/backup', int(self.bkCheck.isChecked()))
+        settings['Editor']['autoindent'] = str(self.aindCheck.isChecked().real)
+        settings['Editor']['titlefocus'] = str(self.tfocusCheck.isChecked().real)
+        settings['Main']['backup'] = str(self.bkCheck.isChecked().real)
         lang = self.index2lang[self.langCombo.currentIndex()]
-        if settings.value('Main/lang') != lang:
-            settings.setValue('Main/lang', lang)
+        if settings['Main'].get('lang', 'en') != lang:
+            settings['Main']['lang'] = lang
             logging.info('Settings saved')
             self.parent.needRestart.emit()
             del self.parent
@@ -709,6 +710,7 @@ class Hazama:
         self.setMainWindow()
 
     def quit(self):
+        settings.save()
         qApp.quit()
 
     def restartMainWindow(self):
@@ -727,8 +729,6 @@ class Hazama:
 
 
 if __name__ == '__main__':
-    program_path = os.path.dirname(os.path.realpath(__file__))
-    os.chdir(program_path)
     logging.basicConfig(level=logging.DEBUG)
 
     timee = time.clock()
@@ -737,34 +737,32 @@ if __name__ == '__main__':
     appicon.addFile(':/appicon32.png')
     appicon.addFile(':/appicon64.png')
     app.setWindowIcon(appicon)
-    settings = QSettings('config.ini', QSettings.IniFormat)
-    settings.setIniCodec('UTF-8')
     set_trans()
     dt_trans = dt_trans_gen()
 
     # setup fonts
     titlefont = QFont()
-    titlefont.fromString(settings.value('/Font/title'))
+    titlefont.fromString(settings['Font'].get('title'))
     ttfontm = QFontMetrics(titlefont)
     datefont = QFont()
-    datefont.fromString(settings.value('/Font/datetime'))
+    datefont.fromString(settings['Font'].get('datetime'))
     dfontm = QFontMetrics(datefont)
     textfont = QFont()
-    textfont.fromString(settings.value('/Font/text'))
+    textfont.fromString(settings['Font'].get('text'))
     sysfont = app.font()
-    if settings.value('/Font/default'):
+    if settings['Font'].get('default'):
         defont = QFont()
-        defont.fromString(settings.value('/Font/default'))
+        defont.fromString(settings['Font'].get('default'))
         app.setFont(defont)
     else:
         defont = sysfont
     defontm = QFontMetrics(defont)
 
-    dbpath = settings.value('/Main/dbpath', 'nikkichou.db')
+    dbpath = settings['Main'].get('dbpath', 'nikkichou.db')
     nikki = Nikki(dbpath)
     logging.info(str(nikki))
 
     hazama = Hazama()
     logging.debug('startup take %s seconds' % round(time.clock()-timee,3))
-    if int(settings.value('Main/backup', 1)): backupcheck(dbpath)
+    if settings['Main'].getint('backup', 1): backupcheck(dbpath)
     sys.exit(app.exec_())
