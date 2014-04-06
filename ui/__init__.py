@@ -1,7 +1,7 @@
 from PySide.QtGui import *
 from PySide.QtCore import *
 from config import settings
-import res
+from . import icons_rc
 import sys
 import time
 import logging

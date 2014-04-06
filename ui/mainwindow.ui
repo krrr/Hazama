@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>509</width>
+    <height>450</height>
+   </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>400</width>
+    <height>450</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>Hazama</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <property name="spacing">
+     <number>0</number>
+    </property>
+    <property name="margin">
+     <number>0</number>
+    </property>
+    <item>
+     <widget class="NSplitter" name="splitter">
+      <property name="styleSheet">
+       <string notr="true">QSplitter::handle{background: rgb(181,61,0)}</string>
+      </property>
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <property name="handleWidth">
+       <number>1</number>
+      </property>
+      <property name="childrenCollapsible">
+       <bool>false</bool>
+      </property>
+      <widget class="TagList" name="tlist">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+         <horstretch>1</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+      </widget>
+      <widget class="NikkiList" name="nlist">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+         <horstretch>4</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QToolBar" name="toolBar">
+   <property name="styleSheet">
+    <string notr="true">QToolBar {background: rgb(242,241,231); border-bottom: 1px solid rgb(181, 61, 0); padding: 2px; spacing: 2px}</string>
+   </property>
+   <property name="movable">
+    <bool>false</bool>
+   </property>
+   <property name="iconSize">
+    <size>
+     <width>24</width>
+     <height>24</height>
+    </size>
+   </property>
+   <property name="floatable">
+    <bool>false</bool>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="creAct"/>
+   <addaction name="delAct"/>
+   <addaction name="tlistAct"/>
+   <addaction name="sorAct"/>
+   <addaction name="cfgAct"/>
+  </widget>
+  <action name="tlistAct">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../res/icons.qrc">
+     <normaloff>:/images/tlist.png</normaloff>:/images/tlist.png</iconset>
+   </property>
+   <property name="text">
+    <string>Tag List</string>
+   </property>
+   <property name="shortcut">
+    <string notr="true">F9</string>
+   </property>
+  </action>
+  <action name="creAct">
+   <property name="icon">
+    <iconset resource="../res/icons.qrc">
+     <normaloff>:/images/new.png</normaloff>:/images/new.png</iconset>
+   </property>
+   <property name="text">
+    <string>New</string>
+   </property>
+   <property name="shortcut">
+    <string notr="true">Ctrl+N</string>
+   </property>
+  </action>
+  <action name="delAct">
+   <property name="icon">
+    <iconset resource="../res/icons.qrc">
+     <normaloff>:/images/delete.png</normaloff>:/images/delete.png</iconset>
+   </property>
+   <property name="text">
+    <string>Delete</string>
+   </property>
+   <property name="shortcut">
+    <string notr="true">Del</string>
+   </property>
+   <property name="shortcutContext">
+    <enum>Qt::WidgetShortcut</enum>
+   </property>
+  </action>
+  <action name="sorAct">
+   <property name="icon">
+    <iconset resource="../res/icons.qrc">
+     <normaloff>:/images/sort.png</normaloff>:/images/sort.png</iconset>
+   </property>
+   <property name="text">
+    <string>Sort By</string>
+   </property>
+   <property name="shortcut">
+    <string notr="true"/>
+   </property>
+  </action>
+  <action name="cfgAct">
+   <property name="icon">
+    <iconset resource="../res/icons.qrc">
+     <normaloff>:/images/config.png</normaloff>:/images/config.png</iconset>
+   </property>
+   <property name="text">
+    <string>Settings</string>
+   </property>
+   <property name="shortcut">
+    <string notr="true"/>
+   </property>
+  </action>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>NikkiList</class>
+   <extends>QListWidget</extends>
+   <header>nikkitaglist</header>
+   <slots>
+    <signal>reloaded()</signal>
+    <signal>needRefresh()</signal>
+    <slot>delNikki()</slot>
+    <slot>newNikki()</slot>
+   </slots>
+  </customwidget>
+  <customwidget>
+   <class>TagList</class>
+   <extends>QListWidget</extends>
+   <header>nikkitaglist</header>
+  </customwidget>
+  <customwidget>
+   <class>NSplitter</class>
+   <extends>QSplitter</extends>
+   <header>customobjects</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources>
+  <include location="../res/icons.qrc"/>
+ </resources>
+ <connections>
+  <connection>
+   <sender>creAct</sender>
+   <signal>triggered()</signal>
+   <receiver>nlist</receiver>
+   <slot>newNikki()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>305</x>
+     <y>182</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>delAct</sender>
+   <signal>triggered()</signal>
+   <receiver>nlist</receiver>
+   <slot>delNikki()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>305</x>
+     <y>182</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>tlistAct</sender>
+   <signal>triggered(bool)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>toggleTagList()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>254</x>
+     <y>165</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>toggleTagList()</slot>
+ </slots>
+</ui>

@@ -112,7 +112,7 @@ class TListDelegate(QStyledItemDelegate):
             painter.setPen(QColor(80, 80, 80))
             painter.drawText(textarea,
                              Qt.AlignVCenter|Qt.AlignLeft,
-                             qApp.translate('TList', 'All'))
+                             qApp.translate('TagList', 'All'))
         else:
             painter.setPen(QColor(209, 109, 63))
             painter.drawLine(x, y, w, y)
@@ -136,8 +136,8 @@ class TListDelegate(QStyledItemDelegate):
 
 
 class TagList(QListWidget):
-    def __init__(self):
-        super(TagList, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(TagList, self).__init__(*args, **kwargs)
         self.setItemDelegate(TListDelegate())
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollMode(QAbstractItemView.ScrollPerPixel)
@@ -181,8 +181,8 @@ class TagList(QListWidget):
 class NikkiList(QListWidget):
     reloaded = Signal()
     needRefresh = Signal(bool, bool)  # (countlabel, taglist)
-    def __init__(self):
-        super(NikkiList, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(NikkiList, self).__init__(*args, **kwargs)
         self.setMinimumSize(350,200)
         self.editors = {}
 
