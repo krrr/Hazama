@@ -8,7 +8,6 @@ xmlsample
 *.jpg
 test.py
 ui/ui2py.py
-ui/configdialog_ui.py
-ui/editor_ui.py
-res.py
+ui/*_ui.py
+ui/icons_rc.py
 lang/*.qm
