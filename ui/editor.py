@@ -1,87 +1,118 @@
-# -*- coding: utf-8 -*-
+from PySide.QtGui import *
+from PySide.QtCore import *
+from .editor_ui import Ui_Editor
+from .customobjects import TagCompleter
+from .customwidgets import DateTimeDialog
+from . import font, dt_trans, currentdt_str
+from config import settings, nikki
 
-# Form implementation generated from reading ui file 'editor.ui'
-#
-# Created: Wed Apr  2 19:27:18 2014
-#      by: pyside-uic 0.2.15 running on PySide 1.2.1
-#
-# WARNING! All changes made in this file will be lost!
 
-from PySide import QtCore, QtGui
+class Editor(QWidget, Ui_Editor):
+    '''Widget used to edit diary's body,title,tag,datetime.
+    Signal closed: (editorid, nikkiid, tagsModified),nikkiid is -1
+    if canceled or no need to save.
+    '''
+    closed = Signal(int, int, bool)
+    def __init__(self, new, row):
+        super(Editor, self).__init__()
+        self.setupUi(self)
+        self.new = new
+        geo = settings['Editor'].get('windowgeo')
+        self.restoreGeometry(QByteArray.fromHex(geo))
+        # setup texteditor and titleeditor, set window title
+        if not new:
+            self.datetime = row['datetime']
+            self.titleEditor.setText(row['title'])
+            formats = None if row['plaintext'] else nikki.getformat(row['id'])
+            self.textEditor.setText(row['text'], formats)
+        else:
+            self.datetime = None
+        self.textEditor.setFont(font.text)
+        self.textEditor.setAutoIndent(settings['Editor'].getint('autoindent', 1))
+        self.titleEditor.setFont(font.title)
+        titlehint = (row['title'] if row else None) or \
+                    (dt_trans(self.datetime,True) if self.datetime else None) or \
+                    self.tr('New Diary')
+        self.setWindowTitle("%s - Hazama" % titlehint)
+        # setup datetime display
+        self.dtLabel.setText('' if self.datetime is None
+                             else dt_trans(self.datetime))
+        self.dtLabel.setFont(font.date)
+        self.dtBtn.setIcon(QIcon(':/editor/clock.png'))
+        sz = min(font.date_m.ascent(), 16)
+        self.dtBtn.setIconSize(QSize(sz, sz))
+        # set up tageditor
+        self.updateTagEditorFont('')
+        if not new: self.tagEditor.setText(row['tags'])
+        completer = TagCompleter(nikki.gettag(), self)
+        self.tagEditor.setCompleter(completer)
+        self.timeModified = self.tagsModified = False
+        # setup shortcuts
+        self.closeSaveSc = QShortcut(QKeySequence.Save, self)
+        self.closeSaveSc.activated.connect(self.close)
+        self.closeSaveSc2 = QShortcut(QKeySequence(Qt.Key_Escape), self)
+        self.closeSaveSc2.activated.connect(self.close)
+        self.preSc = QShortcut(QKeySequence(Qt.CTRL+Qt.Key_PageUp), self)
+        self.nextSc = QShortcut(QKeySequence(Qt.CTRL+Qt.Key_PageDown), self)
 
-class Ui_Editor(object):
-    def setupUi(self, Editor):
-        Editor.setObjectName("Editor")
-        Editor.resize(400, 300)
-        Editor.setStyleSheet("QWidget#Editor {background-color: rgb(232, 245, 255);}")
-        self.verticalLayout = QtGui.QVBoxLayout(Editor)
-        self.verticalLayout.setSpacing(0)
-        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
-        self.verticalLayout.setObjectName("verticalLayout")
-        self.titleEditor = QtGui.QLineEdit(Editor)
-        self.titleEditor.setObjectName("titleEditor")
-        self.verticalLayout.addWidget(self.titleEditor)
-        self.textEditor = NTextEdit(Editor)
-        self.textEditor.setObjectName("textEditor")
-        self.verticalLayout.addWidget(self.textEditor)
-        spacerItem = QtGui.QSpacerItem(30, 4, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
-        self.verticalLayout.addItem(spacerItem)
-        self.horizontalLayout_2 = QtGui.QHBoxLayout()
-        self.horizontalLayout_2.setSpacing(0)
-        self.horizontalLayout_2.setContentsMargins(20, -1, 20, -1)
-        self.horizontalLayout_2.setObjectName("horizontalLayout_2")
-        self.tagEditor = QtGui.QLineEdit(Editor)
-        self.tagEditor.setObjectName("tagEditor")
-        self.horizontalLayout_2.addWidget(self.tagEditor)
-        self.verticalLayout.addLayout(self.horizontalLayout_2)
-        self.horizontalLayout = QtGui.QHBoxLayout()
-        self.horizontalLayout.setSpacing(2)
-        self.horizontalLayout.setContentsMargins(9, 9, 9, 9)
-        self.horizontalLayout.setObjectName("horizontalLayout")
-        self.dtBtn = QtGui.QToolButton(Editor)
-        self.dtBtn.setStyleSheet("QToolButton {border: none;}")
-        self.dtBtn.setObjectName("dtBtn")
-        self.horizontalLayout.addWidget(self.dtBtn)
-        self.dtLabel = QtGui.QLabel(Editor)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Maximum, QtGui.QSizePolicy.Maximum)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.dtLabel.sizePolicy().hasHeightForWidth())
-        self.dtLabel.setSizePolicy(sizePolicy)
-        self.dtLabel.setStyleSheet("color: rgb(80, 80, 80);")
-        self.dtLabel.setText("")
-        self.dtLabel.setObjectName("dtLabel")
-        self.horizontalLayout.addWidget(self.dtLabel)
-        self.box = QtGui.QDialogButtonBox(Editor)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.box.sizePolicy().hasHeightForWidth())
-        self.box.setSizePolicy(sizePolicy)
-        self.box.setOrientation(QtCore.Qt.Horizontal)
-        self.box.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Save)
-        self.box.setCenterButtons(False)
-        self.box.setObjectName("box")
-        self.horizontalLayout.addWidget(self.box)
-        self.verticalLayout.addLayout(self.horizontalLayout)
+    def closeEvent(self, event):
+        "Save geometry information and diary"
+        settings['Editor']['windowgeo'] = str(self.saveGeometry().toHex())
+        nikkiid = self.saveNikki()
+        event.accept()
+        self.closed.emit(self.id, nikkiid, self.tagsModified)
 
-        self.retranslateUi(Editor)
-        QtCore.QObject.connect(self.box, QtCore.SIGNAL("rejected()"), Editor.closeNoSave)
-        QtCore.QObject.connect(self.box, QtCore.SIGNAL("accepted()"), Editor.close)
-        QtCore.QObject.connect(self.tagEditor, QtCore.SIGNAL("textChanged(QString)"), Editor.updateTagEditorFont)
-        QtCore.QMetaObject.connectSlotsByName(Editor)
+    def closeNoSave(self):
+        settings['Editor']['windowgeo'] = str(self.saveGeometry().toHex())
+        self.hide()
+        self.closed.emit(self.id, -1, False)
 
-    def retranslateUi(self, Editor):
-        self.tagEditor.setPlaceholderText(QtGui.QApplication.translate("Editor", "Tags separated by space", None, QtGui.QApplication.UnicodeUTF8))
+    def saveNikki(self):
+        "Save if changed and return nikkiid,else return -1"
+        if (self.textEditor.document().isModified() or
+        self.titleEditor.isModified() or self.timeModified or
+        self.tagsModified):
+            if self.datetime is None:
+                self.datetime = currentdt_str()
+            if self.tagsModified:
+                tags = self.tagEditor.text().split()
+                tags = list(filter(lambda t: tags.count(t)==1, tags))
+            else:
+                tags = None
+            # realid: id returned by database
+            realid = nikki.save(id=self.id, datetime=self.datetime,
+                                html=self.textEditor.toHtml(),
+                                plaintxt=self.textEditor.toPlainText(),
+                                title=self.titleEditor.text(),
+                                tags=tags, new=self.new)
+            return realid
+        else:
+            return -1
 
-from .customwidgets import NTextEdit
+    @Slot()
+    def on_tagEditor_textEdited(self):
+        # tageditor.isModified() will be reset by completer.So this instead.
+        self.tagsModified = True
 
-if __name__ == "__main__":
-    import sys
-    app = QtGui.QApplication(sys.argv)
-    Editor = QtGui.QWidget()
-    ui = Ui_Editor()
-    ui.setupUi(Editor)
-    Editor.show()
-    sys.exit(app.exec_())
+    @Slot()
+    def on_dtBtn_clicked(self):
+        dt = currentdt_str() if self.datetime is None else self.datetime
+        new_dt = DateTimeDialog.getDateTime(dt, self)
+        if new_dt is not None and new_dt!=self.datetime:
+            self.datetime = new_dt
+            self.dtLabel.setText(dt_trans(new_dt))
+            self.timeModified = True
+
+    def showEvent(self, event):
+        if not settings['Editor'].getint('titlefocus', 0):
+            self.textEditor.setFocus()
+        self.textEditor.moveCursor(QTextCursor.Start)
+
+    def updateTagEditorFont(self, text):
+        "Set tagEditor's placeHoderFont to italic"
+        fontstyle = 'normal' if text else 'italic'
+        self.tagEditor.setStyleSheet('font-style: %s' % fontstyle)
+
+    def setEditorId(self, id):
+        self.id = id
 

@@ -26,6 +26,7 @@ class Nikki:
         return '%s nikki in database' % self.count()
 
     def __init__(self, dbpath):
+        self.filepath = dbpath
         self.conn = sqlite3.connect(dbpath)
         self.exe = self.conn.execute
         self.conn.execute('CREATE TABLE IF NOT EXISTS Tags'
@@ -47,6 +48,7 @@ class Nikki:
                           'WHERE (SELECT COUNT(*) FROM Nikki_Tags WHERE '
                           'Nikki_Tags.tagid=Tags.id)==0;  END')
         self.conn.execute('PRAGMA foreign_keys = ON')
+        logging.info(str(self))
 
     def __getitem__(self, id):
         L = self.conn.execute('SELECT * FROM Nikki '
