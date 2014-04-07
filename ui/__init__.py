@@ -1,5 +1,5 @@
-from PySide.QtGui import *
-from PySide.QtCore import *
+from PySide.QtGui import QApplication, QIcon, QFont, QFontMetrics
+from PySide.QtCore import QLocale, QTranslator, QLibraryInfo, QDateTime
 from config import settings
 from . import icons_rc
 import sys
@@ -30,7 +30,7 @@ def set_trans():
     trans.load('lang/'+lang)
     transQt = QTranslator()
     transQt.load('qt_'+lang, QLibraryInfo.location(QLibraryInfo.TranslationsPath))
-    for i in [trans, transQt]: qApp.installTranslator(i)
+    for i in [trans, transQt]: app.installTranslator(i)
     global locale
     locale = QLocale(lang)
 

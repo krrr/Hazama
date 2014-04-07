@@ -1,9 +1,6 @@
 ﻿import logging
-logging.basicConfig(level=logging.DEBUG)
-import ui
-from ui.mainwindow import MainWindow
-from config import settings, nikki
-import sys, os
+import sys
+import os
 import time
 
 __version__ = 0.09
@@ -62,8 +59,12 @@ class Hazama:
 
 
 if __name__ == '__main__':
-    timee = time.clock()
+    logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
+    start_time = time.clock()
+    from config import settings, nikki
+    import ui
+    from ui.mainwindow import MainWindow
     hazama = Hazama()
-    logging.debug('startup take %s seconds' % round(time.clock()-timee,3))
+    logging.debug('Startup take %s sec', round(time.clock()-start_time,3))
     if settings['Main'].getint('backup', 1): backupcheck(nikki.filepath)
     sys.exit(ui.app.exec_())

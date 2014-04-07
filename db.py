@@ -1,5 +1,6 @@
 ﻿import sqlite3
-import sys, os
+import sys
+import os
 import richtagparser
 import logging
 
