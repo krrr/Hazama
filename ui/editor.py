@@ -31,7 +31,7 @@ class Editor(QWidget, Ui_Editor):
         self.textEditor.setAutoIndent(settings['Editor'].getint('autoindent', 1))
         self.titleEditor.setFont(font.title)
         titlehint = (row['title'] if row else None) or \
-                    (dt_trans(self.datetime,True) if self.datetime else None) or \
+                    (dt_trans(self.datetime).split()[0] if self.datetime else None) or \
                     self.tr('New Diary')
         self.setWindowTitle("%s - Hazama" % titlehint)
         # setup datetime display

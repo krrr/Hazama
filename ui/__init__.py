@@ -5,42 +5,34 @@ from . import icons_rc
 import sys
 import time
 import logging
-import locale
 
 
 def dt_trans_gen():
-    dtfmt = settings['Main'].get('datetimefmt', raw=True)
-    dfmt = settings['Main'].get('datefmt', raw=True)
-    if dtfmt and dfmt:
-        def dt_trans(s, dateonly=False):
-            try:
-                dt = time.strptime(s, '%Y-%m-%d %H:%M')
-                return time.strftime(dfmt if dateonly else dtfmt, dt)
-            except Exception:
-                logging.warning('Failed to translate datetime string')
-                return s
+    datefmt = settings['Main'].get('dateformat', raw=True)
+    timefmt = settings['Main'].get('timeformat', '', raw=True)
+    if datefmt:
+        def dt_trans(s):
+            dt = QDateTime.fromString(s, 'yyyy-MM-dd HH:mm')
+            return locale.toString(dt, datefmt+' '+timefmt)
     else:
-        def dt_trans(s, dateonly=False):
-            return s.split()[0] if dateonly else s
+        def dt_trans(s): return s
     return dt_trans
 
 def currentdt_str():
     return time.strftime('%Y-%m-%d %H:%M')
 
 def set_trans():
-    "Install translations"
-    lang = settings['Main'].get('lang')
-    if lang:
-        logging.info('Set translation(%s)', lang)
-        global trans, transQt
-        trans = QTranslator()
-        trans.load('lang/'+lang)
-        transQt = QTranslator()
-        transQt.load('qt_'+lang, QLibraryInfo.location(QLibraryInfo.TranslationsPath))
-        for i in [trans, transQt]: qApp.installTranslator(i)
-        windowslangstr = {'zh_CN': 'chinese-simplified', 'en': 'english',
-                          'ja_JP': 'japanese'}
-        locale.setlocale(locale.LC_ALL, windowslangstr[lang])
+    "Install Qt ranslations and set locale"
+    lang = settings['Main'].get('lang', 'en')
+    logging.info('Set translation(%s)', lang)
+    global trans, transQt
+    trans = QTranslator()
+    trans.load('lang/'+lang)
+    transQt = QTranslator()
+    transQt.load('qt_'+lang, QLibraryInfo.location(QLibraryInfo.TranslationsPath))
+    for i in [trans, transQt]: qApp.installTranslator(i)
+    global locale
+    locale = QLocale(lang)
 
 
 class Fonts:
