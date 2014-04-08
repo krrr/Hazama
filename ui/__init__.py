@@ -36,6 +36,7 @@ def set_trans():
 
 
 class Fonts:
+    '''Manage all fonts used in application'''
     def __init__(self):
         self.title = QFont()
         self.title.fromString(settings['Font'].get('title'))
@@ -51,7 +52,7 @@ class Fonts:
             self.default.fromString(settings['Font'].get('default'))
             app.setFont(self.default)
         else:
-            self.default = _appfont
+            self.default = app.font()
         self.default_m = QFontMetrics(self.default)
 
 
