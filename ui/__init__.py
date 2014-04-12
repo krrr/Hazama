@@ -13,30 +13,33 @@ def dt_trans_gen():
     if datefmt:
         def dt_trans(s):
             dt = QDateTime.fromString(s, 'yyyy-MM-dd HH:mm')
-            return locale.toString(dt, datefmt+' '+timefmt)
+            return locale.toString(dt, datefmt + ' ' + timefmt)
     else:
         def dt_trans(s): return s
     return dt_trans
 
+
 def currentdt_str():
     return time.strftime('%Y-%m-%d %H:%M')
 
+
 def set_trans():
-    "Install Qt ranslations and set locale"
+    """Install Qt ranslations and set locale"""
     lang = settings['Main'].get('lang', 'en')
     logging.info('Set translation(%s)', lang)
     global trans, transQt
     trans = QTranslator()
-    trans.load('lang/'+lang)
+    trans.load('lang/' + lang)
     transQt = QTranslator()
-    transQt.load('qt_'+lang, QLibraryInfo.location(QLibraryInfo.TranslationsPath))
+    transQt.load('qt_' + lang,
+                 QLibraryInfo.location(QLibraryInfo.TranslationsPath))
     for i in [trans, transQt]: app.installTranslator(i)
     global locale
     locale = QLocale(lang)
 
 
 class Fonts:
-    '''Manage all fonts used in application'''
+    """Manage all fonts used in application"""
     def __init__(self):
         self.title = QFont()
         self.title.fromString(settings['Font'].get('title'))

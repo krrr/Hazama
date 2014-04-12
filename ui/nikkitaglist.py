@@ -10,6 +10,7 @@ import logging
 class NListDelegate(QStyledItemDelegate):
     stylesheet = ('QListWidget{background-color: rgb(242, 241, 231);'
                   'border: solid 0px; margin-top: 1px}')
+
     def __init__(self):
         super(NListDelegate, self).__init__()
         self.title_h = QFontInfo(font.title).pixelSize() + 10  # title area height
@@ -59,7 +60,7 @@ class NListDelegate(QStyledItemDelegate):
             title_w = w-self.dt_w-13
             title = font.title_m.elidedText(row['title'], Qt.ElideRight, title_w)
             painter.drawText(x+self.dt_w, y, title_w, self.title_h,
-                             Qt.AlignBottom|Qt.AlignRight, title)
+                             Qt.AlignBottom | Qt.AlignRight, title)
         # draw text
         painter.save()
         formats = None if row['plaintext'] else nikki.getformat(row['id'])
@@ -95,15 +96,16 @@ class NListDelegate(QStyledItemDelegate):
 
 
 class TListDelegate(QStyledItemDelegate):
-    '''Default TagList Delegate.Also contains TList's stylesheet'''
+    """Default TagList Delegate.Also contains TList's stylesheet"""
     stylesheet = ('QListWidget{background-color: rgb(234,182,138);'
-               'border: solid 0px}')
+                  'border: solid 0px}')
+
     def __init__(self):
         super(TListDelegate, self).__init__()
         self.h = QFontInfo(font.default).pixelSize()+8
 
     def paint(self, painter, option, index):
-        x, y, w= option.rect.x(), option.rect.y(), option.rect.width()
+        x, y, w = option.rect.x(), option.rect.y(), option.rect.width()
         tag, count = index.data(3), str(index.data(2))
         painter.setFont(font.default)
         selected = bool(option.state & QStyle.State_Selected)
@@ -111,7 +113,7 @@ class TListDelegate(QStyledItemDelegate):
         if index.row() == 0:  # row 0 is always All(clear tag filter)
             painter.setPen(QColor(80, 80, 80))
             painter.drawText(textarea,
-                             Qt.AlignVCenter|Qt.AlignLeft,
+                             Qt.AlignVCenter | Qt.AlignLeft,
                              qApp.translate('TagList', 'All'))
         else:
             painter.setPen(QColor(209, 109, 63))
@@ -147,8 +149,8 @@ class TagList(QListWidget):
     def load(self):
         logging.info('Tag List load')
         self.clear()  # this may emit unexpected signal when has selection
-        all = QListWidgetItem(self)
-        all.setData(1, 'All')
+        item_all = QListWidgetItem(self)
+        item_all.setData(1, 'All')
         for t in nikki.gettag(getcount=True):
             item = QListWidgetItem(self)
             item.setData(3, t[1])
@@ -160,7 +162,7 @@ class TagList(QListWidget):
         self.tracklst = []
 
     def mouseMoveEvent(self, event):
-        if self.tracklst != None:
+        if self.tracklst is not None:
             self.tracklst.append(event.pos().y())
             if len(self.tracklst) > 4:
                 change = self.tracklst[-1] - self.tracklst[-2]
@@ -171,8 +173,8 @@ class TagList(QListWidget):
         if self.tracklst is not None:
             if len(self.tracklst) <= 4:  # haven't moved
                 pevent = QMouseEvent(QEvent.MouseButtonPress, event.pos(),
-                                    event.globalPos(), Qt.LeftButton,
-                                    Qt.LeftButton, Qt.NoModifier)
+                                     event.globalPos(), Qt.LeftButton,
+                                     Qt.LeftButton, Qt.NoModifier)
                 QListWidget.mousePressEvent(self, pevent)
 
         self.tracklst = None
@@ -181,9 +183,10 @@ class TagList(QListWidget):
 class NikkiList(QListWidget):
     reloaded = Signal()
     needRefresh = Signal(bool, bool)  # (countlabel, taglist)
+
     def __init__(self, *args, **kwargs):
         super(NikkiList, self).__init__(*args, **kwargs)
-        self.setMinimumSize(350,200)
+        self.setMinimumSize(350, 200)
         self.editors = {}
 
         self.setSelectionMode(self.ExtendedSelection)
@@ -211,10 +214,10 @@ class NikkiList(QListWidget):
         menu.addSeparator()
         menu.addAction(self.selAct)
 
-        selcount = len(self.selectedItems())
-        self.editAct.setDisabled(True if selcount!=1 else False)
-        self.delAct.setDisabled(False if selcount!=0 else True)
-        self.selAct.setDisabled(False if selcount!=0 else True)
+        selection_count = len(self.selectedItems())
+        self.editAct.setDisabled(selection_count != 1)
+        self.delAct.setDisabled(selection_count == 0)
+        self.selAct.setDisabled(selection_count == 0)
         menu.popup(event.globalPos())
 
     def starteditor(self, item=None, new=False):
@@ -241,7 +244,7 @@ class NikkiList(QListWidget):
     def on_editor_closed(self, editorid, nikkiid, tagsModified):
         if nikkiid != -1:
             self.reload(nikkiid)
-            self.needRefresh.emit(editorid==-1, tagsModified)
+            self.needRefresh.emit(editorid == -1, tagsModified)
         self.editors[editorid].destroy()
         del self.editors[editorid]
 
@@ -250,7 +253,7 @@ class NikkiList(QListWidget):
                              self.tr('Delete selected diaries'),
                              self.tr('Selected diaries will be deleted '
                                      'permanently.Do it?'),
-                             QMessageBox.Yes|QMessageBox.No,
+                             QMessageBox.Yes | QMessageBox.No,
                              parent=self)
         msgbox.setDefaultButton(QMessageBox.Cancel)
         ret = msgbox.exec_()
@@ -284,8 +287,9 @@ class NikkiList(QListWidget):
         self.setCurrentRow(rownum)
         self.reloaded.emit()
 
-    def getOrder(self):
-        "get sort order(str) and reverse(int) from settings file"
+    @staticmethod
+    def getOrder():
+        """get sort order(str) and reverse(int) from settings file"""
         order = settings['Main'].get('listorder', 'datetime')
         reverse = settings['Main'].getint('listreverse', 1)
         return order, reverse
@@ -300,8 +304,8 @@ class NikkiList(QListWidget):
         self.editorMove(-1)
 
     def editorMove(self, step):
-        '''Move to the Previous/Next Diary in Editor.Current
-        Editor will close without saving,'''
+        """Move to the Previous/Next Diary in Editor.Current
+        Editor will close without saving,"""
         curtEditor = list(self.editors.values())[0]
         try:
             index = self.row(curtEditor.item)
@@ -310,11 +314,11 @@ class NikkiList(QListWidget):
         # disabled when multi-editor or editing new diary(if new,
         # shortcut would not be set) or no item to move on.
         if (len(self.editors) != 1 or index is None or
-            (step == 1 and index >= self.count()-1) or
-            (step == -1 and 0 >= index)):
+           (step == 1 and index >= self.count() - 1) or
+           (step == -1 and 0 >= index)):
             return
         else:
-            self.setCurrentRow(index+step)
+            self.setCurrentRow(index + step)
             self.starteditor()
             curtEditor.closeNoSave()
 

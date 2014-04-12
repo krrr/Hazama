@@ -7,7 +7,7 @@ __version__ = 0.09
 
 
 def backupcheck(dbpath):
-    "Check backups and do if necessary.Delete old backups."
+    """Check backups and do if necessary.Delete old backups."""
     bkpath = 'backup'
     if not os.path.isdir(bkpath): os.mkdir(bkpath)
     dblst = sorted(os.listdir(bkpath))
@@ -27,7 +27,7 @@ def backupcheck(dbpath):
                                              today+'_%d.db' % nikki.count()))
         logging.info('Everyday backup succeed')
         # delete old backups
-        weekbefore = time.strftime(fmt , time.localtime(int(time.time())-604800))
+        weekbefore = time.strftime(fmt, time.localtime(int(time.time())-604800))
         for dname in dblst:
             if dname < weekbefore:
                 os.remove(os.path.join(bkpath, dname))
@@ -36,6 +36,7 @@ def backupcheck(dbpath):
 
 
 class Hazama:
+
     def __init__(self):
         self.setMainWindow()
 
@@ -44,7 +45,7 @@ class Hazama:
         ui.app.quit()
 
     def restartMainWindow(self):
-        "Restart after language changed in settings."
+        """Restart after language changed in settings."""
         ui.set_trans()
         geo = self.mainw.saveGeometry()
         self.setMainWindow()
@@ -55,7 +56,6 @@ class Hazama:
         self.mainw.closed.connect(self.quit)
         self.mainw.needRestart.connect(self.restartMainWindow)
         self.mainw.show()
-
 
 
 if __name__ == '__main__':

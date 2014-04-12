@@ -1,8 +1,8 @@
 import os
 import glob
 uicpath = 'C:\\Python33\\Scripts\\pyside-uic.exe'
-filedir = os.path.dirname(__file__)
-os.chdir(os.sep.join(filedir.split(os.sep)[:-1])+os.sep+'ui')
+os.chdir(os.path.dirname(__file__))
+os.chdir('../ui')
 for i in glob.glob('*.ui'):
     os.system(uicpath+' -o %s -x %s' % (i.split('.')[0]+'_ui.py', i))
               

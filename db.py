@@ -13,16 +13,15 @@ default_tpl = '''***{0[title]}***
 
 
 class Nikki:
-    '''This class hold a SQLite3 database,handling save/read/import/export.
+    """This class hold a SQLite3 database,handling save/read/import/export.
 
     Each Table's function:
     Nikki: All diary saved here.(every one has all data except format/tag info).
     Nikki_Tags: Connecting tags to diary.
     Tags: All tags' body saved here.
     TextFormat: Connecting format info to diary.Format info itself also saved here.
-    
+    """
 
-    '''
     def __str__(self):
         return '%s nikki in database' % self.count()
 
@@ -59,24 +58,25 @@ class Nikki:
         tags = self.conn.execute('SELECT tagid FROM Nikki_Tags WHERE '
                                  'nikkiid = ?', (id,))
         taglst = [self.gettag(i[0]) for i in tags]
-        tagstr = ' '.join(taglst) + ' ' if len(taglst)>=1 else ''
+        tagstr = ' '.join(taglst) + ' ' if len(taglst) >= 1 else ''
 
         return {'id': L[0], 'datetime': L[1], 'plaintext': L[2],
                  'text': L[3], 'title': L[4], 'tags': tagstr}
 
     def importXml(self, xmlpath):
         "Import CintaNotes/Hazama XML file,will not appear in main program."
+
         def trans_date(datetime):
             d, t = datetime.split('T')
-            return (d[:4] + '/' + d[4:6] + '/' + d[6:] + ' '   # date
-                     + t[:2] + ':' + t[2:4])                    # time
+            return (d[:4] + '/' + d[4:6] + '/' + d[6:] + ' '  # date
+                    + t[:2] + ':' + t[2:4])  # time
 
         import xml.etree.ElementTree as ET
-        
+
         tree = ET.parse(xmlpath)
         root = tree.getroot()
         Hxml = True if 'nikkichou' in str(root) else False
-        
+
         if Hxml:
             startindex = 2
         else:  # CintaNotes XML
@@ -107,7 +107,7 @@ class Nikki:
             if nikki['tags']:
                 for tag in nikki['tags'].split():
                     values = (id, self.conn.execute('SELECT id FROM '
-                              'Tags WHERE name=?', (tag,)).fetchone()[0])
+                                                    'Tags WHERE name=?', (tag,)).fetchone()[0])
                     self.conn.execute('INSERT INTO Nikki_Tags VALUES(?,?)',
                                       values)
             # import formats if nikki has rich text
@@ -130,7 +130,7 @@ class Nikki:
         self.commit()
 
     def exportXml(self, xmlpath):
-        "Export XML file,will not appear in main program."
+        """Export XML file,will not appear in main program."""
         import xml.etree.ElementTree as ET
 
         root = ET.Element('nikkichou')
@@ -152,7 +152,7 @@ class Nikki:
             if not n['plaintext']:
                 for r in self.getformat(n['id']):
                     format = ET.SubElement(formats, 'format')
-                    for i in enumerate(['start','length','type']):
+                    for i in enumerate(['start', 'length', 'type']):
                         format.set('index', str(index))
                         format.set(i[1], str(r[i[0]]))
 
@@ -164,8 +164,8 @@ class Nikki:
         tree.write(xmlpath, encoding='utf-8')
 
     def exporttxt(self, txtpath, selected=None):
-        '''Export to TXT file using template(string format).
-        When selected is a list contains nikki data,only export diary in list.'''
+        """Export to TXT file using template(string format).
+        When selected is a list contains nikki data,only export diary in list."""
         file = open(txtpath, 'w', encoding='utf-8')
         try:
             with open('template.txt', encoding='utf-8') as f:
@@ -185,12 +185,12 @@ class Nikki:
                      'tagid=%i) ') % tagid
         elif search and (tagid is None):
             where = ('WHERE datetime LIKE "%%%s%%" OR text LIKE "%%%s%%" '
-                     'OR title LIKE "%%%s%%"') % ((search,)*3)
+                     'OR title LIKE "%%%s%%"') % ((search,) * 3)
         elif search and tagid:
             where = ('WHERE (id IN (SELECT nikkiid FROM Nikki_Tags WHERE '
                      'tagid=%i)) AND (datetime LIKE "%%%s%%" OR '
                      'text LIKE "%%%s%%" OR title LIKE "%%%s%%")' %
-                     ((tagid,) + (search,)*3))
+                     ((tagid,) + (search,) * 3))
         else:
             where = ''
 
@@ -203,9 +203,9 @@ class Nikki:
                                      'nikkiid = ?', (L[0],))
 
             taglst = [self.gettag(i[0]) for i in tags]
-            tagstr = ' '.join(taglst) + ' ' if len(taglst)>=1 else ''
+            tagstr = ' '.join(taglst) + ' ' if len(taglst) >= 1 else ''
             yield {'id': L[0], 'datetime': L[1], 'plaintext': L[2],
-                    'text': L[3], 'title': L[4], 'tags': tagstr}
+                   'text': L[3], 'title': L[4], 'tags': tagstr}
 
     def delete(self, id):
         self.conn.execute('DELETE FROM Nikki WHERE id = ?', (id,))
@@ -219,23 +219,23 @@ class Nikki:
         return self.conn.execute('SELECT COUNT(id) FROM Nikki').fetchone()[0]
 
     def gettag(self, tagid=None, *, getcount=False):
-        if tagid:   # get tags by id
+        if tagid:  # get tags by id
             return self.conn.execute('SELECT name FROM Tags WHERE '
-                                      'id = ?', (tagid,)).fetchone()[0]
-        else:   # get all tags
-            if getcount:    # get with counts.used in TList
+                                     'id = ?', (tagid,)).fetchone()[0]
+        else:  # get all tags
+            if getcount:  # get with counts.used in TList
                 result = self.conn.execute('SELECT Tags.id,Tags.name,(SELECT '
-                'COUNT(*) FROM Nikki_Tags WHERE Nikki_Tags.tagid=Tags.id) '
-                'FROM Tags ORDER BY Tags.name')
+                                           'COUNT(*) FROM Nikki_Tags WHERE Nikki_Tags.tagid=Tags.id) '
+                                           'FROM Tags ORDER BY Tags.name')
 
                 return result
-            else:         # get without counts.used in tag completer
+            else:  # get without counts.used in tag completer
                 result = self.conn.execute('SELECT name FROM Tags')
                 return [n[0] for n in result]
 
     def getformat(self, id):
         return self.conn.execute('SELECT start,length,type FROM TextFormat '
-                                  'WHERE nikkiid=?', (id,))
+                                 'WHERE nikkiid=?', (id,))
 
     def save(self, new, id, datetime, html, title, tags, plaintxt):
         id = self.getnewid() if new else id
@@ -256,14 +256,14 @@ class Nikki:
         else:
             logging.info('Nikki saved (ID: %s)' % id)
         # formats processing
-        if not new:   # delete existed format information
+        if not new:  # delete existed format information
             try:
                 self.exe('DELETE FROM TextFormat WHERE nikkiid=?', (id,))
             except Exception:
                 pass
         for i in formats:
             cmd = 'INSERT INTO TextFormat VALUES(?,?,?,?)'
-            self.exe(cmd, (id,)+i)
+            self.exe(cmd, (id,) + i)
         # tags processing
         if tags is not None:  # tags modified
             if not new:  # if diary isn't new,delete its tags first
@@ -277,16 +277,16 @@ class Nikki:
             for t in tags:
                 cmd = 'SELECT id FROM Tags WHERE name=?'
                 tagid = self.exe(cmd, (t,)).fetchone()[0]
-                self.exe('INSERT INTO Nikki_Tags VALUES(?,?)', (id,tagid))
+                self.exe('INSERT INTO Nikki_Tags VALUES(?,?)', (id, tagid))
         self.commit()
         return id
 
     def getnewid(self):
         maxid = self.conn.execute('SELECT max(id) FROM Nikki').fetchone()[0]
-        return (maxid+1 if maxid else 1)
+        return maxid + 1 if maxid else 1
 
 
 if __name__ == '__main__':
     path = os.path.split(__file__)[0] + os.sep
-    n = Nikki(path+'nikkichou.db')
-    n.importXml(path+'out.xml')
+    n = Nikki(path + 'nikkichou.db')
+    n.importXml(path + 'out.xml')

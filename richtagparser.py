@@ -31,8 +31,8 @@ class RichTagParser(HTMLParser):
 
 
 class QtHtmlParser(HTMLParser):
-    "Parse HTML of QTextDocument,return formats information"
-    typedic = {'font-weight:600': 1, 'background-color:' : 2,
+    """Parse HTML of QTextDocument,return formats information"""
+    typedic = {'font-weight:600': 1, 'background-color:': 2,
                'font-style:italic': 3, 'text-decoration: line-through': 4,
                'text-decoration: underline': 5}
     
@@ -52,9 +52,9 @@ class QtHtmlParser(HTMLParser):
     def handle_data(self, data):
         length = len(data)
         if self.curttype:
-            for type in self.curttype:
+            for _type in self.curttype:
                 # (start, length, type)
-                self.formats.append((self.pos_plain-1, length, type))
+                self.formats.append((self.pos_plain-1, length, _type))
             self.curttype = None
         self.pos_plain += length
 

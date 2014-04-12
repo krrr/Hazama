@@ -4,7 +4,7 @@ import os
 
 
 class ConfigParserSave(ConfigParser):
-    "Add save method for convenience"
+    """Add save method for convenience"""
     @staticmethod
     def save():
         with open('config.ini', 'w', encoding='utf-8') as f:
@@ -21,7 +21,7 @@ try:
         settings.read_file(f)
 except FileNotFoundError:
     settings['Main'] = settings['Editor'] = settings['Font'] = {}
-# setup datebase
+# setup database
 _dbpath = settings['Main'].get('dbpath', 'nikkichou.db')
 nikki = Nikki(_dbpath)
 

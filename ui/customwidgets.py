@@ -4,20 +4,17 @@ from .customobjects import TextFormatter, NTextDocument
 
 
 class NTextEdit(QTextEdit, TextFormatter):
-    '''The widget used to edit diary contents in Editor window.
-    '''
+    """The widget used to edit diary contents in Editor window."""
     def __init__(self, *args, **kwargs):
         super(NTextEdit, self).__init__(*args, **kwargs)
         prt = self.palette()
         prt.setColor(prt.Highlight, QColor(180, 180, 180))
         prt.setColor(prt.HighlightedText, QColor(0, 0, 0))
         self.setPalette(prt)
-        self.creActs()
         self.autoIndent = False
         self.setTabChangesFocus(True)
-
-    def creActs(self):
-        self.submenu = QMenu(self.tr('Format'))
+        # create format menu
+        self.submenu = QMenu(self.tr('Format'), self)
         self.hlAct = QAction(QIcon(':/fmt/highlight.png'), self.tr('Highlight'),
                              self, shortcut=QKeySequence('Ctrl+H'))
         self.soAct = QAction(QIcon(':/fmt/strikeout.png'), self.tr('Strike out'),
@@ -28,19 +25,16 @@ class NTextEdit(QTextEdit, TextFormatter):
                              self, shortcut=QKeySequence.Underline)
         self.itaAct = QAction(QIcon(':/fmt/italic.png'), self.tr('Italic'),
                               self, shortcut=QKeySequence.Italic)
-
         self.hlAct.triggered.connect(self.setHL)
         self.soAct.triggered.connect(self.setSO)
         self.bdAct.triggered.connect(self.setBD)
         self.ulAct.triggered.connect(self.setUL)
         self.itaAct.triggered.connect(self.setIta)
-
         for a in (self.hlAct, self.bdAct, self.soAct, self.bdAct,
                   self.ulAct, self.itaAct):
             self.addAction(a)
             self.submenu.addAction(a)
             a.setCheckable(True)
-
         self.submenu.addSeparator()
         self.clrAct = QAction(self.tr('Clear format'), self,
                               shortcut=QKeySequence('Ctrl+D'))
@@ -50,7 +44,6 @@ class NTextEdit(QTextEdit, TextFormatter):
 
     def setText(self, text, formats):
         doc = NTextDocument()
-        # doc.setDefaultFont(textfont)
         doc.setText(text, formats)
         doc.clearUndoRedoStacks()
         doc.setModified(False)
@@ -66,8 +59,8 @@ class NTextEdit(QTextEdit, TextFormatter):
         cur = self.textCursor()
         if cur.hasSelection():
             curtfmt = cur.charFormat()
-            self.hlAct.setChecked(curtfmt.background().color()==self.hl_color)
-            self.bdAct.setChecked(curtfmt.fontWeight()==QFont.Bold)
+            self.hlAct.setChecked(curtfmt.background().color() == self.hl_color)
+            self.bdAct.setChecked(curtfmt.fontWeight() == QFont.Bold)
             self.soAct.setChecked(curtfmt.fontStrikeOut())
             self.ulAct.setChecked(curtfmt.fontUnderline())
             self.itaAct.setChecked(curtfmt.fontItalic())
@@ -84,7 +77,7 @@ class NTextEdit(QTextEdit, TextFormatter):
         self.textCursor().setCharFormat(fmt)
 
     def keyPressEvent(self, event):
-        "Auto-indent support"
+        """Auto-indent support"""
         if event.key() == Qt.Key_Return and self.autoIndent:
             spacecount = 0
             cur = self.textCursor()
@@ -98,12 +91,12 @@ class NTextEdit(QTextEdit, TextFormatter):
 
             cur.setPosition(savedpos)
             super(NTextEdit, self).keyPressEvent(event)
-            cur.insertText(' '*spacecount)
+            cur.insertText(' ' * spacecount)
         else:
             return super(NTextEdit, self).keyPressEvent(event)
 
     def insertFromMimeData(self, source):
-        "Disable some unsuportted types"
+        """Disable some unsupported types"""
         self.insertHtml(source.html() or source.text())
 
 
@@ -123,8 +116,8 @@ class SearchBox(QLineEdit):
 
     def resizeEvent(self, event):
         w, h = event.size().toTuple()
-        pos_y = (h-18) / 2
-        self.button.move(w-18-pos_y, pos_y)
+        pos_y = (h - 18) / 2
+        self.button.move(w - 18 - pos_y, pos_y)
 
     def update(self, text):
         iconame = 'search_clr' if text else 'search'
@@ -137,6 +130,7 @@ class SearchBox(QLineEdit):
 
 class DateTimeDialog(QDialog):
     timeFmt = "yyyy-MM-dd HH:mm"
+
     def __init__(self, timestr, parent=None):
         super(DateTimeDialog, self).__init__(parent, Qt.WindowTitleHint)
         self.setWindowModality(Qt.WindowModal)
@@ -157,10 +151,10 @@ class DateTimeDialog(QDialog):
 
     @staticmethod
     def getDateTime(timestr, parent):
-        "Run Dialog,return None if canceled,otherwise return timestr"
+        """Run Dialog,return None if canceled,otherwise return timestr"""
         dialog = DateTimeDialog(timestr, parent)
-        code = dialog.exec_()
-        return dialog.dtEdit.dateTime().toString(dialog.timeFmt) if code else None
+        ret = dialog.exec_()
+        return dialog.dtEdit.dateTime().toString(dialog.timeFmt) if ret else None
 
 
 

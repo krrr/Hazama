@@ -10,6 +10,7 @@ from config import settings, nikki
 class MainWindow(QMainWindow, Ui_MainWindow):
     closed = Signal()
     needRestart = Signal()
+
     def __init__(self):
         super(MainWindow, self).__init__()
         self.setupUi(self)
@@ -27,7 +28,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # setup count label
         self.countlabel = QLabel(self.toolBar)
         self.countlabel.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self.countlabel.setAlignment(Qt.AlignVCenter|Qt.AlignRight)
+        self.countlabel.setAlignment(Qt.AlignVCenter | Qt.AlignRight)
         self.countlabel.setIndent(6)
         self.countlabel.setStyleSheet('color: rgb(144, 144, 144)')
         self.updateCountLabel()
@@ -52,11 +53,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         event.accept()
 
     def filter(self, text=None):
-        '''Connected to SearchBox and TagList.Argument "text" belongs to SearchBox'''
+        """Connected to SearchBox and TagList.Argument "text" belongs to SearchBox"""
         text = self.searchbox.text() if text is None else text
         try:
             data = self.tlist.currentItem().data(1)
-            tagid = None if data=='All' else data
+            tagid = None if data == 'All' else data
         except AttributeError:  # TagList hidden
             tagid = None
         self.nlist.clear()
@@ -79,7 +80,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             lst.itemSelectionChanged.connect(self.filter)
         else:
             # currentItem is None when tag deleted
-            if lst.currentItem() is None or lst.currentRow()!=0:
+            if lst.currentItem() is None or lst.currentRow() != 0:
                 lst.setCurrentRow(0)  # reset filter
             # avoid refreshing nlist by unexpected signal
             lst.itemSelectionChanged.disconnect(self.filter)
@@ -89,7 +90,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.nlist.setFocus()
 
     def updateCountLabel(self):
-        "Only called when diary saving or deleting"
+        """Only called when diary saving or deleting"""
         c = nikki.count()
         if c > 1: self.countlabel.setText(self.tr('%i diaries') % c)
 
