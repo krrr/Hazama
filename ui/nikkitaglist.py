@@ -190,7 +190,7 @@ class NikkiList(QListWidget):
         self.editors = {}
 
         self.setSelectionMode(self.ExtendedSelection)
-        self.itemDoubleClicked.connect(self.starteditor)
+        self.itemDoubleClicked.connect(self.startEditor)
 
         self.setItemDelegate(NListDelegate())
         self.setStyleSheet(NListDelegate.stylesheet)
@@ -198,7 +198,7 @@ class NikkiList(QListWidget):
         # Context Menu
         self.editAct = QAction(self.tr('Edit'), self,
                                shortcut=QKeySequence(Qt.Key_Return),
-                               triggered=self.starteditor)
+                               triggered=self.startEditor)
         self.delAct = QAction(self.tr('Delete'), self,
                               shortcut=QKeySequence.Delete,
                               triggered=self.delNikki)
@@ -220,7 +220,7 @@ class NikkiList(QListWidget):
         self.selAct.setDisabled(selection_count == 0)
         menu.popup(event.globalPos())
 
-    def starteditor(self, item=None, new=False):
+    def startEditor(self, item=None, new=False):
         if new:  # called by newNikki method
             curtitem = row = None
             id = -1
@@ -231,10 +231,9 @@ class NikkiList(QListWidget):
         if id in self.editors:
             self.editors[id].activateWindow()
         else:  # create new editor
-            editor = Editor(new=new, row=row)
+            editor = Editor(editorid=id, new=new, row=row)
             editor.closed.connect(self.on_editor_closed)
             self.editors[id] = editor
-            editor.setEditorId(id)
             editor.item = curtitem
             if not new:
                 editor.nextSc.activated.connect(self.editorNext)
@@ -266,7 +265,7 @@ class NikkiList(QListWidget):
         msgbox.deleteLater()
 
     def newNikki(self):
-        self.starteditor(None, True)
+        self.startEditor(None, True)
 
     def load(self, *, tagid=None, search=None):
         order, reverse = self.getOrder()
@@ -319,7 +318,7 @@ class NikkiList(QListWidget):
             return
         else:
             self.setCurrentRow(index + step)
-            self.starteditor()
+            self.startEditor()
             curtEditor.closeNoSave()
 
     def sortDT(self, checked):

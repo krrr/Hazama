@@ -14,13 +14,13 @@ class Editor(QWidget, Ui_Editor):
     """
     closed = Signal(int, int, bool)
 
-    def __init__(self, new, row):
+    def __init__(self, editorid, new, row):
         super(Editor, self).__init__()
         self.setupUi(self)
-        self.new = new
+        self.id, self.new = editorid, new
         geo = settings['Editor'].get('windowgeo')
         self.restoreGeometry(QByteArray.fromHex(geo))
-        # setup texteditor and titleeditor, set window title
+        # setup textEditor and titleEditor, set window title
         if not new:
             self.datetime = row['datetime']
             self.titleEditor.setText(row['title'])
@@ -42,7 +42,7 @@ class Editor(QWidget, Ui_Editor):
         self.dtBtn.setIcon(QIcon(':/editor/clock.png'))
         sz = min(font.date_m.ascent(), 16)
         self.dtBtn.setIconSize(QSize(sz, sz))
-        # set up tageditor
+        # set up tagEditor
         self.updateTagEditorFont('')
         if not new: self.tagEditor.setText(row['tags'])
         completer = TagCompleter(nikki.gettag(), self)
@@ -104,15 +104,15 @@ class Editor(QWidget, Ui_Editor):
             self.timeModified = True
 
     def showEvent(self, event):
-        if not settings['Editor'].getint('titlefocus', 0):
+        if settings['Editor'].getint('titlefocus', 0):
+            self.titleEditor.setCursorPosition(0)
+        else:
             self.textEditor.setFocus()
-        self.textEditor.moveCursor(QTextCursor.Start)
+            self.textEditor.moveCursor(QTextCursor.Start)
 
     def updateTagEditorFont(self, text):
         """Set tagEditor's placeHolderFont to italic"""
         fontstyle = 'normal' if text else 'italic'
         self.tagEditor.setStyleSheet('font-style: %s' % fontstyle)
 
-    def setEditorId(self, id):
-        self.id = id
 
