@@ -14,8 +14,8 @@ class Editor(QWidget, Ui_Editor):
     """
     closed = Signal(int, int, bool)
 
-    def __init__(self, editorid, new, row):
-        super(Editor, self).__init__()
+    def __init__(self, editorid, new, row, parent=None):
+        super(Editor, self).__init__(parent)
         self.setupUi(self)
         self.id, self.new = editorid, new
         geo = settings['Editor'].get('windowgeo')
@@ -71,8 +71,8 @@ class Editor(QWidget, Ui_Editor):
     def saveNikki(self):
         """Save if changed and return nikkiid,else return -1"""
         if (self.textEditor.document().isModified() or
-                self.titleEditor.isModified() or self.timeModified or
-                self.tagsModified):
+           self.titleEditor.isModified() or self.timeModified or
+           self.tagsModified):
             if self.datetime is None:
                 self.datetime = currentdt_str()
             if self.tagsModified:
@@ -91,11 +91,12 @@ class Editor(QWidget, Ui_Editor):
 
     @Slot()
     def on_tagEditor_textEdited(self):
-        # tageditor.isModified() will be reset by completer.So this instead.
+        # tagEditor.isModified() will be reset by completer.So this instead.
         self.tagsModified = True
 
     @Slot()
     def on_dtBtn_clicked(self):
+        """Show datetime edit dialog"""
         dt = currentdt_str() if self.datetime is None else self.datetime
         new_dt = DateTimeDialog.getDateTime(dt, self)
         if new_dt is not None and new_dt != self.datetime:

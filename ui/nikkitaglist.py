@@ -11,8 +11,8 @@ class NListDelegate(QStyledItemDelegate):
     stylesheet = ('QListWidget{background-color: rgb(242, 241, 231);'
                   'border: solid 0px; margin-top: 1px}')
 
-    def __init__(self):
-        super(NListDelegate, self).__init__()
+    def __init__(self, parent=None):
+        super(NListDelegate, self).__init__(parent)
         self.title_h = QFontInfo(font.title).pixelSize() + 10  # title area height
         self.text_h = (QFontMetrics(font.text).lineSpacing() *
                        settings['Main'].getint('previewlines', 4))
@@ -100,8 +100,8 @@ class TListDelegate(QStyledItemDelegate):
     stylesheet = ('QListWidget{background-color: rgb(234,182,138);'
                   'border: solid 0px}')
 
-    def __init__(self):
-        super(TListDelegate, self).__init__()
+    def __init__(self, parent=None):
+        super(TListDelegate, self).__init__(parent)
         self.h = QFontInfo(font.default).pixelSize()+8
 
     def paint(self, painter, option, index):
@@ -140,7 +140,7 @@ class TListDelegate(QStyledItemDelegate):
 class TagList(QListWidget):
     def __init__(self, *args, **kwargs):
         super(TagList, self).__init__(*args, **kwargs)
-        self.setItemDelegate(TListDelegate())
+        self.setItemDelegate(TListDelegate(self))
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollMode(QAbstractItemView.ScrollPerPixel)
         self.setUniformItemSizes(True)
@@ -192,10 +192,10 @@ class NikkiList(QListWidget):
         self.setSelectionMode(self.ExtendedSelection)
         self.itemDoubleClicked.connect(self.startEditor)
 
-        self.setItemDelegate(NListDelegate())
+        self.setItemDelegate(NListDelegate(self))
         self.setStyleSheet(NListDelegate.stylesheet)
 
-        # Context Menu
+        # setup context menu
         self.editAct = QAction(self.tr('Edit'), self,
                                shortcut=QKeySequence(Qt.Key_Return),
                                triggered=self.startEditor)
@@ -206,19 +206,18 @@ class NikkiList(QListWidget):
                               shortcut=QKeySequence(Qt.Key_F7),
                               triggered=self.selectRandomly)
         for i in [self.editAct, self.delAct, self.selAct]: self.addAction(i)
+        self.menu = QMenu(self)
+        self.menu.addAction(self.editAct)
+        self.menu.addAction(self.delAct)
+        self.menu.addSeparator()
+        self.menu.addAction(self.selAct)
 
     def contextMenuEvent(self, event):
-        menu = QMenu(self)
-        menu.addAction(self.editAct)
-        menu.addAction(self.delAct)
-        menu.addSeparator()
-        menu.addAction(self.selAct)
-
         selection_count = len(self.selectedItems())
         self.editAct.setDisabled(selection_count != 1)
         self.delAct.setDisabled(selection_count == 0)
         self.selAct.setDisabled(selection_count == 0)
-        menu.popup(event.globalPos())
+        self.menu.popup(event.globalPos())
 
     def startEditor(self, item=None, new=False):
         if new:  # called by newNikki method

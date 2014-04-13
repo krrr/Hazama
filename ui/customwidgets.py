@@ -40,22 +40,24 @@ class NTextEdit(QTextEdit, TextFormatter):
                               shortcut=QKeySequence('Ctrl+D'))
         self.addAction(self.clrAct)
         self.submenu.addAction(self.clrAct)
-        self.clrAct.triggered.connect(self.clearformat)
+        self.clrAct.triggered.connect(self.clearFormat)
+        self.menu = self.createStandardContextMenu()
+        before = self.menu.actions()[2]
+        self.menu.insertSeparator(before)
+        self.menu.insertMenu(before, self.submenu)
 
     def setText(self, text, formats):
-        doc = NTextDocument()
+        doc = NTextDocument(self)
         doc.setText(text, formats)
         doc.clearUndoRedoStacks()
         doc.setModified(False)
         self.setDocument(doc)
 
     def setAutoIndent(self, enabled):
-        self.autoIndent = bool(enabled)
+        assert isinstance(enabled, (bool, int))
+        self.autoIndent = enabled
 
     def contextMenuEvent(self, event):
-        menu = self.createStandardContextMenu(event.globalPos())
-        before = menu.actions()[2]
-
         cur = self.textCursor()
         if cur.hasSelection():
             curtfmt = cur.charFormat()
@@ -67,12 +69,9 @@ class NTextEdit(QTextEdit, TextFormatter):
             self.submenu.setEnabled(True)
         else:
             self.submenu.setEnabled(False)
+        self.menu.exec_(event.globalPos())
 
-        menu.insertSeparator(before)
-        menu.insertMenu(before, self.submenu)
-        menu.exec_(event.globalPos())
-
-    def clearformat(self):
+    def clearFormat(self):
         fmt = QTextCharFormat()
         self.textCursor().setCharFormat(fmt)
 

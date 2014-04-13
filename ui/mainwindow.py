@@ -17,27 +17,31 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         geo = settings['Main'].get('windowgeo')
         self.restoreGeometry(QByteArray.fromHex(geo))
         self.nlist.load()
-        # setuo TagList width
+        # setup TagList width
         tlist_w = settings['Main'].getint('taglistwidth', 0)
         self.splitter.setSizes([tlist_w, -1])
         # setup sort menu
-        self.sorAct.setMenu(SortOrderMenu(nlist=self.nlist))
-        sortbtn = self.toolBar.widgetForAction(self.sorAct)
-        sortbtn.setPopupMode(QToolButton.InstantPopup)
+        s_menu = SortOrderMenu(self)
+        s_menu.bydatetime.triggered[bool].connect(self.nlist.sortDT)
+        s_menu.bytitle.triggered[bool].connect(self.nlist.sortTT)
+        s_menu.bylength.triggered[bool].connect(self.nlist.sortLT)
+        s_menu.reverse.triggered[bool].connect(self.nlist.sortRE)
+        self.sorAct.setMenu(s_menu)
+        sortBtn = self.toolBar.widgetForAction(self.sorAct)
+        sortBtn.setPopupMode(QToolButton.InstantPopup)
         # Qt Designer doesn't allow us to add widget in toolbar
         # setup count label
-        self.countlabel = QLabel(self.toolBar)
-        self.countlabel.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self.countlabel.setAlignment(Qt.AlignVCenter | Qt.AlignRight)
-        self.countlabel.setIndent(6)
-        self.countlabel.setStyleSheet('color: rgb(144, 144, 144)')
+        self.countLabel = QLabel(self.toolBar)
+        self.countLabel.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.countLabel.setAlignment(Qt.AlignVCenter | Qt.AlignRight)
+        self.countLabel.setIndent(6)
+        self.countLabel.setStyleSheet('color: rgb(144, 144, 144)')
         self.updateCountLabel()
-        self.toolBar.addWidget(self.countlabel)
+        self.toolBar.addWidget(self.countLabel)
         # setup search box
-        self.searchbox = SearchBox(self.toolBar)
-        self.searchbox.textChanged.connect(self.filter)
-        # self.searchbox.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
-        self.toolBar.addWidget(self.searchbox)
+        self.searchBox = SearchBox(self.toolBar)
+        self.searchBox.textChanged.connect(self.filter)
+        self.toolBar.addWidget(self.searchBox)
         if settings['Main'].getint('taglistvisible', 0):
             self.tlistAct.trigger()
         else:
@@ -54,7 +58,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def filter(self, text=None):
         """Connected to SearchBox and TagList.Argument "text" belongs to SearchBox"""
-        text = self.searchbox.text() if text is None else text
+        text = self.searchBox.text() if text is None else text
         try:
             data = self.tlist.currentItem().data(1)
             tagid = None if data == 'All' else data
@@ -65,11 +69,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     @Slot()
     def on_cfgAct_triggered(self):
+        """Start config dialog"""
         try:
-            self.cfgdialog.activateWindow()
+            self.cfgDialog.activateWindow()
         except (AttributeError, RuntimeError):
-            self.cfgdialog = ConfigDialog(self)
-            self.cfgdialog.show()
+            self.cfgDialog = ConfigDialog(self)
+            self.cfgDialog.show()
 
     def toggleTagList(self, checked):
         lst = self.tlist
@@ -92,11 +97,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def updateCountLabel(self):
         """Only called when diary saving or deleting"""
         c = nikki.count()
-        if c > 1: self.countlabel.setText(self.tr('%i diaries') % c)
+        if c > 1: self.countLabel.setText(self.tr('%i diaries') % c)
 
     @Slot()
     def on_nlist_reloaded(self):
-        self.searchbox.clear()
+        self.searchBox.clear()
         self.tlist.setCurrentRow(0)
 
     @Slot(bool, bool)

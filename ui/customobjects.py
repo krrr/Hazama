@@ -1,11 +1,12 @@
 from PySide.QtCore import *
 from PySide.QtGui import *
+from config import settings
 
 
 class TagCompleter(QCompleter):
     def __init__(self, tagL, parent=None):
-        self.tagL = tagL
         super(TagCompleter, self).__init__(tagL, parent)
+        self.tagL = tagL
         self.setCaseSensitivity(Qt.CaseInsensitive)
 
     def pathFromIndex(self, index):
@@ -31,7 +32,7 @@ class TagCompleter(QCompleter):
 class TextFormatter:
     """All methods of this class are used in NTextDocument to set format.
     NTextEdit also use those to set format(called from context-menu).
-    If used in NTextDocumment,pre should be True.
+    If used in NTextDocument,pre should be True.
     """
     hl_color = QColor(248, 162, 109, 100)
 
@@ -87,9 +88,8 @@ class TextFormatter:
 
 class SortOrderMenu(QMenu):
     """Menu used to Change sort order of NList."""
-    def __init__(self, nlist):
-        super(SortOrderMenu, self).__init__()
-        self.nlist = nlist
+    def __init__(self, parent=None):
+        super(SortOrderMenu, self).__init__(parent)
         self.aboutToShow.connect(self.setActs)
         # create actions
         self.bydatetime = QAction(self.tr('Date'), self)
@@ -104,14 +104,10 @@ class SortOrderMenu(QMenu):
         self.addSeparator()
         self.addAction(self.reverse)
 
-        self.bydatetime.triggered[bool].connect(nlist.sortDT)
-        self.bytitle.triggered[bool].connect(nlist.sortTT)
-        self.bylength.triggered[bool].connect(nlist.sortLT)
-        self.reverse.triggered[bool].connect(nlist.sortRE)
-
     def setActs(self):
         """Set actions checked/unchecked before showing"""
-        order, reverse = self.nlist.getOrder()
+        order = settings['Main'].get('listorder', 'datetime')
+        reverse = settings['Main'].getint('listreverse', 1)
         for a in self.ordertypes: a.setChecked(False)
         enabled = getattr(self, 'by' + order)
         enabled.setChecked(True)
@@ -130,6 +126,7 @@ class NTextDocument(QTextDocument, TextFormatter):
                 self.cur.setPosition(r[0])
                 self.cur.setPosition(r[0] + r[1], mode=self.cur.KeepAnchor)
                 getattr(self, self.typedic[r[2]])(pre=True)
+            del self.cur
 
     def textCursor(self):
         """Make TextFormatter's methods to get right cursor"""
