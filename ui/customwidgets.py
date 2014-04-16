@@ -109,7 +109,7 @@ class SearchBox(QLineEdit):
         self.button.clicked.connect(self.clear)
 
         self.textChanged.connect(self.update)
-        self.setPlaceholderText(self.tr('Search'))
+        self.retranslate()
         self.setTextMargins(QMargins(2, 0, 20, 0))
         self.update('')
 
@@ -119,12 +119,15 @@ class SearchBox(QLineEdit):
         self.button.move(w - 18 - pos_y, pos_y)
 
     def update(self, text):
-        iconame = 'search_clr' if text else 'search'
-        fontstyle = 'normal' if text else 'italic'
+        ico_name = 'search_clr' if text else 'search'
+        font_style = 'normal' if text else 'italic'
         self.button.setStyleSheet('QToolButton{border: none;'
                                   'background: url(:/images/%s.png);'
-                                  'background-position: center}' % iconame)
-        self.setStyleSheet('QLineEdit{font-style: %s}' % fontstyle)
+                                  'background-position: center}' % ico_name)
+        self.setStyleSheet('QLineEdit{font-style: %s}' % font_style)
+
+    def retranslate(self):
+        self.setPlaceholderText(self.tr('Search'))
 
 
 class DateTimeDialog(QDialog):

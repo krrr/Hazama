@@ -1,5 +1,6 @@
 from PySide.QtGui import *
 from PySide.QtCore import *
+import ui
 from ui.customwidgets import SearchBox
 from ui.customobjects import SortOrderMenu
 from ui.configdialog import ConfigDialog
@@ -8,9 +9,6 @@ from config import settings, nikki
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
-    closed = Signal()
-    needRestart = Signal()
-
     def __init__(self):
         super(MainWindow, self).__init__()
         self.setupUi(self)
@@ -53,8 +51,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         settings['Main']['taglistvisible'] = str(taglistvisible.real)
         if taglistvisible:
             settings['Main']['taglistwidth'] = str(self.splitter.sizes()[0])
-        self.closed.emit()
+        settings.save()
         event.accept()
+        qApp.quit()
 
     def filter(self, text=None):
         """Connected to SearchBox and TagList.Argument "text" belongs to SearchBox"""
@@ -67,6 +66,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.nlist.clear()
         self.nlist.load(tagid=tagid, search=text if text else None)
 
+    def retranslate(self):
+        """Set translation after language changed in ConfigDialog"""
+        ui.set_trans()
+        self.retranslateUi(self)
+        self.searchBox.retranslate()
+        self.updateCountLabel()
+
     @Slot()
     def on_cfgAct_triggered(self):
         """Start config dialog"""
@@ -74,6 +80,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.cfgDialog.activateWindow()
         except (AttributeError, RuntimeError):
             self.cfgDialog = ConfigDialog(self)
+            self.cfgDialog.langChanged.connect(self.retranslate)
             self.cfgDialog.show()
 
     def toggleTagList(self, checked):
@@ -95,7 +102,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.nlist.setFocus()
 
     def updateCountLabel(self):
-        """Only called when diary saving or deleting"""
+        """Called when diary saving/deleting or on first show"""
         c = nikki.count()
         if c > 1: self.countLabel.setText(self.tr('%i diaries') % c)
 

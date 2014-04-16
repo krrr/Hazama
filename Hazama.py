@@ -3,7 +3,7 @@ import sys
 import os
 import time
 
-__version__ = 0.09
+__version__ = 0.092
 
 
 def backupcheck(dbpath):
@@ -35,36 +35,15 @@ def backupcheck(dbpath):
                 break
 
 
-class Hazama:
-
-    def __init__(self):
-        self.setMainWindow()
-
-    def quit(self):
-        settings.save()
-        ui.app.quit()
-
-    def restartMainWindow(self):
-        """Restart after language changed in settings."""
-        ui.set_trans()
-        geo = self.mainw.saveGeometry()
-        self.setMainWindow()
-        self.mainw.restoreGeometry(geo)
-
-    def setMainWindow(self):
-        self.mainw = MainWindow()
-        self.mainw.closed.connect(self.quit)
-        self.mainw.needRestart.connect(self.restartMainWindow)
-        self.mainw.show()
-
-
 if __name__ == '__main__':
     logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
+    logging.info('Hazama Version %s', __version__)
     start_time = time.clock()
     from config import settings, nikki
     import ui
     from ui.mainwindow import MainWindow
-    hazama = Hazama()
-    logging.debug('Startup take %s sec', round(time.clock()-start_time,3))
+    mainwindow = MainWindow()
+    mainwindow.show()
+    logging.debug('Startup take %.2f sec', time.clock()-start_time)
     if settings['Main'].getint('backup', 1): backupcheck(nikki.filepath)
     sys.exit(ui.app.exec_())
