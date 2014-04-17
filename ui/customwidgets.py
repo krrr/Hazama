@@ -100,17 +100,18 @@ class NTextEdit(QTextEdit, TextFormatter):
 
 
 class SearchBox(QLineEdit):
+    """A real-time search box"""
     def __init__(self, parent=None):
         super(SearchBox, self).__init__(parent)
-
+        self.setMinimumHeight(23)  # looks fine when toolbar icon is 24x24
+        self.setTextMargins(QMargins(2, 0, 20, 0))
         self.button = QToolButton(self)
         self.button.setFixedSize(18, 18)
         self.button.setCursor(Qt.ArrowCursor)
         self.button.clicked.connect(self.clear)
-
         self.textChanged.connect(self.update)
         self.retranslate()
-        self.setTextMargins(QMargins(2, 0, 20, 0))
+        self.text_before_bool = True
         self.update('')
 
     def resizeEvent(self, event):
@@ -119,12 +120,15 @@ class SearchBox(QLineEdit):
         self.button.move(w - 18 - pos_y, pos_y)
 
     def update(self, text):
+        """Update button icon and PlaceholderText font style"""
+        if self.text_before_bool == bool(text): return
         ico_name = 'search_clr' if text else 'search'
         font_style = 'normal' if text else 'italic'
         self.button.setStyleSheet('QToolButton{border: none;'
                                   'background: url(:/images/%s.png);'
                                   'background-position: center}' % ico_name)
         self.setStyleSheet('QLineEdit{font-style: %s}' % font_style)
+        self.text_before_bool = bool(text)
 
     def retranslate(self):
         self.setPlaceholderText(self.tr('Search'))
