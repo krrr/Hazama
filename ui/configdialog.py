@@ -8,6 +8,7 @@ import logging
 
 class ConfigDialog(QDialog, Ui_Settings):
     langChanged = Signal()
+    needExport = Signal(bool)  # arg: export_all
     lang2index = {'en': 0, 'zh_CN': 1, 'ja': 2}  # index used in lang combo
     index2lang = {b: a for (a, b) in lang2index.items()}
 
@@ -34,16 +35,8 @@ class ConfigDialog(QDialog, Ui_Settings):
         logging.info('Settings saved')
         self.close()
 
-    # Move to NikkiList class
-    # @Slot()
-    # def on_exportBtn_clicked(self):
-    #     export_all = not bool(self.exportOption.currentIndex())
-    #     txtpath, _type = QFileDialog.getSaveFileName(self,
-    #         self.tr('Export Diary'), os.getcwd(),
-    #         self.tr('Plain Text (*.txt);;Rich Text (*.rtf)'))
-    #     if txtpath == '': return    # dialog canceled
-    #     if _type.endswith('txt)'):
-    #         selected = (None if export_all else
-    #                     [i.data(2) for i in self.mainw.nlist.selectedItems()])
-    #         nikki.exporttxt(txtpath, selected)
+    @Slot()
+    def on_exportBtn_clicked(self):
+        export_all = not bool(self.exportOption.currentIndex())
+        self.needExport.emit(export_all)
 

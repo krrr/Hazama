@@ -285,6 +285,16 @@ class NikkiList(QListWidget):
         self.setCurrentRow(rownum)
         self.reloaded.emit()
 
+    def handleExport(self, export_all):
+        path, _type = QFileDialog.getSaveFileName(parent=self,
+            caption=self.tr('Export Diary'),
+            filter=self.tr('Plain Text (*.txt);;Rich Text (*.rtf)'))
+        if path == '': return    # dialog canceled
+        if _type.endswith('txt)'):
+            selected = (None if export_all else
+                        [i.data(2) for i in self.selectedItems()])
+            nikki.exporttxt(path, selected)
+
     @staticmethod
     def getOrder():
         """get sort order(str) and reverse(int) from settings file"""

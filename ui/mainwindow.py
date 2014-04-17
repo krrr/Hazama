@@ -81,6 +81,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         except (AttributeError, RuntimeError):
             self.cfgDialog = ConfigDialog(self)
             self.cfgDialog.langChanged.connect(self.retranslate)
+            self.cfgDialog.needExport.connect(self.nlist.handleExport)
             self.cfgDialog.show()
 
     def toggleTagList(self, checked):
