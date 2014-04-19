@@ -1,6 +1,8 @@
 ﻿import sqlite3
 import sys
 import os
+import shutil
+import time
 import richtagparser
 import logging
 
@@ -23,11 +25,12 @@ class Nikki:
     """
 
     def __str__(self):
-        return '%s nikki in database' % self.count()
+        return '%s diary in database' % self.count()
 
-    def __init__(self, dbpath):
-        self.filepath = dbpath
-        self.conn = sqlite3.connect(dbpath)
+    def __init__(self, db_path):
+        self.setinstance(self)
+        self.filepath = db_path
+        self.conn = sqlite3.connect(db_path)
         self.exe = self.conn.execute
         self.conn.execute('CREATE TABLE IF NOT EXISTS Tags'
                           '(id INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE)')
@@ -60,8 +63,17 @@ class Nikki:
         taglst = [self.gettag(i[0]) for i in tags]
         tagstr = ' '.join(taglst) + ' ' if len(taglst) >= 1 else ''
 
-        return {'id': L[0], 'datetime': L[1], 'plaintext': L[2],
-                 'text': L[3], 'title': L[4], 'tags': tagstr}
+        return dict(id=L[0], datetime=L[1], plaintext=L[2], text=L[3],
+                    title=L[4], tags=tagstr)
+
+    def reconnect(self, db_path):
+        self.close()
+        self.filepath = db_path
+        self.conn = sqlite3.connect(db_path)
+        self.exe = self.conn.execute
+
+    def close(self):
+        self.conn.close()
 
     def importXml(self, xmlpath):
         "Import CintaNotes/Hazama XML file,will not appear in main program."
@@ -204,8 +216,8 @@ class Nikki:
 
             taglst = [self.gettag(i[0]) for i in tags]
             tagstr = ' '.join(taglst) + ' ' if len(taglst) >= 1 else ''
-            yield {'id': L[0], 'datetime': L[1], 'plaintext': L[2],
-                   'text': L[3], 'title': L[4], 'tags': tagstr}
+            yield dict(id=L[0], datetime=L[1], plaintext=L[2], text=L[3],
+                       title=L[4], tags=tagstr)
 
     def delete(self, id):
         self.conn.execute('DELETE FROM Nikki WHERE id = ?', (id,))
@@ -285,8 +297,48 @@ class Nikki:
         maxid = self.conn.execute('SELECT max(id) FROM Nikki').fetchone()[0]
         return maxid + 1 if maxid else 1
 
+    @classmethod
+    def setinstance(cls, instance):
+        cls.instance = instance
 
-if __name__ == '__main__':
-    path = os.path.split(__file__)[0] + os.sep
-    n = Nikki(path + 'nikkichou.db')
-    n.importXml(path + 'out.xml')
+    @classmethod
+    def getinstance(cls):
+        return cls.instance
+
+
+def list_backups():
+    files = sorted(os.listdir('backup'))
+    fil = lambda x: len(x)>10 and x[4]==x[7]=='-' and x[10]=='_'
+    return [i for i in files if fil(i)]
+
+
+def restore_backup(bk_name, db_path):
+    logging.info('Restore backup: %s', bk_name)
+    bk_path = os.path.join('backup', bk_name)
+    shutil.copyfile(bk_path, db_path)
+    Nikki.getinstance().reconnect(db_path)
+
+
+def check_backup(db_path):
+    """Check backups and do if necessary.Delete old backups."""
+    if not os.path.isdir('backup'): os.mkdir('backup')
+    backups = list_backups()
+    fmt = '%Y-%m-%d'
+    today = time.strftime(fmt)
+    try:
+        newest = backups[-1]
+    except IndexError:  # empty directory
+        newest = ''
+    if newest.split('_')[0] != today:  # new day
+        # make new backup
+        nikki = Nikki.getinstance()
+        shutil.copyfile(db_path, os.path.join('backup',
+                                              today+'_%d.db' % nikki.count()))
+        logging.info('Everyday backup succeed')
+        # delete old backups
+        weekbefore = time.strftime(fmt, time.localtime(int(time.time())-604800))
+        for dname in backups:
+            if dname < weekbefore:
+                os.remove(os.path.join('backup', dname))
+            else:
+                break

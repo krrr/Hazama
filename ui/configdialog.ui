@@ -32,7 +32,7 @@
       <enum>QTabWidget::Rounded</enum>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <property name="documentMode">
       <bool>false</bool>
@@ -158,13 +158,11 @@
           <string>Backup</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_4">
-          <property name="spacing">
-           <number>24</number>
-          </property>
           <item>
            <widget class="QLabel" name="bkLabel">
             <property name="text">
-             <string>Backup every day and keep each one for a week.</string>
+             <string>Backup every day and keep each one for a week.
+</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
@@ -172,25 +170,46 @@
            </widget>
           </item>
           <item>
+           <widget class="QCheckBox" name="bkCheck">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Enable backup</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <layout class="QHBoxLayout" name="horizontalLayout">
             <item>
-             <widget class="QCheckBox" name="bkCheck">
+             <spacer name="horizontalSpacer_3">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QComboBox" name="rstCombo">
               <property name="sizePolicy">
-               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+               <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
-              <property name="text">
-               <string>Enable backup</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="rstBtn">
-              <property name="text">
-               <string>Restore</string>
-              </property>
+              <item>
+               <property name="text">
+                <string>Select to restore</string>
+               </property>
+              </item>
              </widget>
             </item>
            </layout>
@@ -207,13 +226,11 @@
           <bool>false</bool>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_5">
-          <property name="spacing">
-           <number>24</number>
-          </property>
           <item>
            <widget class="QLabel" name="exportLabel">
             <property name="text">
-             <string>Export diary to single plain text file or RTF file.</string>
+             <string>Export diary to single plain text file or RTF file.
+</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>

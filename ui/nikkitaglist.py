@@ -5,6 +5,7 @@ from .editor import Editor
 from .customobjects import NTextDocument
 from config import settings, nikki
 import logging
+import random
 
 
 class NListDelegate(QStyledItemDelegate):
@@ -247,21 +248,15 @@ class NikkiList(QListWidget):
         del self.editors[editorid]
 
     def delNikki(self):
-        msgbox = QMessageBox(QMessageBox.NoIcon,
-                             self.tr('Delete selected diaries'),
-                             self.tr('Selected diaries will be deleted '
-                                     'permanently.Do it?'),
-                             QMessageBox.Yes | QMessageBox.No,
-                             parent=self)
-        msgbox.setDefaultButton(QMessageBox.Cancel)
-        ret = msgbox.exec_()
-        if ret == QMessageBox.Yes:
-            for i in self.selectedItems():
-                nikki.delete(i.data(2)['id'])
-                self.takeItem(self.row(i))
-            self.needRefresh.emit(True, True)
-        # QWidget.destroy() doesn't work
-        msgbox.deleteLater()
+        ret = QMessageBox.question(self, self.tr('Delete selected diaries'),
+                                   self.tr('Selected diaries will be deleted '
+                                           'permanently.Do it?'),
+                                   QMessageBox.Yes | QMessageBox.No)
+        if ret == QMessageBox.No: return
+        for i in self.selectedItems():
+            nikki.delete(i.data(2)['id'])
+            self.takeItem(self.row(i))
+        self.needRefresh.emit(True, True)
 
     def newNikki(self):
         self.startEditor(None, True)
@@ -273,16 +268,21 @@ class NikkiList(QListWidget):
             item.setData(2, row)
         self.setCurrentRow(0)
 
-    def reload(self, id):
+    def reload(self, id=None):
         order, reverse = self.getOrder()
         logging.debug('Nikki List reload')
         self.clear()
-        for row in nikki.sorted(order, reverse):
-            if row['id'] == id:
-                rownum = self.count()
-            item = QListWidgetItem(self)
-            item.setData(2, row)
-        self.setCurrentRow(rownum)
+        if id is None:
+            for row in nikki.sorted(order, reverse):
+                item = QListWidgetItem(self)
+                item.setData(2, row)
+        else:
+            for row in nikki.sorted(order, reverse):
+                if row['id'] == id:
+                    rownum = self.count()
+                item = QListWidgetItem(self)
+                item.setData(2, row)
+            self.setCurrentRow(rownum)
         self.reloaded.emit()
 
     def handleExport(self, export_all):
