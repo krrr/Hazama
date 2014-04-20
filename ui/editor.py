@@ -81,8 +81,8 @@ class Editor(QWidget, Ui_Editor):
                 tags = None
             # realid: id returned by database
             realid = nikki.save(id=self.id, datetime=self.datetime,
-                                html=self.textEditor.toHtml(),
-                                plaintxt=self.textEditor.toPlainText(),
+                                formats=self.textEditor.getFormats(),
+                                text=self.textEditor.toPlainText(),
                                 title=self.titleEditor.text(),
                                 tags=tags, new=self.new)
             return realid

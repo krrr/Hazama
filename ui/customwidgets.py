@@ -1,6 +1,7 @@
 from PySide.QtCore import *
 from PySide.QtGui import *
 from .customobjects import TextFormatter, NTextDocument
+from richtagparser import QtHtmlParser
 
 
 class NTextEdit(QTextEdit, TextFormatter):
@@ -70,6 +71,10 @@ class NTextEdit(QTextEdit, TextFormatter):
         else:
             self.submenu.setEnabled(False)
         self.menu.exec_(event.globalPos())
+
+    def getFormats(self):
+        parser = QtHtmlParser()
+        return parser.feed(self.toHtml())
 
     def clearFormat(self):
         fmt = QTextCharFormat()

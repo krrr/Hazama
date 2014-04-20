@@ -75,123 +75,57 @@ class Nikki:
     def close(self):
         self.conn.close()
 
-    def importXml(self, xmlpath):
-        "Import CintaNotes/Hazama XML file,will not appear in main program."
-
-        def trans_date(datetime):
-            d, t = datetime.split('T')
-            return (d[:4] + '/' + d[4:6] + '/' + d[6:] + ' '  # date
-                    + t[:2] + ':' + t[2:4])  # time
-
+    def importxml(self, path):
+        """Import XML file"""
         import xml.etree.ElementTree as ET
-
-        tree = ET.parse(xmlpath)
+        tree = ET.parse(path)
         root = tree.getroot()
-        Hxml = True if 'nikkichou' in str(root) else False
-
-        if Hxml:
-            startindex = 2
-        else:  # CintaNotes XML
-            startindex = 1 if root.find('tags') else 0
-
-        # save tags into Tags Table.its index is always 0 in root
-        if root.find('tags'):
-            for t in root[0]:
-                tag = (t.attrib['name'],)
-                try:
-                    self.conn.execute('INSERT INTO Tags VALUES(NULL,?)', tag)
-                except Exception:
-                    logging.warning('Failed adding tag: %s' % tag)
-            self.commit()
-
-        id = self.getnewid()  # the first column in Nikki Table
-        index = startindex
-        for i in range(startindex, len(root)):
-            nikki = root[i].attrib
-            text = root[i].text if root[i].text else ' '
-            plain = int(nikki.get('plainText', 0))
-            # import nikki itself into Nikki Table
-            datetime = nikki['datetime'] if Hxml else trans_date(nikki['created'])
-            values = (datetime, plain, text, nikki['title'])
-            self.conn.execute('INSERT INTO Nikki VALUES(NULL,?,?,?,?)',
-                              values)
-            # import tags if nikki has
-            if nikki['tags']:
-                for tag in nikki['tags'].split():
-                    values = (id, self.conn.execute('SELECT id FROM '
-                                                    'Tags WHERE name=?', (tag,)).fetchone()[0])
-                    self.conn.execute('INSERT INTO Nikki_Tags VALUES(?,?)',
-                                      values)
-            # import formats if nikki has rich text
-            if not plain:
-                if not Hxml:
-                    parser = richtagparser.RichTagParser(strict=False)
-                    parser.myfeed(id, text, self.conn)
-                    text = parser.getstriped()
-                else:
-                    for f in root[1]:
-                        if int(f.attrib['index']) == index:
-                            values = (id, f.attrib['start'],
-                                      f.attrib['length'], f.attrib['type'])
-                            self.conn.execute('INSERT INTO TextFormat VALUES '
-                                              '(?,?,?,?)', values)
-
-            id += 1
-            index += 1
-
+        for i in root:
+            formats = i.find('formats')
+            formats = [(f.get('start'), f.get('length'), f.get('type'))
+                       for f in formats] if formats else []
+            self.save(new=True, id=None, datetime=i.get('datetime'),
+                      title=i.get('title'), tags=i.get('tags').split(),
+                      text=i.text, formats=formats, batch=True)
         self.commit()
 
-    def exportXml(self, xmlpath):
-        """Export XML file,will not appear in main program."""
+    def exportxml(self, path):
+        """Export to XML file"""
         import xml.etree.ElementTree as ET
-
         root = ET.Element('nikkichou')
-        tags = ET.SubElement(root, 'tags')
-        reachedTags = set()
-        formats = ET.SubElement(root, 'formats')
-
-        for e in enumerate(self.sorted('datetime'), 2):
-            index, n = e  # index just connect a rich nikki to its formats
+        for row in self.sorted('datetime'):
             nikki = ET.SubElement(root, 'nikki')
             for attr in ['title', 'datetime', 'tags']:
-                nikki.set(attr, n[attr])
-            nikki.set('plainText', str(n['plaintext']))
-            nikki.text = n['text']
-            # save reatched tags to set
-            if n['tags']:
-                for t in n['tags'].split(): reachedTags.add((t))
+                nikki.set(attr, row[attr])
+            nikki.text = row['text']
             # save format if current nikki has
-            if not n['plaintext']:
-                for r in self.getformat(n['id']):
-                    format = ET.SubElement(formats, 'format')
+            if not row['plaintext']:
+                formats = ET.SubElement(nikki, 'formats')
+                for r in self.getformat(row['id']):
+                    fmt = ET.SubElement(formats, 'format')
                     for i in enumerate(['start', 'length', 'type']):
-                        format.set('index', str(index))
-                        format.set(i[1], str(r[i[0]]))
-
-        for t in reachedTags:
-            tag = ET.SubElement(tags, 'tag')
-            tag.set('name', t)
-
+                        fmt.set(i[1], str(r[i[0]]))
         tree = ET.ElementTree(root)
-        tree.write(xmlpath, encoding='utf-8')
+        tree.write(path, encoding='utf-8')
 
-    def exporttxt(self, txtpath, selected=None):
+    def exporttxt(self, path, selected=None):
         """Export to TXT file using template(string format).
         When selected is a list contains nikki data,only export diary in list."""
-        file = open(txtpath, 'w', encoding='utf-8')
+        file = open(path, 'w', encoding='utf-8')
         try:
             with open('template.txt', encoding='utf-8') as f:
                 tpl = f.read()
+            hint = 'custom'
         except OSError:
-            logging.info('Use default template')
             tpl = default_tpl
+            hint = 'default'
         for n in (self.sorted('datetime', False) if selected is None
-                   else selected):
+                  else selected):
             file.write(tpl.format(n))
         file.close()
-        logging.info('Export succeed')
+        logging.info('Export succeed(use %s template)', hint)
 
-    def sorted(self, orderby, reverse=True, *, tagid=None, search=None):
+    def sorted(self, order, reverse=True, *, tagid=None, search=None):
         if tagid and (search is None):  # only fetch nikki whose tagid matchs
             where = ('WHERE id IN (SELECT nikkiid FROM Nikki_Tags WHERE '
                      'tagid=%i) ') % tagid
@@ -202,18 +136,16 @@ class Nikki:
             where = ('WHERE (id IN (SELECT nikkiid FROM Nikki_Tags WHERE '
                      'tagid=%i)) AND (datetime LIKE "%%%s%%" OR '
                      'text LIKE "%%%s%%" OR title LIKE "%%%s%%")' %
-                     ((tagid,) + (search,) * 3))
+                     (tagid, search, search, search))
         else:
             where = ''
-
-        if orderby == 'length':
-            orderby = 'LENGTH(text)'
+        if order == 'length':
+            order = 'LENGTH(text)'
         cmd = ('SELECT * FROM Nikki ' + where + 'ORDER BY ' +
-               orderby + (' DESC' if reverse else ''))
+               order + (' DESC' if reverse else ''))
         for L in self.conn.execute(cmd):
             tags = self.conn.execute('SELECT tagid FROM Nikki_Tags WHERE '
                                      'nikkiid = ?', (L[0],))
-
             taglst = [self.gettag(i[0]) for i in tags]
             tagstr = ' '.join(taglst) + ' ' if len(taglst) >= 1 else ''
             yield dict(id=L[0], datetime=L[1], plaintext=L[2], text=L[3],
@@ -245,52 +177,49 @@ class Nikki:
                 result = self.conn.execute('SELECT name FROM Tags')
                 return [n[0] for n in result]
 
+    def gettagid(self, name):
+        """Get tag-id by name"""
+        return self.exe('SELECT id FROM Tags WHERE name=?',
+                        (name,)).fetchone()[0]
+
     def getformat(self, id):
         return self.conn.execute('SELECT start,length,type FROM TextFormat '
                                  'WHERE nikkiid=?', (id,))
 
-    def save(self, new, id, datetime, html, title, tags, plaintxt):
+    def save(self, new, id, datetime, title, tags, text, formats, batch=False):
+        """
+        arguments:
+        batch - commit will be skipped if True
+        """
         id = self.getnewid() if new else id
-
-        parser = richtagparser.QtHtmlParser()
-        formats = parser.myfeed(html)
         plain = not formats
-        values = ((None, datetime, plain, plaintxt, title) if new else
-                  (datetime, plain, plaintxt, title, id))
+        values = ((None, datetime, plain, text, title) if new else
+                  (datetime, plain, text, title, id))
         cmd = ('INSERT INTO Nikki VALUES(?,?,?,?,?)' if new else
                'UPDATE Nikki SET datetime=?, plaintext=?, '
                'text=?, title=? WHERE id=?')
-        try:
-            self.exe(cmd, values)
-        except Exception:
-            logging.warning('Failed saving Nikki (ID: %s)' % id)
-            return
-        else:
-            logging.info('Nikki saved (ID: %s)' % id)
+        self.exe(cmd, values)
         # formats processing
-        if not new:  # delete existed format information
-            try:
+        if formats:
+            if not new:  # delete existed format information
                 self.exe('DELETE FROM TextFormat WHERE nikkiid=?', (id,))
-            except Exception:
-                pass
-        for i in formats:
-            cmd = 'INSERT INTO TextFormat VALUES(?,?,?,?)'
-            self.exe(cmd, (id,) + i)
+            for i in formats:
+                cmd = 'INSERT INTO TextFormat VALUES(?,?,?,?)'
+                self.exe(cmd, (id,) + i)
         # tags processing
-        if tags is not None:  # tags modified
+        if tags is not None:  # tags is None when not new and not changed
             if not new:  # if diary isn't new,delete its tags first
                 self.exe('DELETE FROM Nikki_Tags WHERE nikkiid=?', (id,))
             for t in tags:
                 try:
+                    tagid = self.gettagid(t)
+                except TypeError:  # tag not exists
                     self.exe('INSERT INTO Tags VALUES(NULL,?)', (t,))
-                except Exception:
-                    pass
-            self.commit()
-            for t in tags:
-                cmd = 'SELECT id FROM Tags WHERE name=?'
-                tagid = self.exe(cmd, (t,)).fetchone()[0]
+                    self.commit()
+                    tagid = self.gettagid(t)
                 self.exe('INSERT INTO Nikki_Tags VALUES(?,?)', (id, tagid))
-        self.commit()
+        if not batch: self.commit()
+        logging.info('Nikki saved(ID: %s)' % id)
         return id
 
     def getnewid(self):
