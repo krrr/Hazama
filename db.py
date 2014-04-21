@@ -3,7 +3,6 @@ import sys
 import os
 import shutil
 import time
-import richtagparser
 import logging
 
 
