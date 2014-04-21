@@ -17,7 +17,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.nlist.load()
         # setup TagList width
         tlist_w = settings['Main'].getint('taglistwidth', 0)
-        self.splitter.setSizes([tlist_w, -1])
+        if not self.isMaximized():
+            self.splitter.setSizes([tlist_w, self.width()-tlist_w])
         # setup sort menu
         s_menu = SortOrderMenu(self)
         s_menu.bydatetime.triggered[bool].connect(self.nlist.sortDT)

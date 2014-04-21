@@ -187,7 +187,6 @@ class NikkiList(QListWidget):
 
     def __init__(self, *args, **kwargs):
         super(NikkiList, self).__init__(*args, **kwargs)
-        self.setMinimumSize(350, 200)
         self.editors = {}
 
         self.setSelectionMode(self.ExtendedSelection)
