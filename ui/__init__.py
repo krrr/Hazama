@@ -42,21 +42,23 @@ class Fonts:
     """Manage all fonts used in application"""
     def __init__(self):
         self.title = QFont()
+        self.date = QFont()
+        self.text = QFont()
+        self.sys = app.font()
+        self.default = app.font()
+        self.default_m = QFontMetrics(self.default)
+        self.title_m = self.date_m = self.date_m = None
+
+    def load(self):
         self.title.fromString(settings['Font'].get('title'))
         self.title_m = QFontMetrics(self.title)
-        self.date = QFont()
         self.date.fromString(settings['Font'].get('datetime'))
         self.date_m = QFontMetrics(self.date)
-        self.text = QFont()
         self.text.fromString(settings['Font'].get('text'))
-        self.sys = app.font()
         if settings['Font'].get('default'):
-            self.default = QFont()
             self.default.fromString(settings['Font'].get('default'))
+            self.default_m = QFontMetrics(self.default)
             app.setFont(self.default)
-        else:
-            self.default = app.font()
-        self.default_m = QFontMetrics(self.default)
 
 
 # setup application icon
@@ -67,6 +69,7 @@ appicon.addFile(':/appicon64.png')
 app.setWindowIcon(appicon)
 # setup fonts after qApp created
 font = Fonts()
+font.load()
 # setup translation
 set_trans()
 dt_trans = dt_trans_gen()

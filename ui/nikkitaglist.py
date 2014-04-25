@@ -301,6 +301,10 @@ class NikkiList(QListWidget):
         reverse = settings['Main'].getint('listreverse', 1)
         return order, reverse
 
+    def reloadWithDgReset(self):
+        self.setItemDelegate(NListDelegate(self))
+        self.reload()
+
     def selectRandomly(self):
         self.setCurrentRow(random.randrange(0, self.count()))
 

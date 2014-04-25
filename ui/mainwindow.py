@@ -12,6 +12,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
         self.setupUi(self)
+        self.cfgDialog = None  # create on on_cfgAct_triggered
         geo = settings['Main'].get('windowgeo')
         self.restoreGeometry(QByteArray.fromHex(geo))
         self.nlist.load()
@@ -84,6 +85,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.cfgDialog.langChanged.connect(self.retranslate)
             self.cfgDialog.needExport.connect(self.nlist.handleExport)
             self.cfgDialog.bkRestored.connect(self.nlist.reload)
+            self.cfgDialog.accepted.connect(self.nlist.reloadWithDgReset)
             self.cfgDialog.show()
 
     def toggleTagList(self, checked):
