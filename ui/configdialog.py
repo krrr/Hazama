@@ -30,18 +30,26 @@ class ConfigDialog(QDialog, Ui_Settings):
         self.rstCombo.addItems(db.list_backups())
         self.preLinesBox.setValue(settings['Main'].getint('previewlines', 4))
         # load settings(fonts)
-        self.setFontButton(self.dtFontBtn, font.date)
-        self.setFontButton(self.titleFontBtn, font.title)
-        self.setFontButton(self.textFontBtn, font.text)
         self.defFontGBox.setChecked(bool(settings['Font'].get('default')))
-        self.setFontButton(self.defFontBtn, font.default)
+        self.dtFontBtn.configName = 'datetime'
+        self.titleFontBtn.configName = 'title'
+        self.textFontBtn.configName = 'text'
+        self.defFontBtn.configName = 'default'
+        self.buttons = [self.dtFontBtn, self.titleFontBtn, self.textFontBtn,
+                        self.defFontBtn]
+        for i in self.buttons:
+            i.clicked.connect(self.handleFontBtn)
+            # parm font.data in getattr is for dtFontBtn
+            self.setFontButton(i, getattr(font, i.configName, font.date))
 
     def accept(self):
         settings['Editor']['autoindent'] = str(self.aindCheck.isChecked().real)
         settings['Editor']['titlefocus'] = str(self.tfocusCheck.isChecked().real)
         settings['Main']['backup'] = str(self.bkCheck.isChecked().real)
         settings['Main']['previewlines'] = str(self.preLinesBox.value())
-        if self.defFontGBox.isChecked() is False:
+        for i in self.buttons:
+            settings['Font'][i.configName] = i.font().toString()
+        if not self.defFontGBox.isChecked() and settings['Font']['default']:
             del settings['Font']['default']
         lang = self.index2lang[self.langCombo.currentIndex()]
         if settings['Main'].get('lang', 'en') != lang:
@@ -69,37 +77,11 @@ class ConfigDialog(QDialog, Ui_Settings):
         self.rstCombo.setCurrentIndex(0)
         self.bkRestored.emit()
 
-    @Slot()
-    def on_dtFontBtn_clicked(self):
-        f, ok = QFontDialog.getFont(font.date, self,
-                                    self.tr('Change Datetime Font'))
+    def handleFontBtn(self):
+        btn = self.sender()
+        f, ok = QFontDialog.getFont(btn.font(), self)
         if ok:
-            settings['Font']['datetime'] = f.toString()
-            self.setFontButton(self.dtFontBtn, f)
-
-    @Slot()
-    def on_titleFontBtn_clicked(self):
-        f, ok = QFontDialog.getFont(font.title, self,
-                                    self.tr('Change Title Font'))
-        if ok:
-            settings['Font']['title'] = f.toString()
-            self.setFontButton(self.titleFontBtn, f)
-
-    @Slot()
-    def on_textFontBtn_clicked(self):
-        f, ok = QFontDialog.getFont(font.text, self,
-                                    self.tr('Change Text Font'))
-        if ok:
-            settings['Font']['text'] = f.toString()
-            self.setFontButton(self.textFontBtn, f)
-
-    @Slot()
-    def on_defFontBtn_clicked(self):
-        f, ok = QFontDialog.getFont(font.default, self,
-                                    self.tr('Override Default Font'))
-        if ok:
-            settings['Font']['default'] = f.toString()
-            self.setFontButton(self.defFontBtn, f)
+            self.setFontButton(btn, f)
 
     @staticmethod
     def setFontButton(btn, _font):
