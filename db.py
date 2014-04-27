@@ -33,8 +33,7 @@ class Nikki:
                           '(id INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE)')
         self.conn.execute('CREATE TABLE IF NOT EXISTS Nikki'
                           '(id INTEGER PRIMARY KEY, datetime TEXT NOT NULL, '
-                          'plaintext INTEGER NOT NULL, text TEXT NOT NULL, '
-                          'title TEXT NOT NULL)')
+                          'text TEXT NOT NULL, title TEXT NOT NULL)')
         self.conn.execute('CREATE TABLE IF NOT EXISTS Nikki_Tags'
                           '(nikkiid INTEGER NOT NULL REFERENCES Nikki(id) '
                           'ON DELETE CASCADE, tagid INTEGER NOT NULL,'
@@ -80,7 +79,7 @@ class Nikki:
         for i in root:
             formats = i.find('formats')
             formats = [(f.get('start'), f.get('length'), f.get('type'))
-                       for f in formats] if formats else []
+                       for f in formats] if formats else None
             self.save(new=True, id=None, datetime=i.get('datetime'),
                       title=i.get('title'), tags=i.get('tags').split(),
                       text=i.text, formats=formats, batch=True)
@@ -92,18 +91,20 @@ class Nikki:
         root = ET.Element('nikkichou')
         for row in self.sorted('datetime'):
             nikki = ET.SubElement(root, 'nikki')
-            for attr in ['title', 'datetime', 'tags']:
+            for attr in ['title', 'datetime']:
                 nikki.set(attr, row[attr])
+            nikki.set('tags', ' '.join(row['tags']) if row['tags'] else '')
             nikki.text = row['text']
             # save format if current nikki has
-            if not row['plaintext']:
+            if row['formats']:
                 formats = ET.SubElement(nikki, 'formats')
-                for r in self.getformat(row['id']):
+                for f in row['formats']:
                     fmt = ET.SubElement(formats, 'format')
-                    for i in enumerate(['start', 'length', 'type']):
-                        fmt.set(i[1], str(r[i[0]]))
+                    for index, item in enumerate(['start', 'length', 'type']):
+                        fmt.set(item, str(f[index]))
         tree = ET.ElementTree(root)
         tree.write(path, encoding='utf-8')
+        logging.info('Export(XML) succeed')
 
     def exporttxt(self, path, selected=None):
         """Export to TXT file using template(string format).
@@ -148,8 +149,8 @@ class Nikki:
                                'WHERE nikkiid=?', (L[0],))
             # cursor object only generates once, so we make a list
             formats = [i for i in formats] if formats else None
-            yield dict(id=L[0], datetime=L[1], text=L[3],
-                       title=L[4], tags=tags, formats=formats)
+            yield dict(id=L[0], datetime=L[1], text=L[2],
+                       title=L[3], tags=tags, formats=formats)
 
     def delete(self, id):
         self.conn.execute('DELETE FROM Nikki WHERE id = ?', (id,))
@@ -188,12 +189,10 @@ class Nikki:
         batch - commit will be skipped if True
         """
         id = self.getnewid() if new else id
-        plain = not formats
-        values = ((None, datetime, plain, text, title) if new else
-                  (datetime, plain, text, title, id))
-        cmd = ('INSERT INTO Nikki VALUES(?,?,?,?,?)' if new else
-               'UPDATE Nikki SET datetime=?, plaintext=?, '
-               'text=?, title=? WHERE id=?')
+        values = ((None, datetime, text, title) if new else
+                  (datetime, text, title, id))
+        cmd = ('INSERT INTO Nikki VALUES(?,?,?,?)' if new else
+               'UPDATE Nikki SET datetime=?, text=?, title=? WHERE id=?')
         self.exe(cmd, values)
         # formats processing
         if formats:
@@ -214,9 +213,10 @@ class Nikki:
                     self.commit()
                     tagid = self.gettagid(t)
                 self.exe('INSERT INTO Nikki_Tags VALUES(?,?)', (id, tagid))
-        if not batch: self.commit()
-        logging.info('Nikki saved(ID: %s)' % id)
-        return id
+        if not batch:
+            self.commit()
+            logging.info('Nikki saved(ID: %s)' % id)
+            return id
 
     def getnewid(self):
         maxid = self.conn.execute('SELECT max(id) FROM Nikki').fetchone()[0]
