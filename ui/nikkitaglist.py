@@ -64,8 +64,7 @@ class NListDelegate(QStyledItemDelegate):
                              Qt.AlignBottom | Qt.AlignRight, title)
         # draw text
         painter.save()
-        formats = None if row['plaintext'] else nikki.getformat(row['id'])
-        self.doc.setText(row['text'], formats)
+        self.doc.setText(row['text'], row['formats'])
         self.doc.setTextWidth(w-26)
         painter.translate(x+14, y+self.title_h+2)
         self.doc.drawContents(painter, QRect(0, 0, w-26, self.text_h))
@@ -76,7 +75,7 @@ class NListDelegate(QStyledItemDelegate):
             painter.setPen(self.c_gray)
             painter.setFont(qApp.font())
             painter.translate(x + 15, y+self.title_h+6+self.text_h)
-            for t in row['tags'].split():
+            for t in row['tags']:
                 w = font.default_m.width(t) + 4
                 tagpath = QPainterPath()
                 tagpath.moveTo(8, 0)

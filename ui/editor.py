@@ -24,8 +24,7 @@ class Editor(QWidget, Ui_Editor):
         if not new:
             self.datetime = row['datetime']
             self.titleEditor.setText(row['title'])
-            formats = None if row['plaintext'] else nikki.getformat(row['id'])
-            self.textEditor.setText(row['text'], formats)
+            self.textEditor.setText(row['text'], row['formats'])
         else:
             self.datetime = None
         self.textEditor.setFont(font.text)
@@ -44,7 +43,9 @@ class Editor(QWidget, Ui_Editor):
         self.dtBtn.setIconSize(QSize(sz, sz))
         # set up tagEditor
         self.updateTagEditorFont('')
-        if not new: self.tagEditor.setText(row['tags'])
+        if not new:
+            tags = row['tags']
+            self.tagEditor.setText(' '.join(tags) if tags else '')
         completer = TagCompleter(nikki.gettag(), self)
         self.tagEditor.setCompleter(completer)
         self.timeModified = self.tagsModified = False
