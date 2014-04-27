@@ -28,9 +28,7 @@ class Nikki:
 
     def __init__(self, db_path):
         self.setinstance(self)
-        self.filepath = db_path
-        self.conn = sqlite3.connect(db_path)
-        self.exe = self.conn.execute
+        self.connect(db_path)
         self.conn.execute('CREATE TABLE IF NOT EXISTS Tags'
                           '(id INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE)')
         self.conn.execute('CREATE TABLE IF NOT EXISTS Nikki'
@@ -49,7 +47,6 @@ class Nikki:
                           'DELETE ON Nikki_Tags BEGIN   DELETE FROM Tags '
                           'WHERE (SELECT COUNT(*) FROM Nikki_Tags WHERE '
                           'Nikki_Tags.tagid=Tags.id)==0;  END')
-        self.conn.execute('PRAGMA foreign_keys = ON')
         logging.info(str(self))
 
     def __getitem__(self, id):
@@ -65,11 +62,11 @@ class Nikki:
         return dict(id=L[0], datetime=L[1], plaintext=L[2], text=L[3],
                     title=L[4], tags=tagstr)
 
-    def reconnect(self, db_path):
-        self.close()
-        self.filepath = db_path
+    def connect(self, db_path):
+        self.path = db_path
         self.conn = sqlite3.connect(db_path)
         self.exe = self.conn.execute
+        self.exe('PRAGMA foreign_keys = ON')
 
     def close(self):
         self.conn.close()
@@ -225,6 +222,9 @@ class Nikki:
         maxid = self.conn.execute('SELECT max(id) FROM Nikki').fetchone()[0]
         return maxid + 1 if maxid else 1
 
+    def getpath(self):
+        return self.path
+
     @classmethod
     def setinstance(cls, instance):
         cls.instance = instance
@@ -236,19 +236,22 @@ class Nikki:
 
 def list_backups():
     files = sorted(os.listdir('backup'))
-    fil = lambda x: len(x)>10 and x[4]==x[7]=='-' and x[10]=='_'
+    fil = lambda x: (len(x) > 10) and (x[4] == x[7] == '-') and (x[10] == '_')
     return [i for i in files if fil(i)]
 
 
-def restore_backup(bk_name, db_path):
+def restore_backup(bk_name):
     logging.info('Restore backup: %s', bk_name)
+    nikki = Nikki.getinstance()
+    nikki.close()
     bk_path = os.path.join('backup', bk_name)
-    shutil.copyfile(bk_path, db_path)
-    Nikki.getinstance().reconnect(db_path)
+    shutil.copyfile(bk_path, nikki.getpath())
+    nikki.connect(nikki.getpath())
 
 
-def check_backup(db_path):
+def check_backup():
     """Check backups and do if necessary.Delete old backups."""
+    db_path = Nikki.getinstance().getpath()
     if not os.path.isdir('backup'): os.mkdir('backup')
     backups = list_backups()
     fmt = '%Y-%m-%d'
@@ -270,3 +273,4 @@ def check_backup(db_path):
                 os.remove(os.path.join('backup', dname))
             else:
                 break
+

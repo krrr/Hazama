@@ -65,7 +65,7 @@ class ConfigDialog(QDialog, Ui_Settings):
                                            'lost.Do it?'),
                                    QMessageBox.Yes | QMessageBox.No)
         if ret == QMessageBox.No: return
-        db.restore_backup(filename, settings['Main'].get('dbpath', 'nikkichou.db'))
+        db.restore_backup(filename)
         self.rstCombo.setCurrentIndex(0)
         self.bkRestored.emit()
 

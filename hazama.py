@@ -1,4 +1,4 @@
-﻿import db
+import db
 import logging
 import sys
 import os
@@ -18,5 +18,5 @@ if __name__ == '__main__':
     mainwindow.show()
     logging.debug('Startup take %.2f sec', time.clock()-start_time)
     if settings['Main'].getint('backup', 1):
-        db.check_backup(nikki.filepath)
+        db.check_backup()
     sys.exit(ui.app.exec_())
