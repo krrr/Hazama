@@ -28,6 +28,9 @@
    </property>
    <item>
     <widget class="QTabWidget" name="tabWidget">
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
      <widget class="QWidget" name="general">
       <attribute name="title">
        <string>General</string>
@@ -349,11 +352,7 @@
            </widget>
           </item>
           <item row="0" column="1">
-           <widget class="QPushButton" name="dtFontBtn">
-            <property name="text">
-             <string>PushButton</string>
-            </property>
-           </widget>
+           <widget class="QPushButton" name="dtFontBtn"/>
           </item>
           <item row="1" column="0">
            <widget class="QLabel" name="titleFontLabel">
@@ -370,18 +369,10 @@
            </widget>
           </item>
           <item row="1" column="1">
-           <widget class="QPushButton" name="titleFontBtn">
-            <property name="text">
-             <string>PushButton</string>
-            </property>
-           </widget>
+           <widget class="QPushButton" name="titleFontBtn"/>
           </item>
           <item row="2" column="1">
-           <widget class="QPushButton" name="textFontBtn">
-            <property name="text">
-             <string>PushButton</string>
-            </property>
-           </widget>
+           <widget class="QPushButton" name="textFontBtn"/>
           </item>
           <item row="3" column="0" colspan="2">
            <widget class="QGroupBox" name="defFontGBox">
@@ -396,11 +387,7 @@
             </property>
             <layout class="QHBoxLayout" name="horizontalLayout_5">
              <item>
-              <widget class="QPushButton" name="defFontBtn">
-               <property name="text">
-                <string>PushButton</string>
-               </property>
-              </widget>
+              <widget class="QPushButton" name="defFontBtn"/>
              </item>
             </layout>
            </widget>

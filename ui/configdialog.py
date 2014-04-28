@@ -72,10 +72,12 @@ class ConfigDialog(QDialog, Ui_Settings):
                                    self.tr('All diaries in book will be '
                                            'lost.Do it?'),
                                    QMessageBox.Yes | QMessageBox.No)
-        if ret == QMessageBox.No: return
-        db.restore_backup(filename)
-        self.rstCombo.setCurrentIndex(0)
-        self.bkRestored.emit()
+        if ret == QMessageBox.Yes:
+            db.restore_backup(filename)
+            self.bkRestored.emit()
+            self.close()
+        else:
+            self.rstCombo.setCurrentIndex(0)
 
     def handleFontBtn(self):
         btn = self.sender()
