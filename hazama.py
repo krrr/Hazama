@@ -4,7 +4,7 @@ import sys
 import os
 import time
 
-__version__ = 0.092
+__version__ = 0.10
 
 
 if __name__ == '__main__':

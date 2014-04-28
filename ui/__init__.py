@@ -24,7 +24,7 @@ def currentdt_str():
 
 
 def set_trans():
-    """Install Qt ranslations and set locale"""
+    """Install Qt translations and set locale"""
     lang = settings['Main'].get('lang', 'en')
     logging.info('Set translation(%s)', lang)
     global trans, transQt
