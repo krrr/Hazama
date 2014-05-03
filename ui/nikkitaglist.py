@@ -20,6 +20,7 @@ class NListDelegate(QStyledItemDelegate):
         self.tagpath_h = QFontInfo(qApp.font()).pixelSize() + 4
         self.tag_h = self.tagpath_h + 4
         self.dt_w = QFontMetrics(font.title).width('2000/00/00 00:00') + 20
+        self.all_h = None  # updated in sizeHint before each item being painting
         # doc is used to draw text(diary's body)
         self.doc = NTextDocument()
         self.doc.setDefaultFont(font.text)
@@ -145,6 +146,7 @@ class TagList(QListWidget):
         self.setVerticalScrollMode(QAbstractItemView.ScrollPerPixel)
         self.setUniformItemSizes(True)
         self.setStyleSheet(TListDelegate.stylesheet)
+        self.tracklst = None  # update in mousePressEvent
 
     def load(self):
         logging.info('Tag List load')
@@ -246,15 +248,16 @@ class NikkiList(QListWidget):
         del self.editors[editorid]
 
     def delNikki(self):
+        if len(self.selectedItems()) == 0: return
         ret = QMessageBox.question(self, self.tr('Delete selected diaries'),
                                    self.tr('Selected diaries will be deleted '
                                            'permanently.Do it?'),
                                    QMessageBox.Yes | QMessageBox.No)
-        if ret == QMessageBox.No: return
-        for i in self.selectedItems():
-            nikki.delete(i.data(2)['id'])
-            self.takeItem(self.row(i))
-        self.needRefresh.emit(True, True)
+        if ret == QMessageBox.Yes:
+            for i in self.selectedItems():
+                nikki.delete(i.data(2)['id'])
+                self.takeItem(self.row(i))
+            self.needRefresh.emit(True, True)
 
     def newNikki(self):
         self.startEditor(None, True)
