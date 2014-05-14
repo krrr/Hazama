@@ -9,10 +9,18 @@ class NTextEdit(QTextEdit, TextFormatter):
     """The widget used to edit diary contents in Editor window."""
     def __init__(self, *args, **kwargs):
         super(NTextEdit, self).__init__(*args, **kwargs)
+        # setup colors
         prt = self.palette()
         prt.setColor(prt.Highlight, QColor(180, 180, 180))
         prt.setColor(prt.HighlightedText, QColor(0, 0, 0))
         self.setPalette(prt)
+        # remove highlight color's alpha to avoid alpha loss in copy&paste.
+        # NTextDocument should use this color too.
+        hl, bg = self.HlColor, prt.base().color()
+        fac = hl.alpha() / 255
+        self.HlColor = QColor(round(hl.red()*fac + bg.red()*(1-fac)),
+                              round(hl.green()*fac + bg.green()*(1-fac)),
+                              round(hl.blue()*fac + bg.blue()*(1-fac)))
         self.autoIndent = False
         self.setTabChangesFocus(True)
         # create format menu
@@ -50,6 +58,7 @@ class NTextEdit(QTextEdit, TextFormatter):
 
     def setText(self, text, formats):
         doc = NTextDocument(self)
+        doc.setHlColor(self.HlColor)
         doc.setText(text, formats)
         doc.clearUndoRedoStacks()
         doc.setModified(False)
@@ -62,12 +71,12 @@ class NTextEdit(QTextEdit, TextFormatter):
     def contextMenuEvent(self, event):
         cur = self.textCursor()
         if cur.hasSelection():
-            curtfmt = cur.charFormat()
-            self.hlAct.setChecked(curtfmt.background().color() == self.hl_color)
-            self.bdAct.setChecked(curtfmt.fontWeight() == QFont.Bold)
-            self.soAct.setChecked(curtfmt.fontStrikeOut())
-            self.ulAct.setChecked(curtfmt.fontUnderline())
-            self.itaAct.setChecked(curtfmt.fontItalic())
+            curtFmt = cur.charFormat()
+            self.hlAct.setChecked(curtFmt.background().color() == self.HlColor)
+            self.bdAct.setChecked(curtFmt.fontWeight() == QFont.Bold)
+            self.soAct.setChecked(curtFmt.fontStrikeOut())
+            self.ulAct.setChecked(curtFmt.fontUnderline())
+            self.itaAct.setChecked(curtFmt.fontItalic())
             self.submenu.setEnabled(True)
         else:
             self.submenu.setEnabled(False)
