@@ -235,7 +235,10 @@ class Nikki:
 
 
 def list_backups():
-    files = sorted(os.listdir('backup'))
+    try:
+        files = sorted(os.listdir('backup'))
+    except FileNotFoundError:
+        return []
     fil = lambda x: (len(x) > 10) and (x[4] == x[7] == '-') and (x[10] == '_')
     return [i for i in files if fil(i)]
 
