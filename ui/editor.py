@@ -1,9 +1,9 @@
 from PySide.QtGui import *
 from PySide.QtCore import *
-from .editor_ui import Ui_Editor
-from .customobjects import TagCompleter
-from .customwidgets import DateTimeDialog
-from . import font, dt_trans, currentdt_str
+from ui.editor_ui import Ui_Editor
+from ui.customobjects import TagCompleter
+from ui.customwidgets import DateTimeDialog
+from ui import font, dt_trans, currentdt_str
 from config import settings, nikki
 
 

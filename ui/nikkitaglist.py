@@ -1,8 +1,8 @@
 from PySide.QtGui import *
 from PySide.QtCore import *
-from . import font, dt_trans
-from .editor import Editor
-from .customobjects import NTextDocument
+from ui import font, dt_trans
+from ui.editor import Editor
+from ui.customobjects import NTextDocument
 from config import settings, nikki
 import logging
 import random

@@ -1,7 +1,7 @@
 from PySide.QtGui import *
 from PySide.QtCore import *
-from .configdialog_ui import Ui_Settings
-from . import font
+from ui.configdialog_ui import Ui_Settings
+from ui import font
 from config import settings
 import db
 import logging

@@ -1,7 +1,7 @@
 from PySide.QtGui import QApplication, QIcon, QFont, QFontMetrics
 from PySide.QtCore import QLocale, QTranslator, QLibraryInfo, QDateTime
 from config import settings
-from . import icons_rc
+from ui import icons_rc
 import sys
 import time
 import logging

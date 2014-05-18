@@ -4,7 +4,7 @@ import ui
 from ui.customwidgets import SearchBox
 from ui.customobjects import SortOrderMenu
 from ui.configdialog import ConfigDialog
-from .mainwindow_ui import Ui_MainWindow
+from ui.mainwindow_ui import Ui_MainWindow
 from config import settings, nikki
 
 

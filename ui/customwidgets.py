@@ -1,6 +1,6 @@
 from PySide.QtCore import *
 from PySide.QtGui import *
-from .customobjects import TextFormatter, NTextDocument
+from ui.customobjects import TextFormatter, NTextDocument
 from html.parser import HTMLParser
 import re
 
