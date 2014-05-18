@@ -8,15 +8,15 @@ import logging
 
 
 def dt_trans_gen():
-    datefmt = settings['Main'].get('dateformat', raw=True)
-    timefmt = settings['Main'].get('timeformat', '', raw=True)
-    if datefmt:
+    date_fmt = settings['Main'].get('dateformat', raw=True)
+    time_fmt = settings['Main'].get('timeformat', '', raw=True)
+    global dt_trans
+    if date_fmt:
         def dt_trans(s):
             dt = QDateTime.fromString(s, 'yyyy-MM-dd HH:mm')
-            return locale.toString(dt, datefmt + ' ' + timefmt)
+            return locale.toString(dt, date_fmt + ' ' + time_fmt)
     else:
         def dt_trans(s): return s
-    return dt_trans
 
 
 def currentdt_str():
@@ -72,5 +72,5 @@ font = Fonts()
 font.load()
 # setup translation
 set_trans()
-dt_trans = dt_trans_gen()
+dt_trans_gen()
 
