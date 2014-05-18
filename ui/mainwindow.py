@@ -1,8 +1,7 @@
 from PySide.QtGui import *
 from PySide.QtCore import *
 import ui
-from ui.customwidgets import SearchBox
-from ui.customobjects import SortOrderMenu
+from ui.customwidgets import SearchBox, SortOrderMenu
 from ui.configdialog import ConfigDialog
 from ui.mainwindow_ui import Ui_MainWindow
 from config import settings, nikki
@@ -22,9 +21,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.splitter.setSizes([tlist_w, self.width()-tlist_w])
         # setup sort menu
         s_menu = SortOrderMenu(self)
-        s_menu.bydatetime.triggered[bool].connect(self.nlist.sortDT)
-        s_menu.bytitle.triggered[bool].connect(self.nlist.sortTT)
-        s_menu.bylength.triggered[bool].connect(self.nlist.sortLT)
+        s_menu.datetime.triggered[bool].connect(self.nlist.sortDT)
+        s_menu.title.triggered[bool].connect(self.nlist.sortTT)
+        s_menu.length.triggered[bool].connect(self.nlist.sortLT)
         s_menu.reverse.triggered[bool].connect(self.nlist.sortRE)
         self.sorAct.setMenu(s_menu)
         sortBtn = self.toolBar.widgetForAction(self.sorAct)

@@ -1,6 +1,5 @@
 from PySide.QtCore import *
 from PySide.QtGui import *
-from config import settings
 
 
 class TagCompleter(QCompleter):
@@ -88,34 +87,6 @@ class TextFormatter:
         doFormat = True if pre else self.itaAct.isChecked()
         fmt.setFontItalic(doFormat)
         self.textCursor().mergeCharFormat(fmt)
-
-
-class SortOrderMenu(QMenu):
-    """Menu used to Change sort order of NList."""
-    def __init__(self, parent=None):
-        super(SortOrderMenu, self).__init__(parent)
-        self.aboutToShow.connect(self.setActs)
-        # create actions
-        self.bydatetime = QAction(self.tr('Date'), self)
-        self.bytitle = QAction(self.tr('Title'), self)
-        self.bylength = QAction(self.tr('Length'), self)
-        self.reverse = QAction(self.tr('Reverse'), self)
-        self.reverse.setCheckable(True)
-        self.ordertypes = [self.bydatetime, self.bytitle, self.bylength]
-        for a in self.ordertypes:
-            a.setCheckable(True)
-            self.addAction(a)
-        self.addSeparator()
-        self.addAction(self.reverse)
-
-    def setActs(self):
-        """Set actions checked/unchecked before showing"""
-        order = settings['Main'].get('listorder', 'datetime')
-        reverse = settings['Main'].getint('listreverse', 1)
-        for a in self.ordertypes: a.setChecked(False)
-        enabled = getattr(self, 'by' + order)
-        enabled.setChecked(True)
-        self.reverse.setChecked(reverse)
 
 
 class NTextDocument(QTextDocument, TextFormatter):

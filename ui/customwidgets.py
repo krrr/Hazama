@@ -3,6 +3,7 @@ from PySide.QtGui import *
 from ui.customobjects import TextFormatter, NTextDocument
 from html.parser import HTMLParser
 import re
+from config import settings
 
 
 class NTextEdit(QTextEdit, TextFormatter):
@@ -216,4 +217,32 @@ class QtHtmlParser(HTMLParser):
     def handle_entityref(self, name):
         # handle_data will ignore &,<,>
         self.pos_plain += 1
+
+
+class SortOrderMenu(QMenu):
+    """Menu used to Change sort order of NList."""
+    def __init__(self, parent=None):
+        super(SortOrderMenu, self).__init__(parent)
+        self.aboutToShow.connect(self.setActStates)
+        # create actions
+        self.datetime = QAction(self.tr('Date'), self)
+        self.title = QAction(self.tr('Title'), self)
+        self.length = QAction(self.tr('Length'), self)
+        self.reverse = QAction(self.tr('Reverse'), self)
+        self.reverse.setCheckable(True)
+        self.orders = (self.datetime, self.title, self.length)
+        for a in self.orders:
+            a.setCheckable(True)
+            self.addAction(a)
+        self.addSeparator()
+        self.addAction(self.reverse)
+
+    def setActStates(self):
+        """Set actions checked/unchecked before showing"""
+        order = settings['Main'].get('listorder', 'datetime')
+        reverse = settings['Main'].getint('listreverse', 1)
+        for a in self.orders: a.setChecked(False)
+        toEnable = getattr(self, order)
+        toEnable.setChecked(True)
+        self.reverse.setChecked(reverse)
 
