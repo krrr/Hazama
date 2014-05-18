@@ -1,13 +1,10 @@
-*.bat
 *.pyc
 *.db
 *.ini
 demo
 xmlsample
 .idea
-*.jpg
 test.py
-ui/ui2py.py
 ui/*_ui.py
-ui/icons_rc.py
+ui/rc.py
 lang/*.qm
