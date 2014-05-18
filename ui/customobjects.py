@@ -30,59 +30,63 @@ class TagCompleter(QCompleter):
 
 
 class TextFormatter:
-    """All methods of this class are used in NTextDocument to set format.
-    NTextEdit also use those to set format(called from context-menu).
-    If used in NTextDocument,pre should be True.
+    """setXX methods are used in NTextDocument and NTextEdit(called by
+    context-menu or shortcuts, and always before checkFormat).
+    If used in NTextDocument,parameter pre of setXX methods should be True.
     """
     HlColor = QColor(248, 162, 109, 100)
+    checkFuncs = [lambda self, x: x.background().color() == self.HlColor,
+                  lambda __, x: x.fontWeight() == QFont.Bold,
+                  lambda __, x: x.fontStrikeOut(),
+                  lambda __, x: x.fontUnderline(),
+                  lambda __, x: x.fontItalic()]
+
+    def checkFormat(self):
+        """Check five formats in whole selection, return a result list in
+        order of HighLight, Bold, StrikeOut, Underline, Italic"""
+        cur = self.textCursor()
+        start, end = cur.anchor(), cur.position()
+        if start > end:
+            start, end = end, start
+        results = [True] * 5
+        for pos in range(end, start, -1):
+            cur.setPosition(pos)
+            charFmt = cur.charFormat()
+            for i, f in enumerate(self.checkFuncs):
+                if results[i] and not f(self, charFmt):
+                    results[i] = False
+            if not any(results):
+                return results
+        return results
 
     def setHL(self, pre=False):
-        fmt = self.textCursor().charFormat()
-        if pre:  # called by NTextDocument
-            hasFormat = False
-        else:  # called by NTextEdit(Editor's context menu)
-            hasFormat = (fmt.background().color() == self.HlColor)
-        fmt.setBackground(QBrush(Qt.transparent if hasFormat else self.HlColor))
+        fmt = QTextCharFormat()
+        doFormat = True if pre else self.hlAct.isChecked()
+        fmt.setBackground(QBrush(self.HlColor if doFormat else Qt.transparent))
         self.textCursor().mergeCharFormat(fmt)
 
     def setBD(self, pre=False):
-        fmt = self.textCursor().charFormat()
-        if pre:
-            hasFormat = False
-        else:
-            hasFormat = (fmt.fontWeight() == QFont.Bold)
-
-        fmt.setFontWeight(QFont.Normal if hasFormat else QFont.Bold)
+        fmt = QTextCharFormat()
+        doFormat = True if pre else self.bdAct.isChecked()
+        fmt.setFontWeight(QFont.Bold if doFormat else QFont.Normal)
         self.textCursor().mergeCharFormat(fmt)
 
     def setSO(self, pre=False):
-        fmt = self.textCursor().charFormat()
-        if pre:
-            hasFormat = False
-        else:
-            hasFormat = fmt.fontStrikeOut()
-
-        fmt.setFontStrikeOut(not hasFormat)
+        fmt = QTextCharFormat()
+        doFormat = True if pre else self.soAct.isChecked()
+        fmt.setFontStrikeOut(doFormat)
         self.textCursor().mergeCharFormat(fmt)
 
     def setUL(self, pre=False):
-        fmt = self.textCursor().charFormat()
-        if pre:
-            hasFormat = False
-        else:
-            hasFormat = fmt.fontUnderline()
-
-        fmt.setFontUnderline(not hasFormat)
+        fmt = QTextCharFormat()
+        doFormat = True if pre else self.ulAct.isChecked()
+        fmt.setFontUnderline(doFormat)
         self.textCursor().mergeCharFormat(fmt)
 
     def setIta(self, pre=False):
-        fmt = self.textCursor().charFormat()
-        if pre:
-            hasFormat = False
-        else:
-            hasFormat = fmt.fontItalic()
-
-        fmt.setFontItalic(not hasFormat)
+        fmt = QTextCharFormat()
+        doFormat = True if pre else self.itaAct.isChecked()
+        fmt.setFontItalic(doFormat)
         self.textCursor().mergeCharFormat(fmt)
 
 
