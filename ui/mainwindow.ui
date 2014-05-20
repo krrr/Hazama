@@ -41,7 +41,7 @@
       <property name="childrenCollapsible">
        <bool>false</bool>
       </property>
-      <widget class="TagList" name="tlist">
+      <widget class="TagList" name="tList">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Maximum" vsizetype="Expanding">
          <horstretch>1</horstretch>
@@ -49,7 +49,7 @@
         </sizepolicy>
        </property>
       </widget>
-      <widget class="NikkiList" name="nlist">
+      <widget class="NikkiList" name="nList">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
          <horstretch>4</horstretch>
@@ -103,7 +103,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="../res/icons.qrc">
+    <iconset resource="../res/res.qrc">
      <normaloff>:/images/tlist.png</normaloff>:/images/tlist.png</iconset>
    </property>
    <property name="text">
@@ -115,7 +115,7 @@
   </action>
   <action name="creAct">
    <property name="icon">
-    <iconset resource="../res/icons.qrc">
+    <iconset resource="../res/res.qrc">
      <normaloff>:/images/new.png</normaloff>:/images/new.png</iconset>
    </property>
    <property name="text">
@@ -127,7 +127,7 @@
   </action>
   <action name="delAct">
    <property name="icon">
-    <iconset resource="../res/icons.qrc">
+    <iconset resource="../res/res.qrc">
      <normaloff>:/images/delete.png</normaloff>:/images/delete.png</iconset>
    </property>
    <property name="text">
@@ -142,7 +142,7 @@
   </action>
   <action name="sorAct">
    <property name="icon">
-    <iconset resource="../res/icons.qrc">
+    <iconset resource="../res/res.qrc">
      <normaloff>:/images/sort.png</normaloff>:/images/sort.png</iconset>
    </property>
    <property name="text">
@@ -154,7 +154,7 @@
   </action>
   <action name="cfgAct">
    <property name="icon">
-    <iconset resource="../res/icons.qrc">
+    <iconset resource="../res/res.qrc">
      <normaloff>:/images/config.png</normaloff>:/images/config.png</iconset>
    </property>
    <property name="text">
@@ -190,13 +190,13 @@
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="../res/icons.qrc"/>
+  <include location="../res/res.qrc"/>
  </resources>
  <connections>
   <connection>
    <sender>creAct</sender>
    <signal>triggered()</signal>
-   <receiver>nlist</receiver>
+   <receiver>nList</receiver>
    <slot>newNikki()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -212,7 +212,7 @@
   <connection>
    <sender>delAct</sender>
    <signal>triggered()</signal>
-   <receiver>nlist</receiver>
+   <receiver>nList</receiver>
    <slot>delNikki()</slot>
    <hints>
     <hint type="sourcelabel">

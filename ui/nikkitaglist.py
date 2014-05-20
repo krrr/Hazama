@@ -17,8 +17,8 @@ class NListDelegate(QStyledItemDelegate):
         self.title_h = QFontInfo(font.title).pixelSize() + 10  # title area height
         self.text_h = (QFontMetrics(font.text).lineSpacing() *
                        settings['Main'].getint('previewlines', 4))
-        self.tagpath_h = QFontInfo(qApp.font()).pixelSize() + 4
-        self.tag_h = self.tagpath_h + 4
+        self.tagPath_h = QFontInfo(qApp.font()).pixelSize() + 4
+        self.tag_h = self.tagPath_h + 4
         self.dt_w = QFontMetrics(font.title).width('2000/00/00 00:00') + 20
         self.all_h = None  # updated in sizeHint before each item being painting
         # doc is used to draw text(diary's body)
@@ -29,7 +29,7 @@ class NListDelegate(QStyledItemDelegate):
         # setup colors
         self.c_bg = QColor(255, 236, 176)
         self.c_border = QColor(214, 172, 41)
-        self.c_unselbg = QColor(255, 236, 176, 40)
+        self.c_inActBg = QColor(255, 236, 176, 40)
         self.c_gray = QColor(93, 73, 57)
 
     def paint(self, painter, option, index):
@@ -40,16 +40,14 @@ class NListDelegate(QStyledItemDelegate):
         # draw border and background
         painter.setPen(self.c_border)
         painter.setBrush(self.c_bg if selected and active else
-                         self.c_unselbg)
-        border = QRect(x+1, y, w-2, self.all_h)
-        painter.drawRect(border)
-        if selected:
-            innerborder = QRect(x+2, y+1, w-4, self.all_h-2)
+                         self.c_inActBg)
+        painter.drawRect(x+1, y, w-2, self.all_h)  # outer border
+        if selected:  # draw inner border
             pen = QPen()
             pen.setStyle(Qt.DashLine)
             pen.setColor(self.c_gray)
             painter.setPen(pen)
-            painter.drawRect(innerborder)
+            painter.drawRect(x+2, y+1, w-4, self.all_h-2)
         # draw datetime and title
         painter.setPen(self.c_gray)
         painter.drawLine(x+10, y+self.title_h, x+w-10, y+self.title_h)
@@ -78,15 +76,15 @@ class NListDelegate(QStyledItemDelegate):
             painter.translate(x + 15, y+self.title_h+6+self.text_h)
             for t in row['tags']:
                 w = font.default_m.width(t) + 4
-                tagpath = QPainterPath()
-                tagpath.moveTo(8, 0)
-                tagpath.lineTo(8+w, 0)
-                tagpath.lineTo(8+w, self.tagpath_h)
-                tagpath.lineTo(8, self.tagpath_h)
-                tagpath.lineTo(0, self.tagpath_h/2)
-                tagpath.closeSubpath()
-                painter.drawPath(tagpath)
-                painter.drawText(8, 1, w, self.tagpath_h, Qt.AlignCenter, t)
+                tagPath = QPainterPath()
+                tagPath.moveTo(8, 0)
+                tagPath.lineTo(8+w, 0)
+                tagPath.lineTo(8+w, self.tagPath_h)
+                tagPath.lineTo(8, self.tagPath_h)
+                tagPath.lineTo(0, self.tagPath_h/2)
+                tagPath.closeSubpath()
+                painter.drawPath(tagPath)
+                painter.drawText(8, 1, w, self.tagPath_h, Qt.AlignCenter, t)
                 painter.translate(w+15, 0)  # translate by offset
             painter.restore()
 
@@ -110,29 +108,28 @@ class TListDelegate(QStyledItemDelegate):
         tag, count = index.data(3), str(index.data(2))
         painter.setFont(font.default)
         selected = bool(option.state & QStyle.State_Selected)
-        textarea = QRect(x+4, y, w-8, self.h)
+        textArea = QRect(x+4, y, w-8, self.h)
         if index.row() == 0:  # row 0 is always All(clear tag filter)
             painter.setPen(QColor(80, 80, 80))
-            painter.drawText(textarea,
+            painter.drawText(textArea,
                              Qt.AlignVCenter | Qt.AlignLeft,
                              qApp.translate('TagList', 'All'))
         else:
             painter.setPen(QColor(209, 109, 63))
             painter.drawLine(x, y, w, y)
             if selected:
-                trect = QRect(x, y+1, w-1, self.h-2)
                 painter.setPen(QColor(181, 61, 0))
                 painter.setBrush(QColor(250, 250, 250))
-                painter.drawRect(trect)
+                painter.drawRect(x, y+1, w-1, self.h-2)
             # draw tag
             painter.setPen(QColor(20, 20, 20) if selected else
                            QColor(80, 80, 80))
             tag = font.default_m.elidedText(tag, Qt.ElideRight,
                                             w-font.date_m.width(count)-12)
-            painter.drawText(textarea, Qt.AlignVCenter|Qt.AlignLeft, tag)
+            painter.drawText(textArea, Qt.AlignVCenter | Qt.AlignLeft, tag)
             # draw tag count
             painter.setFont(font.date)
-            painter.drawText(textarea, Qt.AlignVCenter|Qt.AlignRight, count)
+            painter.drawText(textArea, Qt.AlignVCenter | Qt.AlignRight, count)
 
     def sizeHint(self, option, index):
         return QSize(-1, self.h)
@@ -146,7 +143,7 @@ class TagList(QListWidget):
         self.setVerticalScrollMode(QAbstractItemView.ScrollPerPixel)
         self.setUniformItemSizes(True)
         self.setStyleSheet(TListDelegate.stylesheet)
-        self.tracklst = None  # update in mousePressEvent
+        self.trackList = None  # update in mousePressEvent
 
     def load(self):
         logging.info('Tag List load')
@@ -161,41 +158,37 @@ class TagList(QListWidget):
 
     # all three events below for drag scroll
     def mousePressEvent(self, event):
-        self.tracklst = []
+        self.trackList = []
 
     def mouseMoveEvent(self, event):
-        if self.tracklst is not None:
-            self.tracklst.append(event.pos().y())
-            if len(self.tracklst) > 4:
-                change = self.tracklst[-1] - self.tracklst[-2]
+        if self.trackList is not None:
+            self.trackList.append(event.pos().y())
+            if len(self.trackList) > 4:
+                change = self.trackList[-1] - self.trackList[-2]
                 scrollbar = self.verticalScrollBar()
                 scrollbar.setValue(scrollbar.value() - change)
 
     def mouseReleaseEvent(self, event):
-        if self.tracklst is not None:
-            if len(self.tracklst) <= 4:  # haven't moved
-                pevent = QMouseEvent(QEvent.MouseButtonPress, event.pos(),
+        if self.trackList is not None:
+            if len(self.trackList) <= 4:  # haven't moved
+                pEvent = QMouseEvent(QEvent.MouseButtonPress, event.pos(),
                                      event.globalPos(), Qt.LeftButton,
                                      Qt.LeftButton, Qt.NoModifier)
-                QListWidget.mousePressEvent(self, pevent)
-
-        self.tracklst = None
+                QListWidget.mousePressEvent(self, pEvent)
+        self.trackList = None
 
 
 class NikkiList(QListWidget):
     reloaded = Signal()
-    needRefresh = Signal(bool, bool)  # (countlabel, taglist)
+    needRefresh = Signal(bool, bool)  # (CountLabel, TagList)
 
     def __init__(self, *args, **kwargs):
         super(NikkiList, self).__init__(*args, **kwargs)
         self.editors = {}
-
         self.setSelectionMode(self.ExtendedSelection)
         self.itemDoubleClicked.connect(self.startEditor)
-
         self.setItemDelegate(NListDelegate(self))
         self.setStyleSheet(NListDelegate.stylesheet)
-
         # setup context menu
         self.editAct = QAction(self.tr('Edit'), self,
                                shortcut=QKeySequence(Qt.Key_Return),
@@ -222,29 +215,29 @@ class NikkiList(QListWidget):
 
     def startEditor(self, item=None, new=False):
         if new:  # called by newNikki method
-            curtitem = row = None
+            curtItem = row = None
             id = -1
-        else:  # called by doubleclick event or contextmenu or key-shortcut
-            curtitem = item if item else self.selectedItems()[0]
-            row = curtitem.data(2)
+        else:  # called by doubleclick event or context-menu or key-shortcut
+            curtItem = item if item else self.selectedItems()[0]
+            row = curtItem.data(2)
             id = row['id']
         if id in self.editors:
             self.editors[id].activateWindow()
         else:  # create new editor
-            editor = Editor(editorid=id, new=new, row=row, parent=self)
+            editor = Editor(editorId=id, new=new, row=row, parent=self)
             editor.closed.connect(self.on_editor_closed)
             self.editors[id] = editor
-            editor.item = curtitem
+            editor.item = curtItem
             if not new:
                 editor.nextSc.activated.connect(self.editorNext)
                 editor.preSc.activated.connect(self.editorPrevious)
             editor.show()
 
-    def on_editor_closed(self, editorid, nikkiid, tagsModified):
-        if nikkiid != -1:
-            self.reload(nikkiid)
-            self.needRefresh.emit(editorid == -1, tagsModified)
-        del self.editors[editorid]
+    def on_editor_closed(self, editorId, nikkiId, tagModified):
+        if nikkiId != -1:
+            self.reload(nikkiId)
+            self.needRefresh.emit(editorId == -1, tagModified)
+        del self.editors[editorId]
 
     def delNikki(self):
         if len(self.selectedItems()) == 0: return
@@ -261,9 +254,9 @@ class NikkiList(QListWidget):
     def newNikki(self):
         self.startEditor(None, True)
 
-    def load(self, *, tagid=None, search=None):
+    def load(self, *, tagId=None, search=None):
         order, reverse = self.getOrder()
-        for row in nikki.sorted(order, reverse, tagid=tagid, search=search):
+        for row in nikki.sorted(order, reverse, tagid=tagId, search=search):
             item = QListWidgetItem(self)
             item.setData(2, row)
         self.setCurrentRow(0)
@@ -277,16 +270,18 @@ class NikkiList(QListWidget):
                 item = QListWidgetItem(self)
                 item.setData(2, row)
         else:
+            rowIndex = 0
             for row in nikki.sorted(order, reverse):
                 if row['id'] == id:
-                    rownum = self.count()
+                    rowIndex = self.count()
                 item = QListWidgetItem(self)
                 item.setData(2, row)
-            self.setCurrentRow(rownum)
+            self.setCurrentRow(rowIndex)
         self.reloaded.emit()
 
     def handleExport(self, export_all):
-        path, _type = QFileDialog.getSaveFileName(parent=self,
+        path, _type = QFileDialog.getSaveFileName(
+            parent=self,
             caption=self.tr('Export Diary'),
             filter=self.tr('Plain Text (*.txt);;Rich Text (*.rtf)'))
         if path == '': return    # dialog canceled

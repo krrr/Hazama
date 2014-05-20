@@ -25,7 +25,7 @@ class NTextEdit(QTextEdit, TextFormatter):
         self.autoIndent = False
         self.setTabChangesFocus(True)
         # create format menu
-        self.submenu = QMenu(self.tr('Format'), self)
+        self.subMenu = QMenu(self.tr('Format'), self)
         self.hlAct = QAction(QIcon(':/fmt/highlight.png'), self.tr('Highlight'),
                              self, triggered=self.setHL)
         self.bdAct = QAction(QIcon(':/fmt/bold.png'), self.tr('Bold'),
@@ -43,15 +43,15 @@ class NTextEdit(QTextEdit, TextFormatter):
                      self.itaAct)  # exclude uncheckable clrAct
         for a in self.acts:
             self.addAction(a)
-            self.submenu.addAction(a)
+            self.subMenu.addAction(a)
             a.setCheckable(True)
-        self.submenu.addSeparator()
+        self.subMenu.addSeparator()
         self.addAction(self.clrAct)
-        self.submenu.addAction(self.clrAct)
+        self.subMenu.addAction(self.clrAct)
         self.menu = self.createStandardContextMenu()
         before = self.menu.actions()[2]
         self.menu.insertSeparator(before)
-        self.menu.insertMenu(before, self.submenu)
+        self.menu.insertMenu(before, self.subMenu)
         # create shortcuts
         self.hlSc = QShortcut(QKeySequence('Ctrl+H'), self, self.handleFormatShortcuts)
         self.bdSc = QShortcut(QKeySequence.Bold, self, self.handleFormatShortcuts)
@@ -77,9 +77,9 @@ class NTextEdit(QTextEdit, TextFormatter):
         if self.textCursor().hasSelection():
             for i, c in enumerate(self.checkFormat()):
                 self.acts[i].setChecked(c)
-            self.submenu.setEnabled(True)
+            self.subMenu.setEnabled(True)
         else:
-            self.submenu.setEnabled(False)
+            self.subMenu.setEnabled(False)
         self.menu.exec_(event.globalPos())
 
     def getFormats(self):
@@ -93,19 +93,18 @@ class NTextEdit(QTextEdit, TextFormatter):
     def keyPressEvent(self, event):
         """Auto-indent support"""
         if event.key() == Qt.Key_Return and self.autoIndent:
-            spacecount = 0
+            spaceCount = 0
             cur = self.textCursor()
-            savedpos = cur.position()
+            savedPos = cur.position()
             cur.movePosition(QTextCursor.StartOfBlock)
             cur.movePosition(QTextCursor.Right, QTextCursor.KeepAnchor)
             while cur.selectedText() == ' ':
-                spacecount += 1
+                spaceCount += 1
                 cur.clearSelection()
                 cur.movePosition(QTextCursor.Right, QTextCursor.KeepAnchor)
-
-            cur.setPosition(savedpos)
+            cur.setPosition(savedPos)
             super(NTextEdit, self).keyPressEvent(event)
-            cur.insertText(' ' * spacecount)
+            cur.insertText(' ' * spaceCount)
         else:
             return super(NTextEdit, self).keyPressEvent(event)
 
@@ -131,7 +130,7 @@ class SearchBox(QLineEdit):
         self.button.clicked.connect(self.clear)
         self.textChanged.connect(self.update)
         self.retranslate()
-        self.text_before_bool = True
+        self.isTextBefore = True
         self.update('')
 
     def resizeEvent(self, event):
@@ -141,14 +140,14 @@ class SearchBox(QLineEdit):
 
     def update(self, text):
         """Update button icon and PlaceholderText font style"""
-        if self.text_before_bool == bool(text): return
+        if self.isTextBefore == bool(text): return
         ico_name = 'search_clr' if text else 'search'
         font_style = 'normal' if text else 'italic'
         self.button.setStyleSheet('QToolButton{border: none;'
                                   'background: url(:/images/%s.png);'
                                   'background-position: center}' % ico_name)
         self.setStyleSheet('QLineEdit{font-style: %s}' % font_style)
-        self.text_before_bool = bool(text)
+        self.isTextBefore = bool(text)
 
     def retranslate(self):
         self.setPlaceholderText(self.tr('Search'))
@@ -157,14 +156,14 @@ class SearchBox(QLineEdit):
 class DateTimeDialog(QDialog):
     timeFmt = "yyyy-MM-dd HH:mm"
 
-    def __init__(self, timestr, parent=None):
+    def __init__(self, timeStr, parent=None):
         super(DateTimeDialog, self).__init__(parent, Qt.WindowTitleHint)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowTitle(self.tr('Edit datetime'))
         self.setMinimumWidth(100)
         self.verticalLayout = QVBoxLayout(self)
-        dt = QDateTime.fromString(timestr, self.timeFmt)
+        dt = QDateTime.fromString(timeStr, self.timeFmt)
         self.dtEdit = QDateTimeEdit(dt)
         self.dtEdit.setDisplayFormat(self.timeFmt)
         self.verticalLayout.addWidget(self.dtEdit)
@@ -177,9 +176,9 @@ class DateTimeDialog(QDialog):
         self.btnBox.rejected.connect(self.reject)
 
     @staticmethod
-    def getDateTime(timestr, parent):
-        """Run Dialog,return None if canceled,otherwise return timestr"""
-        dialog = DateTimeDialog(timestr, parent)
+    def getDateTime(timeStr, parent):
+        """Run Dialog,return None if canceled else time string"""
+        dialog = DateTimeDialog(timeStr, parent)
         ret = dialog.exec_()
         return dialog.dtEdit.dateTime().toString(dialog.timeFmt) if ret else None
 

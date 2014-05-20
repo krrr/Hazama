@@ -3,9 +3,9 @@ from PySide.QtGui import *
 
 
 class TagCompleter(QCompleter):
-    def __init__(self, tagL, parent=None):
-        super(TagCompleter, self).__init__(tagL, parent)
-        self.tagL = tagL
+    def __init__(self, tagList, parent=None):
+        super(TagCompleter, self).__init__(tagList, parent)
+        self.tagList = tagList
         self.setCaseSensitivity(Qt.CaseInsensitive)
 
     def pathFromIndex(self, index):
@@ -22,7 +22,7 @@ class TagCompleter(QCompleter):
     def splitPath(self, path):
         # path is tag string like "tag1 tag2 tag3(maybe a part) "
         path = path.split()[-1] if path.split() else None
-        if path in self.tagL or path is None:
+        if path in self.tagList or path is None:
             return ' '
         else:
             return [path, ]
@@ -91,7 +91,7 @@ class TextFormatter:
 
 class NTextDocument(QTextDocument, TextFormatter):
     """Read format info from database and apply it."""
-    typedic = {1: 'setBD', 2: 'setHL', 3: 'setIta', 4: 'setSO', 5: 'setUL'}
+    type2method = {1: 'setBD', 2: 'setHL', 3: 'setIta', 4: 'setSO', 5: 'setUL'}
 
     def setText(self, text, formats=None):
         self.setPlainText(text)
@@ -100,11 +100,11 @@ class NTextDocument(QTextDocument, TextFormatter):
             for r in formats:
                 self.cur.setPosition(r[0])
                 self.cur.setPosition(r[0] + r[1], mode=self.cur.KeepAnchor)
-                getattr(self, self.typedic[r[2]])(pre=True)
+                getattr(self, self.type2method[r[2]])(pre=True)
             del self.cur
 
     def textCursor(self):
-        """Make TextFormatter's methods to get right cursor"""
+        """Make methods of TextFormatter to get right cursor"""
         return self.cur
 
     def setHlColor(self, color):
