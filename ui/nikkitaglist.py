@@ -231,7 +231,7 @@ class NikkiList(QListWidget):
         if id in self.editors:
             self.editors[id].activateWindow()
         else:  # create new editor
-            editor = Editor(editorid=id, new=new, row=row)
+            editor = Editor(editorid=id, new=new, row=row, parent=self)
             editor.closed.connect(self.on_editor_closed)
             self.editors[id] = editor
             editor.item = curtitem
@@ -244,7 +244,6 @@ class NikkiList(QListWidget):
         if nikkiid != -1:
             self.reload(nikkiid)
             self.needRefresh.emit(editorid == -1, tagsModified)
-        self.editors[editorid].destroy()
         del self.editors[editorid]
 
     def delNikki(self):

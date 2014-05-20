@@ -15,7 +15,8 @@ class Editor(QWidget, Ui_Editor):
     closed = Signal(int, int, bool)
 
     def __init__(self, editorid, new, row, parent=None):
-        super(Editor, self).__init__(parent)
+        super(Editor, self).__init__(parent, Qt.Window)
+        self.setAttribute(Qt.WA_DeleteOnClose)
         self.setupUi(self)
         self.id, self.new = editorid, new
         geo = settings['Editor'].get('windowgeo')
@@ -61,8 +62,8 @@ class Editor(QWidget, Ui_Editor):
         """Save geometry information and diary"""
         settings['Editor']['windowgeo'] = str(self.saveGeometry().toHex())
         nikkiid = self.saveNikki()
-        event.accept()
         self.closed.emit(self.id, nikkiid, self.tagsModified)
+        event.accept()
 
     def closeNoSave(self):
         settings['Editor']['windowgeo'] = str(self.saveGeometry().toHex())
