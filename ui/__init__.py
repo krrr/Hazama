@@ -31,8 +31,10 @@ def set_trans():
     trans = QTranslator()
     trans.load('lang/' + lang)
     transQt = QTranslator()
-    transQt.load('qt_' + lang,
-                 QLibraryInfo.location(QLibraryInfo.TranslationsPath))
+    ret = transQt.load('qt_' + lang,
+                       QLibraryInfo.location(QLibraryInfo.TranslationsPath))
+    if not ret:  # frozen
+        transQt.load('lang/qt_' + lang)
     for i in [trans, transQt]: app.installTranslator(i)
     global locale
     locale = QLocale(lang)
