@@ -158,7 +158,6 @@ class DateTimeDialog(QDialog):
 
     def __init__(self, timeStr, parent=None):
         super(DateTimeDialog, self).__init__(parent, Qt.WindowTitleHint)
-        self.setAttribute(Qt.WA_DeleteOnClose)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowTitle(self.tr('Edit datetime'))
         self.setMinimumWidth(100)
@@ -180,6 +179,7 @@ class DateTimeDialog(QDialog):
         """Run Dialog,return None if canceled else time string"""
         dialog = DateTimeDialog(timeStr, parent)
         ret = dialog.exec_()
+        dialog.deleteLater()
         return dialog.dtEdit.dateTime().toString(dialog.timeFmt) if ret else None
 
 
