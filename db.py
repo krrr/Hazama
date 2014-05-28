@@ -1,4 +1,5 @@
 ﻿import sqlite3
+from sqlite3 import DatabaseError
 import sys
 import os
 import shutil
@@ -22,6 +23,8 @@ class Nikki:
     Tags: All tags' body saved here.
     TextFormat: Connecting format info to diary.Format info itself also saved here.
     """
+    path = conn = None
+    exe = commit = close = None  # for convenience, updated after connection
 
     def __str__(self):
         return '%s diary in database' % self.count()
@@ -29,23 +32,24 @@ class Nikki:
     def __init__(self, db_path):
         self.setinstance(self)
         self.connect(db_path)
-        self.conn.execute('CREATE TABLE IF NOT EXISTS Tags'
-                          '(id INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE)')
-        self.conn.execute('CREATE TABLE IF NOT EXISTS Nikki'
-                          '(id INTEGER PRIMARY KEY, datetime TEXT NOT NULL, '
-                          'text TEXT NOT NULL, title TEXT NOT NULL)')
-        self.conn.execute('CREATE TABLE IF NOT EXISTS Nikki_Tags'
-                          '(nikkiid INTEGER NOT NULL REFERENCES Nikki(id) '
-                          'ON DELETE CASCADE, tagid INTEGER NOT NULL,'
-                          'PRIMARY KEY(nikkiid, tagid))')
-        self.conn.execute('CREATE TABLE IF NOT EXISTS TextFormat'
-                          '(nikkiid INTEGER NOT NULL REFERENCES Nikki(id) '
-                          'ON DELETE CASCADE, start INTEGER NOT NULL, '
-                          'length INTEGER NOT NULL, type INTEGER NOT NULL)')
-        self.conn.execute('CREATE TRIGGER IF NOT EXISTS autodeltag AFTER '
-                          'DELETE ON Nikki_Tags BEGIN   DELETE FROM Tags '
-                          'WHERE (SELECT COUNT(*) FROM Nikki_Tags WHERE '
-                          'Nikki_Tags.tagid=Tags.id)==0;  END')
+        # reconnect by calling connect method will skip schema checking
+        self.exe('CREATE TABLE IF NOT EXISTS Tags'
+                 '(id INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE)')
+        self.exe('CREATE TABLE IF NOT EXISTS Nikki'
+                 '(id INTEGER PRIMARY KEY, datetime TEXT NOT NULL, '
+                 'text TEXT NOT NULL, title TEXT NOT NULL)')
+        self.exe('CREATE TABLE IF NOT EXISTS Nikki_Tags'
+                 '(nikkiid INTEGER NOT NULL REFERENCES Nikki(id) '
+                 'ON DELETE CASCADE, tagid INTEGER NOT NULL,'
+                 'PRIMARY KEY(nikkiid, tagid))')
+        self.exe('CREATE TABLE IF NOT EXISTS TextFormat'
+                 '(nikkiid INTEGER NOT NULL REFERENCES Nikki(id) '
+                 'ON DELETE CASCADE, start INTEGER NOT NULL, '
+                 'length INTEGER NOT NULL, type INTEGER NOT NULL)')
+        self.exe('CREATE TRIGGER IF NOT EXISTS autodeltag AFTER '
+                 'DELETE ON Nikki_Tags BEGIN   DELETE FROM Tags '
+                 'WHERE (SELECT COUNT(*) FROM Nikki_Tags WHERE '
+                 'Nikki_Tags.tagid=Tags.id)==0;  END')
         logging.info(str(self))
 
     def __getitem__(self, id):
@@ -65,11 +69,9 @@ class Nikki:
     def connect(self, db_path):
         self.path = db_path
         self.conn = sqlite3.connect(db_path)
-        self.exe = self.conn.execute
-        self.exe('PRAGMA foreign_keys = ON')
-
-    def close(self):
-        self.conn.close()
+        self.conn.execute('PRAGMA foreign_keys = ON')
+        self.commit, self.exe, self.close = (
+            self.conn.commit, self.conn.execute, self.conn.close)
 
     def importxml(self, path):
         """Import XML file"""
@@ -104,7 +106,7 @@ class Nikki:
                         fmt.set(item, str(f[index]))
         tree = ET.ElementTree(root)
         tree.write(path, encoding='utf-8')
-        logging.info('Export(XML) succeed')
+        logging.info('Exporting(XML) successful')
 
     def exporttxt(self, path, selected=None):
         """Export to TXT file using template(string format).
@@ -121,7 +123,7 @@ class Nikki:
                   else selected):
             file.write(tpl.format(n))
         file.close()
-        logging.info('Export succeed(use %s template)', hint)
+        logging.info('Exporting successful(use %s template)', hint)
 
     def sorted(self, order, reverse=True, *, tagid=None, search=None):
         if tagid and not search:  # only fetch nikki whose tagid match
@@ -153,29 +155,25 @@ class Nikki:
                        title=L[3], tags=tags, formats=formats)
 
     def delete(self, id):
-        self.conn.execute('DELETE FROM Nikki WHERE id = ?', (id,))
+        self.exe('DELETE FROM Nikki WHERE id = ?', (id,))
         logging.info('Nikki deleted (ID: %s)' % id)
         self.commit()
 
-    def commit(self):
-        self.conn.commit()
-
     def count(self):
-        return self.conn.execute('SELECT COUNT(id) FROM Nikki').fetchone()[0]
+        return self.exe('SELECT COUNT(id) FROM Nikki').fetchone()[0]
 
     def gettag(self, tagid=None, *, getcount=False):
         if tagid:  # get tags by id
-            return self.conn.execute('SELECT name FROM Tags WHERE '
-                                     'id = ?', (tagid,)).fetchone()[0]
+            return self.exe(
+                'SELECT name FROM Tags WHERE id = ?', (tagid,)).fetchone()[0]
         else:  # get all tags
-            if getcount:  # get with counts.used in TList
-                result = self.conn.execute('SELECT Tags.id,Tags.name,(SELECT '
-                                           'COUNT(*) FROM Nikki_Tags WHERE Nikki_Tags.tagid=Tags.id) '
-                                           'FROM Tags ORDER BY Tags.name')
-
+            if getcount:  # get with counts, used in TagList
+                result = self.exe('SELECT Tags.id,Tags.name,(SELECT COUNT(*) FROM '
+                                  'Nikki_Tags WHERE Nikki_Tags.tagid=Tags.id) '
+                                  'FROM Tags ORDER BY Tags.name')
                 return result
-            else:  # get without counts.used in tag completer
-                result = self.conn.execute('SELECT name FROM Tags')
+            else:  # get without counts, used in TagCompleter
+                result = self.exe('SELECT name FROM Tags')
                 return [n[0] for n in result]
 
     def gettagid(self, name):
@@ -203,7 +201,7 @@ class Nikki:
                 self.exe(cmd, (id,) + i)
         # tags processing
         if tags is not None:  # tags is None when not new and not changed
-            if not new:  # if diary isn't new,delete its tags first
+            if not new:  # if diary isn't new, delete its tags first
                 self.exe('DELETE FROM Nikki_Tags WHERE nikkiid=?', (id,))
             for t in tags:
                 try:
@@ -219,8 +217,8 @@ class Nikki:
             return id
 
     def getnewid(self):
-        maxid = self.conn.execute('SELECT max(id) FROM Nikki').fetchone()[0]
-        return maxid + 1 if maxid else 1
+        max_id = self.exe('SELECT max(id) FROM Nikki').fetchone()[0]
+        return max_id + 1 if max_id else 1
 
     def getpath(self):
         return self.path
@@ -268,12 +266,12 @@ def check_backup():
         nikki = Nikki.getinstance()
         shutil.copyfile(db_path, os.path.join('backup',
                                               today+'_%d.db' % nikki.count()))
-        logging.info('Everyday backup succeed')
+        logging.info('Everyday backup successful')
         # delete old backups
-        weekbefore = time.strftime(fmt, time.localtime(int(time.time())-604800))
-        for dname in backups:
-            if dname < weekbefore:
-                os.remove(os.path.join('backup', dname))
+        week_before = time.strftime(fmt, time.localtime(int(time.time())-604800))
+        for i in backups:
+            if i < week_before:
+                os.remove(os.path.join('backup', i))
             else:
                 break
 
