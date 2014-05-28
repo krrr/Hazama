@@ -1,4 +1,5 @@
 ﻿SOURCES = Hazama.py \
+		  ui/__init__.py \
 		  ui/customwidgets.py \
 		  ui/customobjects.py \
 		  ui/configdialog.py \

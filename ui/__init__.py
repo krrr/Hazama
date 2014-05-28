@@ -1,4 +1,4 @@
-from PySide.QtGui import QApplication, QIcon, QFont, QFontMetrics
+from PySide.QtGui import QApplication, QIcon, QFont, QFontMetrics, QMessageBox
 from PySide.QtCore import QLocale, QTranslator, QLibraryInfo, QDateTime
 from config import settings
 from ui import rc
@@ -38,6 +38,15 @@ def set_trans():
     for i in [trans, transQt]: app.installTranslator(i)
     global locale
     locale = QLocale(lang)
+
+
+def show_error_db(hint=''):
+    """If unable to access database, display a error and exit"""
+    QMessageBox.critical(
+        None,
+        app.translate('Errors', 'Unable to access database'),
+        app.translate('Errors', 'SQLite3: %s.\n\nIf database path is correct, '
+                      'should recover this file by hand or restore from backups.') % hint)
 
 
 class Fonts:

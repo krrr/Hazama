@@ -32,7 +32,7 @@
         <translation type="obsolete">修改创建时间</translation>
     </message>
     <message>
-        <location filename="ui/customwidgets.py" line="149"/>
+        <location filename="ui/customwidgets.py" line="162"/>
         <source>Edit datetime</source>
         <translation>修改日期时间</translation>
     </message>
@@ -40,7 +40,7 @@
 <context>
     <name>Editor</name>
     <message>
-        <location filename="ui/editor.py" line="35"/>
+        <location filename="ui/editor.py" line="36"/>
         <source>New Diary</source>
         <translation>新的日记</translation>
     </message>
@@ -80,6 +80,28 @@ Modified: %s</source>
         <location filename="Hazama.py" line="349"/>
         <source>Tags separated by space</source>
         <translation type="obsolete">被空格分开的标签们</translation>
+    </message>
+</context>
+<context>
+    <name>Errors</name>
+    <message>
+        <location filename="ui/__init__.py" line="47"/>
+        <source>Unable to access database file</source>
+        <translation type="obsolete">访问数据库失败</translation>
+    </message>
+    <message>
+        <location filename="ui/__init__.py" line="49"/>
+        <source>SQLite3: %s.
+
+If database path is correct, should recover this file by hand or restore from backups.</source>
+        <translation>SQLite3: %s
+
+如果数据库路径正确，手动修复当前文件或者恢复备份。</translation>
+    </message>
+    <message>
+        <location filename="ui/__init__.py" line="47"/>
+        <source>Unable to access database</source>
+        <translation>访问数据库失败</translation>
     </message>
 </context>
 <context>
@@ -131,37 +153,37 @@ Modified: %s</source>
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="ui/mainwindow_ui.py" line="99"/>
+        <location filename="ui/mainwindow_ui.py" line="100"/>
         <source>Tag List</source>
         <translation>标签侧边栏</translation>
     </message>
     <message>
-        <location filename="ui/mainwindow_ui.py" line="100"/>
+        <location filename="ui/mainwindow_ui.py" line="101"/>
         <source>New</source>
         <translation>新的日记</translation>
     </message>
     <message>
-        <location filename="ui/mainwindow_ui.py" line="101"/>
+        <location filename="ui/mainwindow_ui.py" line="102"/>
         <source>Delete</source>
         <translation>删除</translation>
     </message>
     <message>
-        <location filename="ui/mainwindow_ui.py" line="102"/>
+        <location filename="ui/mainwindow_ui.py" line="103"/>
         <source>Sort By</source>
         <translation>排序方式</translation>
     </message>
     <message>
-        <location filename="ui/mainwindow_ui.py" line="103"/>
+        <location filename="ui/mainwindow_ui.py" line="104"/>
         <source>Settings</source>
         <translation>设置</translation>
     </message>
     <message>
-        <location filename="ui/mainwindow.py" line="112"/>
+        <location filename="ui/mainwindow.py" line="111"/>
         <source>%i diaries</source>
         <translation>%i 篇日记</translation>
     </message>
     <message>
-        <location filename="ui/mainwindow_ui.py" line="98"/>
+        <location filename="ui/mainwindow_ui.py" line="99"/>
         <source>Hazama</source>
         <translation>Hazama</translation>
     </message>
@@ -227,37 +249,37 @@ Modified: %s</source>
 <context>
     <name>NTextEdit</name>
     <message>
-        <location filename="ui/customwidgets.py" line="19"/>
+        <location filename="ui/customwidgets.py" line="28"/>
         <source>Format</source>
         <translation>格式</translation>
     </message>
     <message>
-        <location filename="ui/customwidgets.py" line="20"/>
+        <location filename="ui/customwidgets.py" line="29"/>
         <source>Highlight</source>
         <translation>高亮</translation>
     </message>
     <message>
-        <location filename="ui/customwidgets.py" line="22"/>
+        <location filename="ui/customwidgets.py" line="33"/>
         <source>Strike out</source>
         <translation>删除线</translation>
     </message>
     <message>
-        <location filename="ui/customwidgets.py" line="24"/>
+        <location filename="ui/customwidgets.py" line="31"/>
         <source>Bold</source>
         <translation>粗体</translation>
     </message>
     <message>
-        <location filename="ui/customwidgets.py" line="26"/>
+        <location filename="ui/customwidgets.py" line="35"/>
         <source>Underline</source>
         <translation>下划线</translation>
     </message>
     <message>
-        <location filename="ui/customwidgets.py" line="28"/>
+        <location filename="ui/customwidgets.py" line="37"/>
         <source>Italic</source>
         <translation>斜体</translation>
     </message>
     <message>
-        <location filename="ui/customwidgets.py" line="41"/>
+        <location filename="ui/customwidgets.py" line="39"/>
         <source>Clear format</source>
         <translation>清除格式</translation>
     </message>
@@ -265,37 +287,37 @@ Modified: %s</source>
 <context>
     <name>NikkiList</name>
     <message>
-        <location filename="ui/nikkitaglist.py" line="198"/>
+        <location filename="ui/nikkitaglist.py" line="193"/>
         <source>Edit</source>
         <translation>编辑</translation>
     </message>
     <message>
-        <location filename="ui/nikkitaglist.py" line="201"/>
+        <location filename="ui/nikkitaglist.py" line="196"/>
         <source>Delete</source>
         <translation>删除</translation>
     </message>
     <message>
-        <location filename="ui/nikkitaglist.py" line="204"/>
+        <location filename="ui/nikkitaglist.py" line="199"/>
         <source>Random</source>
         <translation>随机</translation>
     </message>
     <message>
-        <location filename="ui/nikkitaglist.py" line="249"/>
+        <location filename="ui/nikkitaglist.py" line="244"/>
         <source>Delete selected diaries</source>
         <translation>删除选中的日记</translation>
     </message>
     <message>
-        <location filename="ui/nikkitaglist.py" line="251"/>
+        <location filename="ui/nikkitaglist.py" line="246"/>
         <source>Selected diaries will be deleted permanently.Do it?</source>
         <translation>选中的日记将被永久删除，确认码？</translation>
     </message>
     <message>
-        <location filename="ui/nikkitaglist.py" line="288"/>
+        <location filename="ui/nikkitaglist.py" line="285"/>
         <source>Export Diary</source>
         <translation>导出日记</translation>
     </message>
     <message>
-        <location filename="ui/nikkitaglist.py" line="289"/>
+        <location filename="ui/nikkitaglist.py" line="286"/>
         <source>Plain Text (*.txt);;Rich Text (*.rtf)</source>
         <translation>纯文本 (*.txt);;富文本 (*.rtf)</translation>
     </message>
@@ -303,7 +325,7 @@ Modified: %s</source>
 <context>
     <name>SearchBox</name>
     <message>
-        <location filename="ui/customwidgets.py" line="140"/>
+        <location filename="ui/customwidgets.py" line="153"/>
         <source>Search</source>
         <translation>搜索</translation>
     </message>
@@ -518,7 +540,7 @@ Modified: %s</source>
         <translation type="obsolete">修改日期</translation>
     </message>
     <message>
-        <location filename="ui/customobjects.py" line="96"/>
+        <location filename="ui/customwidgets.py" line="229"/>
         <source>Title</source>
         <translation>标题</translation>
     </message>
@@ -528,17 +550,17 @@ Modified: %s</source>
         <translation type="obsolete">大小</translation>
     </message>
     <message>
-        <location filename="ui/customobjects.py" line="98"/>
+        <location filename="ui/customwidgets.py" line="231"/>
         <source>Reverse</source>
         <translation>倒序排列</translation>
     </message>
     <message>
-        <location filename="ui/customobjects.py" line="97"/>
+        <location filename="ui/customwidgets.py" line="230"/>
         <source>Length</source>
         <translation>长度</translation>
     </message>
     <message>
-        <location filename="ui/customobjects.py" line="95"/>
+        <location filename="ui/customwidgets.py" line="228"/>
         <source>Date</source>
         <translation>日期</translation>
     </message>
@@ -554,7 +576,7 @@ Modified: %s</source>
 <context>
     <name>TagList</name>
     <message>
-        <location filename="ui/nikkitaglist.py" line="117"/>
+        <location filename="ui/nikkitaglist.py" line="116"/>
         <source>All</source>
         <translation>全部</translation>
     </message>

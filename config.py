@@ -1,7 +1,8 @@
 """Setup database&settings, set work directory,
 and share global variables between modules"""
 from configparser import ConfigParser
-from db import Nikki
+import db
+import sys
 import os
 
 
@@ -17,6 +18,7 @@ _program_path = os.path.dirname(os.path.realpath(__file__))
 if _program_path.endswith('.zip'):  # path is a frozen library
     _program_path = os.path.dirname(_program_path)
 os.chdir(_program_path)
+
 # setup settings
 settings = ConfigParserSave()
 try:
@@ -25,7 +27,13 @@ try:
         settings.read_file(_f)
 except FileNotFoundError:
     settings['Main'] = settings['Editor'] = settings['Font'] = {}
+
 # setup database
 _dbpath = settings['Main'].get('dbpath', 'nikkichou.db')
-nikki = Nikki(_dbpath)
+try:
+    nikki = db.Nikki(_dbpath)
+except db.DatabaseError as e:
+    import ui
+    ui.show_error_db(str(e))
+    sys.exit(-1)
 
