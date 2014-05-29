@@ -1,10 +1,9 @@
 *.pyc
+*.qm
 *.db
 *.ini
-demo
 xmlsample
 .idea
 test.py
-ui/*_ui.py
-ui/rc.py
-lang/*.qm
+hazama/ui/*_ui.py
+hazama/ui/rc.py
