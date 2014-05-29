@@ -4,8 +4,13 @@ import sys
 import os
 import time
 
-__version__ = 0.10
+__version__ = 0.11
 
+try:
+    program_path = os.path.dirname(os.path.realpath(__file__))
+except NameError:  # frozen
+    program_path = os.path.dirname(sys.argv[0])
+os.chdir(program_path)
 
 if __name__ == '__main__':
     start_time = time.clock()
