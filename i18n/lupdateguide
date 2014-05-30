@@ -1,0 +1,14 @@
+﻿# This is a Qt project file only used by pyside-lupdate
+
+SOURCES = ../hazama/ui/__init__.py \
+          ../hazama/ui/customwidgets.py \
+          ../hazama/ui/customobjects.py \
+          ../hazama/ui/configdialog.py \
+          ../hazama/ui/configdialog_ui.py \
+          ../hazama/ui/editor.py \
+          ../hazama/ui/editor_ui.py \
+          ../hazama/ui/mainwindow.py \
+          ../hazama/ui/mainwindow_ui.py \
+          ../hazama/ui/nikkitaglist.py
+TRANSLATIONS = zh_CN.ts \
+			   ja.ts
