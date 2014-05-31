@@ -3,6 +3,7 @@ import os
 from os import path
 from glob import glob
 from distutils.core import Command
+from distutils.spawn import find_executable
 
 
 class build_qt(Command):
@@ -54,9 +55,11 @@ class build_qt(Command):
     def compile_ts():
         lang_dir = path.join('hazama', 'lang')
         if not path.isdir(lang_dir): os.mkdir(lang_dir)
+        lres = 'lrelease' if find_executable('lrelease') else 'lrelease-qt4'
         for i in glob(path.join('i18n', '*.ts')):
             qm_filename = path.basename(i).split('.')[0] + '.qm'
-            os.system('lrelease %s -qm %s' % (i, path.join(lang_dir, qm_filename)))
+            os.system('%s %s -qm %s' % (lres, i,
+                                        path.join(lang_dir, qm_filename)))
 
 
 class update_ts(Command):
@@ -80,10 +83,8 @@ if sys.platform == 'win32':
     os.environ['PATH'] += ';' + pyside_dir
 
 if sys.platform == 'win32' and 'build' in sys.argv:
-    # setup.py only used to make frozen binary on Windows
     from cx_Freeze import setup, Executable
 
-    project_path = path.dirname(path.realpath(__file__))  # abstract path needed
     # prepare translation files
     ts = [i for i in glob('hazama/lang/*.qm')]
     qt_ts = [path.join(pyside_dir, 'translations', 'qt_%s')
@@ -103,7 +104,7 @@ if sys.platform == 'win32' and 'build' in sys.argv:
             'excludes': ['tkinter', 'PySide.QtNetwork', 'distutils'],
             'build_exe': 'build/lib',
             'path': sys.path + ['hazama/'],
-            'init_script': path.join(project_path, 'utils', 'cx_freeze_init.py')}},
+            'init_script': path.join(os.getcwd(), 'utils', 'cx_freeze_init.py')}},
         executables=[main])
 else:
     from distutils.core import setup
@@ -114,7 +115,8 @@ setup(name='Hazama',
       author='krrr',
       url='https://github.com/krrr/Hazama',
       version="0.11",
-      description='a simple cross-platform diary program',
+      description='A simple cross-platform diary program',
       requires=['PySide'],
       cmdclass=cmdclass,
       **extra_opts)
+
