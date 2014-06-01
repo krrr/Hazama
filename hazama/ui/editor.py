@@ -39,7 +39,6 @@ class Editor(QWidget, Ui_Editor):
         self.dtLabel.setText('' if self.datetime is None
                              else dt_trans(self.datetime))
         self.dtLabel.setFont(font.date)
-        self.dtBtn.setIcon(QIcon(':/editor/clock.png'))
         sz = min(font.date_m.ascent(), 16)
         self.dtBtn.setIconSize(QSize(sz, sz))
         # set up tagEditor

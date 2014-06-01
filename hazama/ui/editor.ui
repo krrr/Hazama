@@ -75,6 +75,10 @@
        <property name="styleSheet">
         <string notr="true">QToolButton {border: none;}</string>
        </property>
+       <property name="icon">
+        <iconset resource="../../res/res.qrc">
+         <normaloff>:/editor/clock.png</normaloff>:/editor/clock.png</iconset>
+       </property>
       </widget>
      </item>
      <item>
@@ -123,7 +127,9 @@
    <header>customwidgets</header>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="../../res/res.qrc"/>
+ </resources>
  <connections>
   <connection>
    <sender>box</sender>
