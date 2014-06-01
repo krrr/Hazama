@@ -48,6 +48,12 @@
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
+       <property name="minimumSize">
+        <size>
+         <width>75</width>
+         <height>0</height>
+        </size>
+       </property>
       </widget>
       <widget class="NikkiList" name="nList">
        <property name="sizePolicy">
@@ -94,16 +100,16 @@
    </attribute>
    <addaction name="creAct"/>
    <addaction name="delAct"/>
-   <addaction name="tlistAct"/>
+   <addaction name="tListAct"/>
    <addaction name="sorAct"/>
    <addaction name="cfgAct"/>
   </widget>
-  <action name="tlistAct">
+  <action name="tListAct">
    <property name="checkable">
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="../res/res.qrc">
+    <iconset resource="../../res/res.qrc">
      <normaloff>:/images/tlist.png</normaloff>:/images/tlist.png</iconset>
    </property>
    <property name="text">
@@ -115,7 +121,7 @@
   </action>
   <action name="creAct">
    <property name="icon">
-    <iconset resource="../res/res.qrc">
+    <iconset resource="../../res/res.qrc">
      <normaloff>:/images/new.png</normaloff>:/images/new.png</iconset>
    </property>
    <property name="text">
@@ -127,7 +133,7 @@
   </action>
   <action name="delAct">
    <property name="icon">
-    <iconset resource="../res/res.qrc">
+    <iconset resource="../../res/res.qrc">
      <normaloff>:/images/delete.png</normaloff>:/images/delete.png</iconset>
    </property>
    <property name="text">
@@ -142,7 +148,7 @@
   </action>
   <action name="sorAct">
    <property name="icon">
-    <iconset resource="../res/res.qrc">
+    <iconset resource="../../res/res.qrc">
      <normaloff>:/images/sort.png</normaloff>:/images/sort.png</iconset>
    </property>
    <property name="text">
@@ -154,7 +160,7 @@
   </action>
   <action name="cfgAct">
    <property name="icon">
-    <iconset resource="../res/res.qrc">
+    <iconset resource="../../res/res.qrc">
      <normaloff>:/images/config.png</normaloff>:/images/config.png</iconset>
    </property>
    <property name="text">
@@ -190,7 +196,7 @@
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="../res/res.qrc"/>
+  <include location="../../res/res.qrc"/>
  </resources>
  <connections>
   <connection>
@@ -226,7 +232,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>tlistAct</sender>
+   <sender>tListAct</sender>
    <signal>triggered(bool)</signal>
    <receiver>MainWindow</receiver>
    <slot>toggleTagList()</slot>
