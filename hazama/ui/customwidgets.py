@@ -24,42 +24,42 @@ class NTextEdit(QTextEdit, TextFormatter):
                               round(hl.blue()*fac + bg.blue()*(1-fac)))
         self.autoIndent = False
         self.setTabChangesFocus(True)
-        # create format menu
-        self.subMenu = QMenu(self.tr('Format'), self)
+        # create context-menu
+        self.menu = self.createStandardContextMenu()
+        self.subMenu = QMenu(self.tr('Format'), self.menu)
+        before = self.menu.actions()[2]
+        self.menu.insertSeparator(before)
+        self.menu.insertMenu(before, self.subMenu)
+        # shortcuts of format actions only used to display shortcut-hint in menu
         self.hlAct = QAction(QIcon(':/fmt/highlight.png'), self.tr('Highlight'),
-                             self, triggered=self.setHL)
+                             self, triggered=self.setHL,
+                             shortcut=QKeySequence('Ctrl+H'))
         self.bdAct = QAction(QIcon(':/fmt/bold.png'), self.tr('Bold'),
-                             self, triggered=self.setBD)
+                             self, triggered=self.setBD,
+                             shortcut=QKeySequence.Bold)
         self.soAct = QAction(QIcon(':/fmt/strikeout.png'), self.tr('Strike out'),
-                             self, triggered=self.setSO)
+                             self, triggered=self.setSO,
+                             shortcut=QKeySequence('Ctrl+T'))
         self.ulAct = QAction(QIcon(':/fmt/underline.png'), self.tr('Underline'),
-                             self, triggered=self.setUL)
+                             self, triggered=self.setUL,
+                             shortcut=QKeySequence.Underline)
         self.itaAct = QAction(QIcon(':/fmt/italic.png'), self.tr('Italic'),
-                              self, triggered=self.setIta)
+                              self, triggered=self.setIta,
+                              shortcut=QKeySequence.Italic)
         self.clrAct = QAction(self.tr('Clear format'), self,
                               shortcut=QKeySequence('Ctrl+D'),
                               triggered=self.clearFormat)
         self.acts = (self.hlAct, self.bdAct, self.soAct, self.ulAct,
                      self.itaAct)  # exclude uncheckable clrAct
         for a in self.acts:
-            self.addAction(a)
             self.subMenu.addAction(a)
             a.setCheckable(True)
         self.subMenu.addSeparator()
         self.addAction(self.clrAct)
         self.subMenu.addAction(self.clrAct)
-        self.menu = self.createStandardContextMenu()
-        before = self.menu.actions()[2]
-        self.menu.insertSeparator(before)
-        self.menu.insertMenu(before, self.subMenu)
-        # create shortcuts
-        self.hlSc = QShortcut(QKeySequence('Ctrl+H'), self, self.handleFormatShortcuts)
-        self.bdSc = QShortcut(QKeySequence.Bold, self, self.handleFormatShortcuts)
-        self.soSc = QShortcut(QKeySequence('Ctrl+-'), self, self.handleFormatShortcuts)
-        self.ulSc = QShortcut(QKeySequence.Underline, self, self.handleFormatShortcuts)
-        self.itaSc = QShortcut(QKeySequence.Italic, self, self.handleFormatShortcuts)
-        self.sc2act = {self.hlSc: self.hlAct, self.bdSc: self.bdAct, self.soSc: self.soAct,
-                       self.ulSc: self.ulAct, self.itaSc: self.itaAct}
+        self.key2act = {
+            Qt.Key_H: self.hlAct, Qt.Key_B: self.bdAct, Qt.Key_T: self.soAct,
+            Qt.Key_U: self.ulAct, Qt.Key_I: self.itaAct}
 
     def setText(self, text, formats):
         doc = NTextDocument(self)
@@ -75,8 +75,7 @@ class NTextEdit(QTextEdit, TextFormatter):
 
     def contextMenuEvent(self, event):
         if self.textCursor().hasSelection():
-            for i, c in enumerate(self.checkFormat()):
-                self.acts[i].setChecked(c)
+            self.checkFormats()
             self.subMenu.setEnabled(True)
         else:
             self.subMenu.setEnabled(False)
@@ -91,8 +90,12 @@ class NTextEdit(QTextEdit, TextFormatter):
         self.textCursor().setCharFormat(fmt)
 
     def keyPressEvent(self, event):
-        """Auto-indent support"""
-        if event.key() == Qt.Key_Return and self.autoIndent:
+        if event.modifiers() == Qt.ControlModifier and event.key() in self.key2act:
+            # set actions before calling format methods
+            self.checkFormats()
+            self.key2act[event.key()].trigger()
+        elif event.key() == Qt.Key_Return and self.autoIndent:
+            # auto-indent support
             spaceCount = 0
             cur = self.textCursor()
             savedPos = cur.position()
@@ -106,16 +109,11 @@ class NTextEdit(QTextEdit, TextFormatter):
             super(NTextEdit, self).keyPressEvent(event)
             cur.insertText(' ' * spaceCount)
         else:
-            return super(NTextEdit, self).keyPressEvent(event)
+            super(NTextEdit, self).keyPressEvent(event)
 
     def insertFromMimeData(self, source):
         """Disable some unsupported types"""
         self.insertHtml(source.html() or source.text())
-
-    def handleFormatShortcuts(self):
-        for i, c in enumerate(self.checkFormat()):
-            self.acts[i].setChecked(c)
-        self.sc2act[self.sender()].trigger()
 
 
 class SearchBox(QLineEdit):

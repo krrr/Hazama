@@ -30,7 +30,7 @@ class TagCompleter(QCompleter):
 
 class TextFormatter:
     """setXX methods are used in NTextDocument and NTextEdit(called by
-    context-menu or shortcuts, and always before checkFormat).
+    context-menu or shortcuts and rely on whether action checked or not).
     If used in NTextDocument,parameter pre of setXX methods should be True.
     """
     HlColor = QColor(248, 162, 109, 100)
@@ -40,9 +40,8 @@ class TextFormatter:
                   lambda __, x: x.fontUnderline(),
                   lambda __, x: x.fontItalic()]
 
-    def checkFormat(self):
-        """Check five formats in whole selection, return a result list in
-        order of HighLight, Bold, StrikeOut, Underline, Italic"""
+    def checkFormats(self):
+        """Check formats in current selection and check or uncheck actions"""
         cur = self.textCursor()
         start, end = cur.anchor(), cur.position()
         if start > end:
@@ -54,9 +53,9 @@ class TextFormatter:
             for i, f in enumerate(self.checkFuncs):
                 if results[i] and not f(self, charFmt):
                     results[i] = False
-            if not any(results):
-                return results
-        return results
+            if not any(results): break
+        for i, c in enumerate(results):
+            self.acts[i].setChecked(c)
 
     def setHL(self, pre=False):
         fmt = QTextCharFormat()
