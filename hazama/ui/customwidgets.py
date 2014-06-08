@@ -24,12 +24,8 @@ class NTextEdit(QTextEdit, TextFormatter):
                               round(hl.blue()*fac + bg.blue()*(1-fac)))
         self.autoIndent = False
         self.setTabChangesFocus(True)
-        # create context-menu
-        self.menu = self.createStandardContextMenu()
-        self.subMenu = QMenu(self.tr('Format'), self.menu)
-        before = self.menu.actions()[2]
-        self.menu.insertSeparator(before)
-        self.menu.insertMenu(before, self.subMenu)
+        # create format menu
+        self.subMenu = QMenu(self.tr('Format'), self)
         # shortcuts of format actions only used to display shortcut-hint in menu
         self.hlAct = QAction(QIcon(':/fmt/highlight.png'), self.tr('Highlight'),
                              self, triggered=self.setHL,
@@ -50,7 +46,7 @@ class NTextEdit(QTextEdit, TextFormatter):
                               shortcut=QKeySequence('Ctrl+D'),
                               triggered=self.clearFormat)
         self.acts = (self.hlAct, self.bdAct, self.soAct, self.ulAct,
-                     self.itaAct)  # exclude uncheckable clrAct
+                     self.itaAct)  # excluding uncheckable clrAct
         for a in self.acts:
             self.subMenu.addAction(a)
             a.setCheckable(True)
@@ -79,7 +75,12 @@ class NTextEdit(QTextEdit, TextFormatter):
             self.subMenu.setEnabled(True)
         else:
             self.subMenu.setEnabled(False)
-        self.menu.exec_(event.globalPos())
+        menu = self.createStandardContextMenu()
+        before = menu.actions()[2]
+        menu.insertSeparator(before)
+        menu.insertMenu(before, self.subMenu)
+        menu.exec_(event.globalPos())
+        menu.deleteLater()
 
     def getFormats(self):
         parser = QtHtmlParser()
