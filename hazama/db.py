@@ -193,9 +193,9 @@ class Nikki:
                'UPDATE Nikki SET datetime=?, text=?, title=? WHERE id=?')
         self.exe(cmd, values)
         # formats processing
+        if not new:  # delete existed format information
+            self.exe('DELETE FROM TextFormat WHERE nikkiid=?', (id,))
         if formats:
-            if not new:  # delete existed format information
-                self.exe('DELETE FROM TextFormat WHERE nikkiid=?', (id,))
             for i in formats:
                 cmd = 'INSERT INTO TextFormat VALUES(?,?,?,?)'
                 self.exe(cmd, (id,) + i)
@@ -205,12 +205,12 @@ class Nikki:
                 self.exe('DELETE FROM Nikki_Tags WHERE nikkiid=?', (id,))
             for t in tags:
                 try:
-                    tagid = self.gettagid(t)
+                    tag_id = self.gettagid(t)
                 except TypeError:  # tag not exists
                     self.exe('INSERT INTO Tags VALUES(NULL,?)', (t,))
                     self.commit()
-                    tagid = self.gettagid(t)
-                self.exe('INSERT INTO Nikki_Tags VALUES(?,?)', (id, tagid))
+                    tag_id = self.gettagid(t)
+                self.exe('INSERT INTO Nikki_Tags VALUES(?,?)', (id, tag_id))
         if not batch:
             self.commit()
             logging.info('Nikki saved(ID: %s)' % id)
