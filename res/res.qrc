@@ -20,6 +20,13 @@
   <qresource prefix="/images">
     <file>config.png</file>
   </qresource>
+
+  <qresource prefix="/menu">
+    <file>list_delete.png</file>
+  </qresource>
+  <qresource prefix="/menu">
+    <file>random.png</file>
+  </qresource>
   
   <qresource prefix="/fmt">
     <file>highlight.png</file>

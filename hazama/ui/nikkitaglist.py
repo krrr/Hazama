@@ -193,10 +193,12 @@ class NikkiList(QListWidget):
         self.editAct = QAction(self.tr('Edit'), self,
                                shortcut=QKeySequence(Qt.Key_Return),
                                triggered=self.startEditor)
-        self.delAct = QAction(self.tr('Delete'), self,
+        self.delAct = QAction(QIcon(':/menu/list_delete.png'),
+                              self.tr('Delete'), self,
                               shortcut=QKeySequence.Delete,
                               triggered=self.delNikki)
-        self.selAct = QAction(self.tr('Random'), self,
+        self.selAct = QAction(QIcon(':/menu/random.png'),
+                              self.tr('Random'), self,
                               shortcut=QKeySequence(Qt.Key_F7),
                               triggered=self.selectRandomly)
         for i in [self.editAct, self.delAct, self.selAct]: self.addAction(i)
