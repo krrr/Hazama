@@ -151,11 +151,9 @@ class SearchBox(QLineEditWithMenuIcon):
         """Update button icon and PlaceholderText font style"""
         if self.isTextBefore == bool(text): return
         ico_name = 'search_clr' if text else 'search'
-        font_style = 'normal' if text else 'italic'
         self.button.setStyleSheet('QToolButton{border: none;'
                                   'background: url(:/images/%s.png);'
                                   'background-position: center}' % ico_name)
-        self.setStyleSheet('QLineEdit{font-style: %s}' % font_style)
         self.isTextBefore = bool(text)
 
     def retranslate(self):

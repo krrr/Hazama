@@ -41,7 +41,7 @@ class Editor(QWidget, Ui_Editor):
         sz = min(font.date_m.ascent(), 16)
         self.dtBtn.setIconSize(QSize(sz, sz))
         # set up tagEditor
-        self.updateTagEditorFont('')
+        self.tagEditor.setTextMargins(QMargins(2, 0, 2, 0))
         if not new:
             tags = row['tags']
             self.tagEditor.setText(' '.join(tags) if tags else '')
@@ -110,10 +110,4 @@ class Editor(QWidget, Ui_Editor):
         else:
             self.textEditor.setFocus()
             self.textEditor.moveCursor(QTextCursor.Start)
-
-    def updateTagEditorFont(self, text):
-        """Set tagEditor's placeHolderFont to italic"""
-        style = 'normal' if text else 'italic'
-        self.tagEditor.setStyleSheet('font-style: %s' % style)
-
 
