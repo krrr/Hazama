@@ -49,6 +49,18 @@ def show_error_db(hint=''):
                       'should recover this file by hand or restore from backups.') % hint)
 
 
+def setStdEditMenuIcons(menu):
+    """Add system theme icons to QLineEdit and QTextEdit context-menu"""
+    (undo, redo, __, cut, copy, paste, delete, __, sel, *__) = menu.actions()
+    undo.setIcon(QIcon.fromTheme('edit-undo'))
+    redo.setIcon(QIcon.fromTheme('edit-redo'))
+    cut.setIcon(QIcon.fromTheme('edit-cut'))
+    copy.setIcon(QIcon.fromTheme('edit-copy'))
+    paste.setIcon(QIcon.fromTheme('edit-paste'))
+    delete.setIcon(QIcon.fromTheme('edit-delete'))
+    sel.setIcon(QIcon.fromTheme('edit-select-all'))
+
+
 class Fonts:
     """Manage all fonts used in application"""
     def __init__(self):

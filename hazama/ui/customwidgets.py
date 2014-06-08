@@ -1,9 +1,18 @@
 from PySide.QtCore import *
 from PySide.QtGui import *
+from ui import setStdEditMenuIcons
 from ui.customobjects import TextFormatter, NTextDocument
 from html.parser import HTMLParser
 import re
 from config import settings
+
+
+class QLineEditWithMenuIcon(QLineEdit):
+    def contextMenuEvent(self, event):
+        menu = self.createStandardContextMenu()
+        setStdEditMenuIcons(menu)
+        menu.exec_(event.globalPos())
+        menu.deleteLater()
 
 
 class NTextEdit(QTextEdit, TextFormatter):
@@ -76,6 +85,7 @@ class NTextEdit(QTextEdit, TextFormatter):
         else:
             self.subMenu.setEnabled(False)
         menu = self.createStandardContextMenu()
+        setStdEditMenuIcons(menu)
         before = menu.actions()[2]
         menu.insertSeparator(before)
         menu.insertMenu(before, self.subMenu)
@@ -117,7 +127,7 @@ class NTextEdit(QTextEdit, TextFormatter):
         self.insertHtml(source.html() or source.text())
 
 
-class SearchBox(QLineEdit):
+class SearchBox(QLineEditWithMenuIcon):
     """A real-time search box"""
     def __init__(self, parent=None):
         super(SearchBox, self).__init__(parent)

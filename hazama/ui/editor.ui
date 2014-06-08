@@ -54,7 +54,7 @@
       <number>20</number>
      </property>
      <item>
-      <widget class="QLineEdit" name="tagEditor">
+      <widget class="QLineEditWithMenuIcon" name="tagEditor">
        <property name="placeholderText">
         <string>Tags separated by space</string>
        </property>
@@ -124,6 +124,11 @@
   <customwidget>
    <class>NTextEdit</class>
    <extends>QTextEdit</extends>
+   <header>customwidgets</header>
+  </customwidget>
+  <customwidget>
+   <class>QLineEditWithMenuIcon</class>
+   <extends>QLineEdit</extends>
    <header>customwidgets</header>
   </customwidget>
  </customwidgets>
