@@ -239,6 +239,7 @@ class NikkiList(QListWidget):
         if nikkiId != -1:
             self.reload(nikkiId)
             self.needRefresh.emit(editorId == -1, tagModified)
+        self.editors[editorId].deleteLater()
         del self.editors[editorId]
 
     def delNikki(self):
@@ -318,7 +319,7 @@ class NikkiList(QListWidget):
         curtEditor = list(self.editors.values())[0]
         try:
             index = self.row(curtEditor.item)
-        except RuntimeError:  # C++ object already deleted
+        except RuntimeError:  # item has been deleted from list
             return
         # disabled when multi-editor or editing new diary(if new,
         # shortcut would not be set) or no item to move on.
@@ -328,8 +329,8 @@ class NikkiList(QListWidget):
             return
         else:
             self.setCurrentRow(index + step)
-            self.startEditor()
             curtEditor.closeNoSave()
+            self.startEditor()
 
     def sortDT(self, checked):
         if checked:

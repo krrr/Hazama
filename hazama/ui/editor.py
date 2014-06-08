@@ -16,7 +16,6 @@ class Editor(QWidget, Ui_Editor):
 
     def __init__(self, editorId, new, row, parent=None):
         super(Editor, self).__init__(parent, Qt.Window)
-        self.setAttribute(Qt.WA_DeleteOnClose)
         self.setupUi(self)
         self.id, self.new = editorId, new
         geo = settings['Editor'].get('windowgeo')
@@ -66,7 +65,7 @@ class Editor(QWidget, Ui_Editor):
 
     def closeNoSave(self):
         settings['Editor']['windowgeo'] = str(self.saveGeometry().toHex())
-        self.hide()
+        self.hide()  # use deleteLater to free, not destroy slot or attribute
         self.closed.emit(self.id, -1, False)
 
     def saveNikki(self):
