@@ -95,7 +95,6 @@ if sys.platform == 'win32' and 'build' in sys.argv:
                       icon='res/appicon/appicon.ico',
                       appendScriptToLibrary=False,
                       appendScriptToExe=True,
-                      copyDependentFiles=False,
                       targetDir='build')
     extra_opts = dict(
         options={'build_exe': {
