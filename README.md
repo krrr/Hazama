@@ -11,9 +11,14 @@ Features:
 
 It is developed in Python3 with PySide.
 
+Installation
+----
+**Downloads:** [Releases page](https://github.com/krrr/Hazama/releases)
 
 **Run from source:**
 ```sh
+git clone https://github.com/krrr/Hazama
+cd Hazama
 setup.py build_qt
 python hazama/hazama.py
 ```
