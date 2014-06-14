@@ -105,6 +105,7 @@ class NTextEdit(QTextEdit, TextFormatter):
             # set actions before calling format methods
             self.checkFormats()
             self.key2act[event.key()].trigger()
+            event.accept()
         elif event.key() == Qt.Key_Return and self.autoIndent:
             # auto-indent support
             spaceCount = 0
@@ -119,6 +120,7 @@ class NTextEdit(QTextEdit, TextFormatter):
             cur.setPosition(savedPos)
             super(NTextEdit, self).keyPressEvent(event)
             cur.insertText(' ' * spaceCount)
+            event.accept()
         else:
             super(NTextEdit, self).keyPressEvent(event)
 
