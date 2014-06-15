@@ -21,10 +21,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.splitter.setSizes([tListW, self.width()-tListW])
         # setup sort menu
         sorMenu = SortOrderMenu(self)
-        # sorMenu.datetime.triggered[bool].connect(self.nList.sortDT)
-        # sorMenu.title.triggered[bool].connect(self.nList.sortTT)
-        # sorMenu.length.triggered[bool].connect(self.nList.sortLT)
-        # sorMenu.reverse.triggered[bool].connect(self.nList.sortRE)
+        sorMenu.orderChanged.connect(self.nList.sort)
         self.sorAct.setMenu(sorMenu)
         sortBtn = self.toolBar.widgetForAction(self.sorAct)
         sortBtn.setPopupMode(QToolButton.InstantPopup)

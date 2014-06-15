@@ -230,28 +230,47 @@ class QtHtmlParser(HTMLParser):
 
 class SortOrderMenu(QMenu):
     """Menu used to Change sort order of NList."""
+    orderChanged = Signal()
+
     def __init__(self, parent=None):
         super(SortOrderMenu, self).__init__(parent)
-        self.aboutToShow.connect(self.setActStates)
+        self.aboutToShow.connect(self.setActions)
         # create actions
         self.datetime = QAction(self.tr('Date'), self)
+        self.datetime.name = 'datetime'
         self.title = QAction(self.tr('Title'), self)
+        self.title.name = 'title'
         self.length = QAction(self.tr('Length'), self)
+        self.length.name = 'length'
         self.reverse = QAction(self.tr('Reverse'), self)
-        self.reverse.setCheckable(True)
         self.orders = (self.datetime, self.title, self.length)
         for a in self.orders:
             a.setCheckable(True)
             self.addAction(a)
+            a.triggered[bool].connect(self.signalEmitter)
         self.addSeparator()
+        self.reverse.setCheckable(True)
         self.addAction(self.reverse)
+        self.reverse.triggered[bool].connect(self.signalEmitter)
 
-    def setActStates(self):
+    def setActions(self):
         """Set actions checked/unchecked before showing"""
-        order = settings['Main'].get('listorder', 'datetime')
+        order = settings['Main'].get('listsortby', 'datetime')
         reverse = settings['Main'].getint('listreverse', 1)
         for a in self.orders: a.setChecked(False)
-        toEnable = getattr(self, order)
+        toEnable = getattr(self, order, self.datetime)
         toEnable.setChecked(True)
         self.reverse.setChecked(reverse)
+
+    def signalEmitter(self, checked):
+        """Save new order to settings and emit a signal"""
+        sender = self.sender()
+        if hasattr(sender, 'name'):
+            if checked:
+                settings['Main']['listsortby'] = sender.name
+                self.orderChanged.emit()
+        else:
+            settings['Main']['listreverse'] = str(checked.real)
+            self.orderChanged.emit()
+
 

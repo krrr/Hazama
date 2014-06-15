@@ -35,8 +35,8 @@ class NListDelegate(QStyledItemDelegate):
     def paint(self, painter, option, index):
         x, y, w = option.rect.x(), option.rect.y(), option.rect.width()-1
         row, model = index.row(), index.model()
-        (dt, text, title, tags, formats) = (model.data(model.index(row, i), 0)
-                                            for i in range(5))
+        dt, text, title, tags, formats = (model.data(model.index(row, i), 0)
+                                          for i in range(5))
         selected = bool(option.state & QStyle.State_Selected)
         active = bool(option.state & QStyle.State_Active)
         # draw border and background
@@ -364,11 +364,16 @@ class NikkiList(QListView):
         super(NikkiList, self).__init__(*args, **kwargs)
         self.setItemDelegate(NListDelegate(self))
         self.setStyleSheet(NListDelegate.stylesheet)
-        self.model = QStandardItemModel(0, 5, self)
-        self.loadF()
+        self.model = QStandardItemModel(0, 6, self)
+        self.fillModel(self.model)
+        self.proxyModel = QSortFilterProxyModel(self)
+        self.proxyModel.setSourceModel(self.model)
+        self.proxyModel.setDynamicSortFilter(True)
+        self.setModel(self.proxyModel)
+        self.sort()
 
-    def loadF(self):
-        model = self.model
+    @staticmethod
+    def fillModel(model):
         for i in nikki.sorted('datetime'):
             model.insertRow(0)
             model.setData(model.index(0, 0), i['datetime'])
@@ -376,7 +381,7 @@ class NikkiList(QListView):
             model.setData(model.index(0, 2), i['title'])
             model.setData(model.index(0, 3), i['tags'])
             model.setData(model.index(0, 4), i['formats'])
-        self.setModel(model)
+            model.setData(model.index(0, 5), len(i['text']))
 
     def newNikki(self): pass
 
@@ -384,3 +389,9 @@ class NikkiList(QListView):
 
     def load(self): pass
 
+    def sort(self):
+        sortBy = settings['Main'].get('listsortby', 'datetime')
+        sortByCol = {'datetime': 0, 'title': 2, 'length': 5}.get(sortBy, 0)
+        reverse = settings['Main'].getint('listreverse', 1)
+        self.proxyModel.sort(sortByCol,
+                             Qt.DescendingOrder if reverse else Qt.AscendingOrder)
