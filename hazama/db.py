@@ -13,6 +13,11 @@ default_tpl = '''***{0[title]}***
 
 {0[text]}\n\n\n\n'''
 
+sql_tag_with_count = '''
+SELECT Tags.name, (SELECT COUNT(*) FROM Nikki_Tags
+                   WHERE Nikki_Tags.tagid=Tags.id) AS count
+FROM Tags'''
+
 
 class Nikki:
     """This class hold a SQLite3 database,handling save/read/import/export.
@@ -146,7 +151,7 @@ class Nikki:
         for L in self.exe(cmd):
             tags_id = self.exe('SELECT tagid FROM Nikki_Tags WHERE '
                                'nikkiid = ?', (L[0],))
-            tags = [self.gettag(i[0]) for i in tags_id] if tags_id else None
+            tags = ' '.join(self.gettag(i[0]) for i in tags_id) if tags_id else ''
             formats = self.exe('SELECT start,length,type FROM TextFormat '
                                'WHERE nikkiid=?', (L[0],))
             # cursor object only generates once, so we make a list
@@ -168,10 +173,7 @@ class Nikki:
                 'SELECT name FROM Tags WHERE id = ?', (tagid,)).fetchone()[0]
         else:  # get all tags
             if getcount:  # get with counts, used in TagList
-                result = self.exe('SELECT Tags.id,Tags.name,(SELECT COUNT(*) FROM '
-                                  'Nikki_Tags WHERE Nikki_Tags.tagid=Tags.id) '
-                                  'FROM Tags ORDER BY Tags.name')
-                return result
+                return self.exe(sql_tag_with_count)
             else:  # get without counts, used in TagCompleter
                 result = self.exe('SELECT name FROM Tags')
                 return [n[0] for n in result]

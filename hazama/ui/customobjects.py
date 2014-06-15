@@ -118,3 +118,23 @@ class NSplitter(QSplitter):
         handle.setCursor(Qt.SizeHorCursor)
         return handle
 
+
+class MultiSortFilterProxyModel(QSortFilterProxyModel):
+    """Simple Multi-Column ProxyModel, only supports fixed string"""
+    fixedString = ''
+    keyColumns = [0]
+
+    def filterAcceptsRow(self, sourceRow, sourceParent):
+        model = self.sourceModel()
+        for i in self.keyColumns:
+            if self.fixedString in model.data(model.index(sourceRow, i)):
+                return True
+        return False
+
+    def setFilterFixedString(self, s):
+        self.fixedString = s
+        super(MultiSortFilterProxyModel, self).setFilterFixedString(s)
+
+    def setFilterKeyColumns(self, *cols):
+        self.keyColumns = cols
+

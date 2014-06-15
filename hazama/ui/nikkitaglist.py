@@ -2,7 +2,7 @@ from PySide.QtGui import *
 from PySide.QtCore import *
 from ui import font, dt_trans
 from ui.editor import Editor
-from ui.customobjects import NTextDocument
+from ui.customobjects import NTextDocument, MultiSortFilterProxyModel
 from config import settings, nikki
 import logging
 import random
@@ -34,8 +34,8 @@ class NListDelegate(QStyledItemDelegate):
 
     def paint(self, painter, option, index):
         x, y, w = option.rect.x(), option.rect.y(), option.rect.width()-1
-        row, model = index.row(), index.model()
-        dt, text, title, tags, formats = (model.data(model.index(row, i), 0)
+        row = index.row()
+        dt, text, title, tags, formats = (index.sibling(row, i).data()
                                           for i in range(5))
         selected = bool(option.state & QStyle.State_Selected)
         active = bool(option.state & QStyle.State_Active)
@@ -76,7 +76,7 @@ class NListDelegate(QStyledItemDelegate):
             painter.setPen(self.c_gray)
             painter.setFont(qApp.font())
             painter.translate(x + 15, y+self.title_h+6+self.text_h)
-            for t in tags:
+            for t in tags.split():
                 w = font.default_m.width(t) + 4
                 tagPath = QPainterPath()
                 tagPath.moveTo(8, 0)
@@ -108,7 +108,7 @@ class TListDelegate(QStyledItemDelegate):
 
     def paint(self, painter, option, index):
         x, y, w = option.rect.x(), option.rect.y(), option.rect.width()
-        tag, count = index.data(3), str(index.data(2))
+        tag, count = index.data(Qt.DisplayRole), str(index.data(Qt.UserRole))
         painter.setFont(font.default)
         selected = bool(option.state & QStyle.State_Selected)
         textArea = QRect(x+4, y, w-8, self.h)
@@ -116,7 +116,7 @@ class TListDelegate(QStyledItemDelegate):
             painter.setPen(QColor(80, 80, 80))
             painter.drawText(textArea,
                              Qt.AlignVCenter | Qt.AlignLeft,
-                             qApp.translate('TagList', 'All'))
+                             tag)
         else:
             painter.setPen(QColor(209, 109, 63))
             painter.drawLine(x, y, w, y)
@@ -139,6 +139,8 @@ class TListDelegate(QStyledItemDelegate):
 
 
 class TagList(QListWidget):
+    tagChanged = Signal(str)  # str is tag-name or ''
+
     def __init__(self, *args, **kwargs):
         super(TagList, self).__init__(*args, **kwargs)
         self.setItemDelegate(TListDelegate(self))
@@ -147,17 +149,21 @@ class TagList(QListWidget):
         self.setUniformItemSizes(True)
         self.setStyleSheet(TListDelegate.stylesheet)
         self.trackList = None  # update in mousePressEvent
+        self.currentItemChanged.connect(self.emitTagChanged)
 
     def load(self):
         logging.info('Tag List load')
         self.clear()  # this may emit unexpected signal when has selection
         item_all = QListWidgetItem(self)
-        item_all.setData(1, 'All')
+        item_all.setData(Qt.DisplayRole, self.tr('All'))
         for t in nikki.gettag(getcount=True):
             item = QListWidgetItem(self)
-            item.setData(3, t[1])
-            item.setData(2, t[2])
-            item.setData(1, t[0])
+            item.setData(Qt.DisplayRole, t[0])
+            item.setData(Qt.UserRole, t[1])
+
+    def emitTagChanged(self, currentItem):
+        text = currentItem.data(Qt.DisplayRole)
+        self.tagChanged.emit('' if text == self.tr('All') else text)
 
     # all three events below for drag scroll
     def mousePressEvent(self, event):
@@ -360,16 +366,23 @@ class NikkiList1(QListWidget):
 
 
 class NikkiList(QListView):
-    def __init__(self, *args, **kwargs):
-        super(NikkiList, self).__init__(*args, **kwargs)
+    def __init__(self, parent=None):
+        super(NikkiList, self).__init__(parent)
         self.setItemDelegate(NListDelegate(self))
         self.setStyleSheet(NListDelegate.stylesheet)
         self.model = QStandardItemModel(0, 6, self)
         self.fillModel(self.model)
-        self.proxyModel = QSortFilterProxyModel(self)
-        self.proxyModel.setSourceModel(self.model)
-        self.proxyModel.setDynamicSortFilter(True)
-        self.setModel(self.proxyModel)
+        # ModelProxy1 is filtered by tag
+        self.modelProxy1 = QSortFilterProxyModel(self)
+        self.modelProxy1.setSourceModel(self.model)
+        self.modelProxy1.setDynamicSortFilter(True)
+        self.modelProxy1.setFilterKeyColumn(3)
+        # ModelProxy2 is from ModelProxy1 and filtered by search string
+        self.modelProxy2 = MultiSortFilterProxyModel(self)
+        self.modelProxy2.setSourceModel(self.modelProxy1)
+        self.modelProxy2.setDynamicSortFilter(True)
+        self.modelProxy2.setFilterKeyColumns(0, 1, 2)
+        self.setModel(self.modelProxy2)
         self.sort()
 
     @staticmethod
@@ -387,11 +400,10 @@ class NikkiList(QListView):
 
     def delNikki(self): pass
 
-    def load(self): pass
-
     def sort(self):
         sortBy = settings['Main'].get('listsortby', 'datetime')
         sortByCol = {'datetime': 0, 'title': 2, 'length': 5}.get(sortBy, 0)
         reverse = settings['Main'].getint('listreverse', 1)
-        self.proxyModel.sort(sortByCol,
-                             Qt.DescendingOrder if reverse else Qt.AscendingOrder)
+        self.modelProxy1.sort(sortByCol,
+                              Qt.DescendingOrder if reverse else Qt.AscendingOrder)
+
