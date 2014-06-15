@@ -9,7 +9,7 @@ import random
 
 
 class NListDelegate(QStyledItemDelegate):
-    stylesheet = ('QListWidget{background-color: rgb(242, 241, 231);'
+    stylesheet = ('QListView{background-color: rgb(242, 241, 231);'
                   'border: solid 0px; margin-top: 1px}')
 
     def __init__(self, parent=None):
@@ -34,7 +34,9 @@ class NListDelegate(QStyledItemDelegate):
 
     def paint(self, painter, option, index):
         x, y, w = option.rect.x(), option.rect.y(), option.rect.width()-1
-        row = index.data()
+        row, model = index.row(), index.model()
+        (dt, text, title, tags, formats) = (model.data(model.index(row, i), 0)
+                                            for i in range(5))
         selected = bool(option.state & QStyle.State_Selected)
         active = bool(option.state & QStyle.State_Active)
         # draw border and background
@@ -54,27 +56,27 @@ class NListDelegate(QStyledItemDelegate):
         painter.setPen(Qt.black)
         painter.setFont(font.date)
         painter.drawText(x+14, y, w, self.title_h, Qt.AlignBottom,
-                         dt_trans(row['datetime']))
-        if row['title']:
+                         dt_trans(dt))
+        if title:
             painter.setFont(font.title)
             title_w = w-self.dt_w-13
-            title = font.title_m.elidedText(row['title'], Qt.ElideRight, title_w)
+            title = font.title_m.elidedText(title, Qt.ElideRight, title_w)
             painter.drawText(x+self.dt_w, y, title_w, self.title_h,
                              Qt.AlignBottom | Qt.AlignRight, title)
         # draw text
         painter.save()
-        self.doc.setText(row['text'], row['formats'])
+        self.doc.setText(text, formats)
         self.doc.setTextWidth(w-26)
         painter.translate(x+14, y+self.title_h+2)
         self.doc.drawContents(painter, QRect(0, 0, w-26, self.text_h))
         painter.restore()
         # draw tags
-        if row['tags']:
+        if tags:
             painter.save()
             painter.setPen(self.c_gray)
             painter.setFont(qApp.font())
             painter.translate(x + 15, y+self.title_h+6+self.text_h)
-            for t in row['tags']:
+            for t in tags:
                 w = font.default_m.width(t) + 4
                 tagPath = QPainterPath()
                 tagPath.moveTo(8, 0)
@@ -89,7 +91,8 @@ class NListDelegate(QStyledItemDelegate):
             painter.restore()
 
     def sizeHint(self, option, index):
-        tag_h = self.tag_h if index.data()['tags'] else 0
+        row, model = index.row(), index.model()
+        tag_h = self.tag_h if model.data(model.index(row, 3), 0) else 0
         self.all_h = self.title_h + self.text_h + tag_h + 10
         return QSize(-1, self.all_h+3)  # 3 is spacing between entries
 
@@ -178,7 +181,7 @@ class TagList(QListWidget):
         self.trackList = None
 
 
-class NikkiList(QListWidget):
+class NikkiList1(QListWidget):
     reloaded = Signal()
     needRefresh = Signal(bool, bool)  # (CountLabel, TagList)
 
@@ -354,4 +357,30 @@ class NikkiList(QListWidget):
         settings['Main']['listreverse'] = str(checked.real)
         self.clear()
         self.load()
+
+
+class NikkiList(QListView):
+    def __init__(self, *args, **kwargs):
+        super(NikkiList, self).__init__(*args, **kwargs)
+        self.setItemDelegate(NListDelegate(self))
+        self.setStyleSheet(NListDelegate.stylesheet)
+        self.model = QStandardItemModel(0, 5, self)
+        self.loadF()
+
+    def loadF(self):
+        model = self.model
+        for i in nikki.sorted('datetime'):
+            model.insertRow(0)
+            model.setData(model.index(0, 0), i['datetime'])
+            model.setData(model.index(0, 1), i['text'])
+            model.setData(model.index(0, 2), i['title'])
+            model.setData(model.index(0, 3), i['tags'])
+            model.setData(model.index(0, 4), i['formats'])
+        self.setModel(model)
+
+    def newNikki(self): pass
+
+    def delNikki(self): pass
+
+    def load(self): pass
 
