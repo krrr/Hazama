@@ -85,18 +85,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.cfgDialog.show()
 
     def toggleTagList(self, checked):
-        lst = self.tList
-        lst.setVisible(checked)
+        self.tList.setVisible(checked)
         if checked:
-            lst.load()
-            lst.setCurrentRow(0)
-            lst.tagChanged.connect(self.nList.modelProxy1.setFilterFixedString)
+            self.tList.load()
+            self.tList.tagChanged.connect(self.nList.modelProxy1.setFilterFixedString)
         else:
-            # currentItem is None when tag deleted
-            if lst.currentItem() is None or lst.currentRow() != 0:
-                lst.setCurrentRow(0)  # reset filter
+            self.tList.setCurrentRow(0)  # reset filter
             # avoid refreshing nList by unexpected signal
-            lst.tagChanged.disconnect(self.nList.modelProxy1.setFilterFixedString)
+            self.tList.tagChanged.disconnect(self.nList.modelProxy1.setFilterFixedString)
             settings['Main']['taglistwidth'] = str(self.splitter.sizes()[0])
 
     def showEvent(self, event):
