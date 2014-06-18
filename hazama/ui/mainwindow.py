@@ -95,13 +95,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def updateCountLabel(self):
         """Called when diary saving/deleting or on first show"""
-        c = nikki.count()
+        c = self.nList.model.rowCount()
         if c > 1: self.countLabel.setText(self.tr('%i diaries') % c)
-
-    @Slot()
-    def on_nList_reloaded(self):
-        self.searchBox.clear()
-        self.tList.setCurrentRow(0)
 
     @Slot(bool, bool)
     def on_nList_needRefresh(self, label, tList):

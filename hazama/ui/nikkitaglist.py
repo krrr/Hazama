@@ -247,6 +247,8 @@ class NikkiList1(QListWidget):
 
 
 class NikkiList(QListView):
+    countChanged = Signal()
+
     def __init__(self, parent=None):
         super(NikkiList, self).__init__(parent)
         self.setSelectionMode(self.ExtendedSelection)
@@ -353,6 +355,8 @@ class NikkiList(QListView):
             self.modelProxy.setSourceModel(self.model)
             self.setCurrentIndex(self.modelProxy.mapFromSource(
                 self.model.index(row, 0)))
+        if isNew:
+            self.countChanged.emit()
         editor.deleteLater()
         del self.editors[id]
 
@@ -381,6 +385,7 @@ class NikkiList(QListView):
             for i in indexes: nikki.delete(i.data())
             for i in sorted([i.row() for i in indexes], reverse=True):
                 self.model.removeRow(i)
+            self.countChanged.emit()
 
     def sort(self):
         sortBy = settings['Main'].get('listsortby', 'datetime')

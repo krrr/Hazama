@@ -186,8 +186,8 @@ class Nikki:
     def save(self, new, id, datetime, title, tags, text, formats, batch=False):
         """
         arguments:
-        tags - string contains tags separated by space. if new==False and
-               tags==None, skip saving tags.
+        tags - string contains tags separated by space. if tags is None,
+               skip saving tags.
         batch - commit will be skipped if True
         """
         id = self.getnewid() if new else id
@@ -204,7 +204,7 @@ class Nikki:
                 cmd = 'INSERT INTO TextFormat VALUES(?,?,?,?)'
                 self.exe(cmd, (id,) + i)
         # tags processing
-        if tags is not None:  # tags is None when not new and not changed
+        if tags is not None:
             if not new:  # if diary isn't new, delete its tags first
                 self.exe('DELETE FROM Nikki_Tags WHERE nikkiid=?', (id,))
             for t in tags.split():

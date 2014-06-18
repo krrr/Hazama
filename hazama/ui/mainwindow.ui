@@ -179,6 +179,7 @@
    <slots>
     <signal>reloaded()</signal>
     <signal>needRefresh()</signal>
+    <signal>countChanged()</signal>
     <slot>delNikki()</slot>
     <slot>startEditorNew()</slot>
    </slots>
@@ -247,8 +248,25 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>nList</sender>
+   <signal>countChanged()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>updateCountLabel()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>305</x>
+     <y>241</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>254</x>
+     <y>224</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>toggleTagList()</slot>
+  <slot>updateCountLabel()</slot>
  </slots>
 </ui>
