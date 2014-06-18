@@ -223,26 +223,6 @@ class NikkiList1(QListWidget):
         self.menu.addSeparator()
         self.menu.addAction(self.selAct)
 
-    def startEditor(self, item=None, new=False):
-        if new:  # called by newNikki method
-            curtItem = row = None
-            id = -1
-        else:  # called by doubleclick event or context-menu or key-shortcut
-            curtItem = item if item else self.selectedItems()[0]
-            row = curtItem.data(2)
-            id = row['id']
-        if id in self.editors:
-            self.editors[id].activateWindow()
-        else:  # create new editor
-            editor = Editor(editorId=id, new=new, row=row, parent=self)
-            editor.closed.connect(self.on_editor_closed)
-            self.editors[id] = editor
-            editor.item = curtItem
-            if not new:
-                editor.nextSc.activated.connect(self.editorNext)
-                editor.preSc.activated.connect(self.editorPrevious)
-            editor.show()
-
     def on_editor_closed(self, editorId, nikkiId, tagModified):
         if nikkiId != -1:
             self.reload(nikkiId)
@@ -264,31 +244,6 @@ class NikkiList1(QListWidget):
     def reloadWithDgReset(self):
         self.setItemDelegate(NListDelegate(self))
         self.reload()
-
-    def editorNext(self):
-        self.editorMove(1)
-
-    def editorPrevious(self):
-        self.editorMove(-1)
-
-    def editorMove(self, step):
-        """Move to the Previous/Next Diary in Editor.Current
-        Editor will close without saving,"""
-        curtEditor = list(self.editors.values())[0]
-        try:
-            index = self.row(curtEditor.item)
-        except RuntimeError:  # item has been deleted from list
-            return
-        # disabled when multi-editor or editing new diary(if new,
-        # shortcut would not be set) or no item to move on.
-        if (len(self.editors) != 1 or index is None or
-           (step == 1 and index >= self.count() - 1) or
-           (step == -1 and 0 >= index)):
-            return
-        else:
-            self.setCurrentRow(index + step)
-            curtEditor.closeNoSave()
-            self.startEditor()
 
 
 class NikkiList(QListView):
@@ -357,7 +312,10 @@ class NikkiList(QListView):
             editor.textEditor.setText(text, formats)
             self.editors[id] = editor
             editor.closed.connect(self.closeEditor)
+            editor.preSc.activated.connect(self.editorPrevious)
+            editor.nextSc.activated.connect(self.editorNext)
             editor.show()
+            return id
 
     def startEditorNew(self):
         if -1 in self.editors:
@@ -430,4 +388,28 @@ class NikkiList(QListView):
         reverse = settings['Main'].getint('listreverse', 1)
         self.modelProxy.sort(sortByCol,
                              Qt.DescendingOrder if reverse else Qt.AscendingOrder)
+
+    def editorNext(self):
+        self.editorMove(1)
+
+    def editorPrevious(self):
+        self.editorMove(-1)
+
+    def editorMove(self, step):
+        if len(self.editors) > 1: return
+        id = list(self.editors.keys())[0]
+        assert id != -1
+        index = self.model.findItems(str(id))[0].index()
+        rowInProxy = self.modelProxy.mapFromSource(index).row()
+        if ((step == -1 and rowInProxy == 0) or
+           (step == 1 and rowInProxy == self.modelProxy.rowCount() - 1)):
+             return
+        self.clearSelection()
+        self.setCurrentIndex(self.modelProxy.index(rowInProxy+step, 0))
+        geo = self.editors[id].saveGeometry()
+        newId = self.startEditor()
+        # start new before close old to avoid focus changing, but we should
+        # set geometry twice
+        self.editors[id].closeNoSave()
+        self.editors[newId].restoreGeometry(geo)
 
