@@ -68,6 +68,10 @@ class NTextEdit(QTextEdit, TextFormatter):
 
     def setText(self, text, formats):
         doc = NTextDocument(self)
+        doc.setDefaultFont(self.document().defaultFont())
+        doc.setDefaultStyleSheet(self.document().defaultStyleSheet())
+        doc.setDefaultCursorMoveStyle(self.document().defaultCursorMoveStyle())
+        doc.setDefaultTextOption(self.document().defaultTextOption())
         doc.setHlColor(self.HlColor)
         doc.setText(text, formats)
         doc.clearUndoRedoStacks()
