@@ -121,20 +121,38 @@ class NSplitter(QSplitter):
 
 class MultiSortFilterProxyModel(QSortFilterProxyModel):
     """Simple Multi-Column ProxyModel, only supports fixed string"""
-    fixedString = ''
-    keyColumns = [0]
+    def __init__(self, *args):
+        super(MultiSortFilterProxyModel, self).__init__(*args)
+        self.keys = []
+        self.keyColumns = {}
+        self.strings = {}
 
     def filterAcceptsRow(self, sourceRow, sourceParent):
+        def checkOneKey(k):
+            pattern = self.strings[k]
+            for c in self.keyColumns[k]:
+                if pattern in str(model.data(model.index(sourceRow, c))):
+                    return True
+            return False
+
         model = self.sourceModel()
-        for i in self.keyColumns:
-            if self.fixedString in model.data(model.index(sourceRow, i)):
-                return True
-        return False
+        for k in self.keys:
+            if not checkOneKey(k):
+                return False
+        return True
 
-    def setFilterFixedString(self, s):
-        self.fixedString = s
-        super(MultiSortFilterProxyModel, self).setFilterFixedString(s)
+    def setFilterFixedString(self, keyNum, s):
+        self.strings[keyNum] = s
+        super(MultiSortFilterProxyModel, self).setFilterFixedString('')
 
-    def setFilterKeyColumns(self, *cols):
-        self.keyColumns = cols
+    def addFilterKey(self, keyNum, cols):
+        """cols is a list contains columns"""
+        self.keys.append(keyNum)
+        self.keyColumns[keyNum] = cols
+        self.strings[keyNum] = ''
+
+    def removeFilterKey(self, keyNum):
+        self.keys.remove(keyNum)
+        del self.strings[keynum]
+        del self.keyColumns[keyNum]
 

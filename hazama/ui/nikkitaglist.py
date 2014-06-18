@@ -1,6 +1,6 @@
 from PySide.QtGui import *
 from PySide.QtCore import *
-from ui import font, dt_trans
+from ui import font, dt_trans, currentdt_str
 from ui.editor import Editor
 from ui.customobjects import NTextDocument, MultiSortFilterProxyModel
 from config import settings, nikki
@@ -36,7 +36,7 @@ class NListDelegate(QStyledItemDelegate):
         x, y, w = option.rect.x(), option.rect.y(), option.rect.width()-1
         row = index.row()
         dt, text, title, tags, formats = (index.sibling(row, i).data()
-                                          for i in range(5))
+                                          for i in range(1, 6))
         selected = bool(option.state & QStyle.State_Selected)
         active = bool(option.state & QStyle.State_Active)
         # draw border and background
@@ -91,10 +91,13 @@ class NListDelegate(QStyledItemDelegate):
             painter.restore()
 
     def sizeHint(self, option, index):
-        row, model = index.row(), index.model()
-        tag_h = self.tag_h if model.data(model.index(row, 3), 0) else 0
+        tag_h = self.tag_h if index.sibling(index.row(), 4).data() else 0
         self.all_h = self.title_h + self.text_h + tag_h + 10
         return QSize(-1, self.all_h+3)  # 3 is spacing between entries
+
+    def createEditor(self, *__):
+        """Disable default editor. Editor is implemented in the View"""
+        return None
 
 
 class TListDelegate(QStyledItemDelegate):
@@ -152,7 +155,7 @@ class TagList(QListWidget):
         self.currentItemChanged.connect(self.emitTagChanged)
 
     def load(self):
-        logging.info('Tag List load')
+        logging.debug('Tag List load')
         self.clear()  # this may emit unexpected signal when has selection
         item_all = QListWidgetItem(self)
         item_all.setData(Qt.DisplayRole, self.tr('All'))
@@ -162,7 +165,10 @@ class TagList(QListWidget):
             item.setData(Qt.UserRole, t[1])
 
     def emitTagChanged(self, currentItem):
-        text = currentItem.data(Qt.DisplayRole)
+        try:
+            text = currentItem.data(Qt.DisplayRole)
+        except AttributeError:
+            return
         self.tagChanged.emit('' if text == self.tr('All') else text)
 
     # all three events below for drag scroll
@@ -217,13 +223,6 @@ class NikkiList1(QListWidget):
         self.menu.addSeparator()
         self.menu.addAction(self.selAct)
 
-    def contextMenuEvent(self, event):
-        selection_count = len(self.selectedItems())
-        self.editAct.setDisabled(selection_count != 1)
-        self.delAct.setDisabled(selection_count == 0)
-        self.selAct.setDisabled(selection_count == 0)
-        self.menu.popup(event.globalPos())
-
     def startEditor(self, item=None, new=False):
         if new:  # called by newNikki method
             curtItem = row = None
@@ -251,46 +250,6 @@ class NikkiList1(QListWidget):
         self.editors[editorId].deleteLater()
         del self.editors[editorId]
 
-    def delNikki(self):
-        if len(self.selectedItems()) == 0: return
-        ret = QMessageBox.question(self, self.tr('Delete selected diaries'),
-                                   self.tr('Selected diaries will be deleted '
-                                           'permanently.Do it?'),
-                                   QMessageBox.Yes | QMessageBox.No)
-        if ret == QMessageBox.Yes:
-            for i in self.selectedItems():
-                nikki.delete(i.data(2)['id'])
-                self.takeItem(self.row(i))
-            self.needRefresh.emit(True, True)
-
-    def newNikki(self):
-        self.startEditor(None, True)
-
-    def load(self, *, tagId=None, search=None):
-        order, reverse = self.getOrder()
-        for row in nikki.sorted(order, reverse, tagid=tagId, search=search):
-            item = QListWidgetItem(self)
-            item.setData(2, row)
-        self.setCurrentRow(0)
-
-    def reload(self, id=None):
-        order, reverse = self.getOrder()
-        logging.debug('Nikki List reload')
-        self.clear()
-        if id is None:
-            for row in nikki.sorted(order, reverse):
-                item = QListWidgetItem(self)
-                item.setData(2, row)
-        else:
-            rowIndex = 0
-            for row in nikki.sorted(order, reverse):
-                if row['id'] == id:
-                    rowIndex = self.count()
-                item = QListWidgetItem(self)
-                item.setData(2, row)
-            self.setCurrentRow(rowIndex)
-        self.reloaded.emit()
-
     def handleExport(self, export_all):
         path, _type = QFileDialog.getSaveFileName(
             parent=self,
@@ -302,19 +261,9 @@ class NikkiList1(QListWidget):
                         [i.data(2) for i in self.selectedItems()])
             nikki.exporttxt(path, selected)
 
-    @staticmethod
-    def getOrder():
-        """get sort order(str) and reverse(int) from settings file"""
-        order = settings['Main'].get('listorder', 'datetime')
-        reverse = settings['Main'].getint('listreverse', 1)
-        return order, reverse
-
     def reloadWithDgReset(self):
         self.setItemDelegate(NListDelegate(self))
         self.reload()
-
-    def selectRandomly(self):
-        self.setCurrentRow(random.randrange(0, self.count()))
 
     def editorNext(self):
         self.editorMove(1)
@@ -341,69 +290,144 @@ class NikkiList1(QListWidget):
             curtEditor.closeNoSave()
             self.startEditor()
 
-    def sortDT(self, checked):
-        if checked:
-            settings['Main']['listorder'] = 'datetime'
-            self.clear()
-            self.load()
-
-    def sortTT(self, checked):
-        if checked:
-            settings['Main']['listorder'] = 'title'
-            self.clear()
-            self.load()
-
-    def sortLT(self, checked):
-        if checked:
-            settings['Main']['listorder'] = 'length'
-            self.clear()
-            self.load()
-
-    def sortRE(self, checked):
-        settings['Main']['listreverse'] = str(checked.real)
-        self.clear()
-        self.load()
-
 
 class NikkiList(QListView):
     def __init__(self, parent=None):
         super(NikkiList, self).__init__(parent)
+        self.setSelectionMode(self.ExtendedSelection)
         self.setItemDelegate(NListDelegate(self))
         self.setStyleSheet(NListDelegate.stylesheet)
-        self.model = QStandardItemModel(0, 6, self)
+        # setup models
+        self.model = QStandardItemModel(0, 7, self)
         self.fillModel(self.model)
-        # ModelProxy1 is filtered by tag
-        self.modelProxy1 = QSortFilterProxyModel(self)
-        self.modelProxy1.setSourceModel(self.model)
-        self.modelProxy1.setDynamicSortFilter(True)
-        self.modelProxy1.setFilterKeyColumn(3)
-        # ModelProxy2 is from ModelProxy1 and filtered by search string
-        self.modelProxy2 = MultiSortFilterProxyModel(self)
-        self.modelProxy2.setSourceModel(self.modelProxy1)
-        self.modelProxy2.setDynamicSortFilter(True)
-        self.modelProxy2.setFilterKeyColumns(0, 1, 2)
-        self.setModel(self.modelProxy2)
+        self.modelProxy = MultiSortFilterProxyModel(self)
+        self.modelProxy.setSourceModel(self.model)
+        self.modelProxy.setDynamicSortFilter(True)
+        self.modelProxy.addFilterKey(0, cols=[4])
+        self.modelProxy.addFilterKey(1, cols=[1, 2, 3])
+        self.setModel(self.modelProxy)
         self.sort()
+        # setup context menu
+        self.editAct = QAction(self.tr('Edit'), self,
+                               triggered=self.startEditor)
+        self.delAct = QAction(QIcon(':/menu/list_delete.png'),
+                              self.tr('Delete'), self,
+                              shortcut=QKeySequence.Delete,
+                              triggered=self.delNikki)
+        self.randAct = QAction(QIcon(':/menu/random.png'),
+                               self.tr('Random'), self,
+                               shortcut=QKeySequence(Qt.Key_F7),
+                               triggered=self.selectRandomly)
+        for i in [self.editAct, self.delAct, self.randAct]: self.addAction(i)
+        self.menu = QMenu(self)
+        self.menu.addAction(self.editAct)
+        self.menu.addAction(self.delAct)
+        self.menu.addSeparator()
+        self.menu.addAction(self.randAct)
+        # setup editors
+        self.editors = {}
+        self.doubleClicked.connect(self.startEditor)
+        self.activated.connect(self.startEditor)
+
+    def contextMenuEvent(self, event):
+        selectionCount = len(self.selectedIndexes())
+        self.editAct.setDisabled(selectionCount != 1)
+        self.delAct.setDisabled(selectionCount == 0)
+        self.randAct.setDisabled(selectionCount == 0)
+        self.menu.popup(event.globalPos())
+
+    def selectRandomly(self):
+        randRow = random.randrange(0, self.modelProxy.rowCount())
+        self.setCurrentIndex(self.modelProxy.index(randRow, 0))
+
+    def startEditor(self, index=None):
+        if index is None:  # called by context-menu
+            index = self.currentIndex()
+        row = index.row()
+        id, dt, text, title, tags, formats = (index.sibling(row, i).data()
+                                              for i in range(6))
+        if id in self.editors:
+            self.editors[id].activateWindow()
+        else:
+            editor = Editor()
+            editor.datetime = dt
+            editor.id = id
+            editor.tagEditor.setText(tags)
+            editor.titleEditor.setText(title)
+            editor.textEditor.setText(text, formats)
+            self.editors[id] = editor
+            editor.closed.connect(self.closeEditor)
+            editor.show()
+
+    def startEditorNew(self):
+        if -1 in self.editors:
+            self.editors[-1].activateWindow()
+        else:
+            editor = Editor()
+            editor.id = -1
+            self.editors[-1] = editor
+            editor.closed.connect(self.closeEditor)
+            editor.show()
+
+    def closeEditor(self, id, needSave):
+        """Write editor's data to model and database, and destroy editor"""
+        editor = self.editors[id]
+        isNew = id == -1
+        if needSave:
+            dt = currentdt_str() if editor.datetime is None else editor.datetime
+            text = editor.textEditor.toPlainText()
+            title = editor.titleEditor.text()
+            tags = editor.tagEditor.text()
+            formats = editor.textEditor.getFormats()
+            realId = nikki.save(id=id, datetime=dt, formats=formats,
+                                text=text, title=title, new=isNew,
+                                tags=tags if editor.tagModified else None)
+            # write to model
+            self.modelProxy.setSourceModel(None)
+            if isNew:
+                self.model.insertRow(0)
+                row = 0
+            else:
+                row = self.model.findItems(str(realId))[0].row()
+            cols = (realId, dt, text, title, tags, formats, len(text))
+            for c, d in zip(range(7), cols):
+                self.model.setData(self.model.index(row, c), d)
+            self.modelProxy.setSourceModel(self.model)
+            self.setCurrentIndex(self.modelProxy.mapFromSource(
+                self.model.index(row, 0)))
+        editor.deleteLater()
+        del self.editors[id]
 
     @staticmethod
     def fillModel(model):
         for i in nikki.sorted('datetime'):
             model.insertRow(0)
-            model.setData(model.index(0, 0), i['datetime'])
-            model.setData(model.index(0, 1), i['text'])
-            model.setData(model.index(0, 2), i['title'])
-            model.setData(model.index(0, 3), i['tags'])
-            model.setData(model.index(0, 4), i['formats'])
-            model.setData(model.index(0, 5), len(i['text']))
+            model.setData(model.index(0, 0), i['id'])
+            model.setData(model.index(0, 1), i['datetime'])
+            model.setData(model.index(0, 2), i['text'])
+            model.setData(model.index(0, 3), i['title'])
+            model.setData(model.index(0, 4), i['tags'])
+            model.setData(model.index(0, 5), i['formats'])
+            model.setData(model.index(0, 6), len(i['text']))
 
-    def newNikki(self): pass
+    def delNikki(self):
+        if len(self.selectedIndexes()) == 0: return
+        ret = QMessageBox.question(self, self.tr('Delete selected diaries'),
+                                   self.tr('Selected diaries will be deleted '
+                                           'permanently!'),
+                                   QMessageBox.Yes | QMessageBox.No)
 
-    def delNikki(self): pass
+        if ret == QMessageBox.Yes:
+            indexes = [self.modelProxy.mapToSource(i)
+                       for i in self.selectedIndexes()]
+            for i in indexes: nikki.delete(i.data())
+            for i in sorted([i.row() for i in indexes], reverse=True):
+                self.model.removeRow(i)
 
     def sort(self):
         sortBy = settings['Main'].get('listsortby', 'datetime')
-        sortByCol = {'datetime': 0, 'title': 2, 'length': 5}.get(sortBy, 0)
+        sortByCol = {'datetime': 1, 'title': 3, 'length': 6}.get(sortBy, 1)
         reverse = settings['Main'].getint('listreverse', 1)
-        self.modelProxy1.sort(sortByCol,
-                              Qt.DescendingOrder if reverse else Qt.AscendingOrder)
+        self.modelProxy.sort(sortByCol,
+                             Qt.DescendingOrder if reverse else Qt.AscendingOrder)
 

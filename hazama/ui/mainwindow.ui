@@ -180,7 +180,7 @@
     <signal>reloaded()</signal>
     <signal>needRefresh()</signal>
     <slot>delNikki()</slot>
-    <slot>newNikki()</slot>
+    <slot>startEditorNew()</slot>
    </slots>
   </customwidget>
   <customwidget>
@@ -203,7 +203,7 @@
    <sender>creAct</sender>
    <signal>triggered()</signal>
    <receiver>nList</receiver>
-   <slot>newNikki()</slot>
+   <slot>startEditorNew()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>-1</x>

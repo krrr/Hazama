@@ -36,7 +36,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.toolBar.addWidget(self.countLabel)
         # setup search box
         self.searchBox = SearchBox(self.toolBar)
-        self.searchBox.textChanged.connect(self.nList.modelProxy2.setFilterFixedString)
+        self.searchBox.textChanged.connect(self.setFilterBySearchString)
         self.toolBar.addWidget(self.searchBox)
         if settings['Main'].getint('taglistvisible', 0):
             self.tListAct.trigger()
@@ -53,16 +53,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         event.accept()
         qApp.quit()
 
-    def filter(self, text=None):
-        """Connected to SearchBox and TagList.Argument "text" belongs to SearchBox"""
-        text = self.searchBox.text() if text is None else text
-        try:
-            data = self.tList.currentItem().data(1)
-            tagId = None if data == 'All' else data
-        except AttributeError:  # TagList hidden
-            tagId = None
-        self.nList.clear()
-        self.nList.load(tagId=tagId, search=text if text else None)
+    def setFilterBySearchString(self, s):
+        self.nList.modelProxy.setFilterFixedString(1, s)
+
+    def setFilterByTag(self, s):
+        self.nList.modelProxy.setFilterFixedString(0, s)
 
     def retranslate(self):
         """Set translation after language changed in ConfigDialog"""
@@ -88,11 +83,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.tList.setVisible(checked)
         if checked:
             self.tList.load()
-            self.tList.tagChanged.connect(self.nList.modelProxy1.setFilterFixedString)
+            self.tList.tagChanged.connect(self.setFilterByTag)
         else:
             self.tList.setCurrentRow(0)  # reset filter
             # avoid refreshing nList by unexpected signal
-            self.tList.tagChanged.disconnect(self.nList.modelProxy1.setFilterFixedString)
+            self.tList.tagChanged.disconnect(self.setFilterByTag)
             settings['Main']['taglistwidth'] = str(self.splitter.sizes()[0])
 
     def showEvent(self, event):
