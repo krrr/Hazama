@@ -175,7 +175,7 @@
   <customwidget>
    <class>NikkiList</class>
    <extends>QListWidget</extends>
-   <header>nikkitaglist</header>
+   <header>listview</header>
    <slots>
     <signal>countChanged()</signal>
     <signal>tagsChanged()</signal>
@@ -187,7 +187,7 @@
   <customwidget>
    <class>TagList</class>
    <extends>QListWidget</extends>
-   <header>nikkitaglist</header>
+   <header>listview</header>
    <slots>
     <signal>currentTagChanged(QString)</signal>
     <slot>reload()</slot>
