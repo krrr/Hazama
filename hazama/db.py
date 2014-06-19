@@ -68,7 +68,7 @@ class Nikki:
         id = l[0]
         tags_id = self.exe('SELECT tagid FROM Nikki_Tags WHERE '
                            'nikkiid = ?', (id,))
-        tags = ''.join(self.gettag(i[0]) for i in tags_id) if tags_id else None
+        tags = ' '.join(self.gettag(i[0]) for i in tags_id) if tags_id else ''
         formats = self.exe('SELECT start,length,type FROM TextFormat '
                            'WHERE nikkiid=?', (id,))
         # cursor object only generates once, so we make a list
