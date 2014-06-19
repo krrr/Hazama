@@ -142,7 +142,7 @@ class TListDelegate(QStyledItemDelegate):
 
 
 class TagList(QListWidget):
-    tagChanged = Signal(str)  # str is tag-name or ''
+    currentTagChanged = Signal(str)  # str is tag-name or ''
 
     def __init__(self, *args, **kwargs):
         super(TagList, self).__init__(*args, **kwargs)
@@ -152,11 +152,10 @@ class TagList(QListWidget):
         self.setUniformItemSizes(True)
         self.setStyleSheet(TListDelegate.stylesheet)
         self.trackList = None  # update in mousePressEvent
-        self.currentItemChanged.connect(self.emitTagChanged)
+        self.currentItemChanged.connect(self.emitCurrentTagChanged)
 
     def load(self):
         logging.debug('Tag List load')
-        self.clear()  # this may emit unexpected signal when has selection
         item_all = QListWidgetItem(self)
         item_all.setData(Qt.DisplayRole, self.tr('All'))
         for t in nikki.gettag(getcount=True):
@@ -164,12 +163,27 @@ class TagList(QListWidget):
             item.setData(Qt.DisplayRole, t[0])
             item.setData(Qt.UserRole, t[1])
 
-    def emitTagChanged(self, currentItem):
+    def reload(self):
+        if self.isVisible():
+            try:
+                currentTag = self.currentItem().data(Qt.DisplayRole)
+            except AttributeError:  # no selection
+                currentTag = None
+            self.clear()
+            self.load()
+            if currentTag:
+                try:
+                    item = self.findItems(currentTag, Qt.MatchFixedString)[0]
+                except IndexError:
+                    item = self.item(0)
+                self.setCurrentItem(item)
+
+    def emitCurrentTagChanged(self, currentItem):
         try:
             text = currentItem.data(Qt.DisplayRole)
-        except AttributeError:
+        except AttributeError:  # no selection
             return
-        self.tagChanged.emit('' if text == self.tr('All') else text)
+        self.currentTagChanged.emit('' if text == self.tr('All') else text)
 
     # all three events below for drag scroll
     def mousePressEvent(self, event):
@@ -223,13 +237,6 @@ class NikkiList1(QListWidget):
         self.menu.addSeparator()
         self.menu.addAction(self.selAct)
 
-    def on_editor_closed(self, editorId, nikkiId, tagModified):
-        if nikkiId != -1:
-            self.reload(nikkiId)
-            self.needRefresh.emit(editorId == -1, tagModified)
-        self.editors[editorId].deleteLater()
-        del self.editors[editorId]
-
     def handleExport(self, export_all):
         path, _type = QFileDialog.getSaveFileName(
             parent=self,
@@ -248,6 +255,7 @@ class NikkiList1(QListWidget):
 
 class NikkiList(QListView):
     countChanged = Signal()
+    tagsChanged = Signal()
 
     def __init__(self, parent=None):
         super(NikkiList, self).__init__(parent)
@@ -357,6 +365,8 @@ class NikkiList(QListView):
                 self.model.index(row, 0)))
         if isNew:
             self.countChanged.emit()
+        if editor.tagModified:
+            self.tagsChanged.emit()
         editor.deleteLater()
         del self.editors[id]
 
@@ -386,6 +396,7 @@ class NikkiList(QListView):
             for i in sorted([i.row() for i in indexes], reverse=True):
                 self.model.removeRow(i)
             self.countChanged.emit()
+            self.tagsChanged.emit()  # tags might changed
 
     def sort(self):
         sortBy = settings['Main'].get('listsortby', 'datetime')
@@ -417,4 +428,10 @@ class NikkiList(QListView):
         # set geometry twice
         self.editors[id].closeNoSave()
         self.editors[newId].restoreGeometry(geo)
+
+    def setFilterBySearchString(self, s):
+        self.modelProxy.setFilterFixedString(1, s)
+
+    def setFilterByTag(self, s):
+        self.modelProxy.setFilterFixedString(0, s)
 

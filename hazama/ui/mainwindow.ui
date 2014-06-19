@@ -177,17 +177,21 @@
    <extends>QListWidget</extends>
    <header>nikkitaglist</header>
    <slots>
-    <signal>reloaded()</signal>
-    <signal>needRefresh()</signal>
     <signal>countChanged()</signal>
+    <signal>tagsChanged()</signal>
     <slot>delNikki()</slot>
     <slot>startEditorNew()</slot>
+    <slot>setFilterByTag(QString)</slot>
    </slots>
   </customwidget>
   <customwidget>
    <class>TagList</class>
    <extends>QListWidget</extends>
    <header>nikkitaglist</header>
+   <slots>
+    <signal>currentTagChanged(QString)</signal>
+    <slot>reload()</slot>
+   </slots>
   </customwidget>
   <customwidget>
    <class>NSplitter</class>
@@ -261,6 +265,38 @@
     <hint type="destinationlabel">
      <x>254</x>
      <y>224</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>nList</sender>
+   <signal>tagsChanged()</signal>
+   <receiver>tList</receiver>
+   <slot>reload()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>305</x>
+     <y>241</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>50</x>
+     <y>241</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>tList</sender>
+   <signal>currentTagChanged(QString)</signal>
+   <receiver>nList</receiver>
+   <slot>setFilterByTag(QString)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>50</x>
+     <y>241</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>305</x>
+     <y>241</y>
     </hint>
    </hints>
   </connection>
