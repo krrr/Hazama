@@ -207,52 +207,6 @@ class TagList(QListWidget):
         self.trackList = None
 
 
-class NikkiList1(QListWidget):
-    reloaded = Signal()
-    needRefresh = Signal(bool, bool)  # (CountLabel, TagList)
-
-    def __init__(self, *args, **kwargs):
-        super(NikkiList, self).__init__(*args, **kwargs)
-        self.editors = {}
-        self.setSelectionMode(self.ExtendedSelection)
-        self.itemDoubleClicked.connect(self.startEditor)
-        self.setItemDelegate(NListDelegate(self))
-        self.setStyleSheet(NListDelegate.stylesheet)
-        # setup context menu
-        self.editAct = QAction(self.tr('Edit'), self,
-                               shortcut=QKeySequence(Qt.Key_Return),
-                               triggered=self.startEditor)
-        self.delAct = QAction(QIcon(':/menu/list_delete.png'),
-                              self.tr('Delete'), self,
-                              shortcut=QKeySequence.Delete,
-                              triggered=self.delNikki)
-        self.selAct = QAction(QIcon(':/menu/random.png'),
-                              self.tr('Random'), self,
-                              shortcut=QKeySequence(Qt.Key_F7),
-                              triggered=self.selectRandomly)
-        for i in [self.editAct, self.delAct, self.selAct]: self.addAction(i)
-        self.menu = QMenu(self)
-        self.menu.addAction(self.editAct)
-        self.menu.addAction(self.delAct)
-        self.menu.addSeparator()
-        self.menu.addAction(self.selAct)
-
-    def handleExport(self, export_all):
-        path, _type = QFileDialog.getSaveFileName(
-            parent=self,
-            caption=self.tr('Export Diary'),
-            filter=self.tr('Plain Text (*.txt);;Rich Text (*.rtf)'))
-        if path == '': return    # dialog canceled
-        if _type.endswith('txt)'):
-            selected = (None if export_all else
-                        [i.data(2) for i in self.selectedItems()])
-            nikki.exporttxt(path, selected)
-
-    def reloadWithDgReset(self):
-        self.setItemDelegate(NListDelegate(self))
-        self.reload()
-
-
 class NikkiList(QListView):
     countChanged = Signal()
     tagsChanged = Signal()
@@ -382,6 +336,13 @@ class NikkiList(QListView):
             model.setData(model.index(0, 5), i['formats'])
             model.setData(model.index(0, 6), len(i['text']))
 
+    def reload(self):
+        self.modelProxy.setSourceModel(None)
+        self.model.deleteLater()
+        self.model = QStandardItemModel(0, 7, self)
+        self.fillModel(self.model)
+        self.modelProxy.setSourceModel(self.model)
+
     def delNikki(self):
         if len(self.selectedIndexes()) == 0: return
         ret = QMessageBox.question(self, self.tr('Delete selected diaries'),
@@ -397,6 +358,22 @@ class NikkiList(QListView):
                 self.model.removeRow(i)
             self.countChanged.emit()
             self.tagsChanged.emit()  # tags might changed
+
+    def handleExport(self, export_all):
+        path, _type = QFileDialog.getSaveFileName(
+            parent=self,
+            caption=self.tr('Export Diary'),
+            filter=self.tr('Plain Text (*.txt);;Rich Text (*.rtf)'))
+        if path == '': return    # dialog canceled
+        if _type.endswith('txt)'):
+            selected = (None if export_all else
+                        [i.data(2) for i in self.selectedItems()])
+            nikki.exporttxt(path, selected)
+
+    def resetDelegate(self):
+        self.setItemDelegate(NListDelegate(self))
+        # without this spacing between items will be strange
+        self.setStyleSheet(self.styleSheet())
 
     def sort(self):
         sortBy = settings['Main'].get('listsortby', 'datetime')

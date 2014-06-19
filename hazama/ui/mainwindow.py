@@ -70,7 +70,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.cfgDialog.langChanged.connect(self.retranslate)
             self.cfgDialog.needExport.connect(self.nList.handleExport)
             self.cfgDialog.bkRestored.connect(self.nList.reload)
-            self.cfgDialog.accepted.connect(self.nList.reloadWithDgReset)
+            self.cfgDialog.accepted.connect(self.nList.resetDelegate)
             self.cfgDialog.show()
 
     def toggleTagList(self, checked):
@@ -89,9 +89,4 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """Called when diary saving/deleting or on first show"""
         c = self.nList.model.rowCount()
         if c > 1: self.countLabel.setText(self.tr('%i diaries') % c)
-
-    @Slot(bool, bool)
-    def on_nList_needRefresh(self, label, tList):
-        if label: self.updateCountLabel()
-        if tList and self.tList.isVisible(): self.tList.load()
 
