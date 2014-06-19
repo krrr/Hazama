@@ -53,13 +53,6 @@ class Editor(QWidget, Ui_Editor):
         self.hide()  # use deleteLater to free, not destroy slot or DeleteOnClose attribute
         self.closed.emit(self.id, False)
 
-    # def saveNikki(self):
-    #     """Save if changed and return nikkiId,else return -1"""
-    #
-    #         return realId
-    #     else:
-    #         return -1
-
     @Slot()
     def on_tagEditor_textEdited(self):
         # tagEditor.isModified() will be reset by completer. So this instead.
