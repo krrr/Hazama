@@ -57,19 +57,24 @@ class Nikki:
                  'Nikki_Tags.tagid=Tags.id)==0;  END')
         logging.info(str(self))
 
-    def __getitem__(self, id):
-        L = self.exe('SELECT * FROM Nikki WHERE id = ?', (id,)).fetchone()
-        if not L:
-            raise IndexError('id is not in database')
+    def __iter__(self):
+        self.iter_all = self.exe('SELECT * FROM Nikki')
+        return self
+
+    def __next__(self):
+        l = self.iter_all.fetchone()
+        if l is None:
+            raise StopIteration
+        id = l[0]
         tags_id = self.exe('SELECT tagid FROM Nikki_Tags WHERE '
-                           'nikkiid = ?', (L[0],))
-        tags = [self.gettag(i[0]) for i in tags_id] if tags_id else None
+                           'nikkiid = ?', (id,))
+        tags = ''.join(self.gettag(i[0]) for i in tags_id) if tags_id else None
         formats = self.exe('SELECT start,length,type FROM TextFormat '
-                           'WHERE nikkiid=?', (L[0],))
+                           'WHERE nikkiid=?', (id,))
         # cursor object only generates once, so we make a list
-        formats = [i for i in formats] if formats else None
-        return dict(id=L[0], datetime=L[1], text=L[3],
-                    title=L[4], tags=tags, formats=formats)
+        formats = list(formats) if formats else None
+        return dict(id=id, title=l[3], datetime=l[1], text=l[2],
+                    tags=tags, formats=formats)
 
     def connect(self, db_path):
         self.path = db_path
@@ -129,35 +134,6 @@ class Nikki:
             file.write(tpl.format(n))
         file.close()
         logging.info('Exporting successful(use %s template)', hint)
-
-    def sorted(self, order, reverse=True, *, tagid=None, search=None):
-        if tagid and not search:  # only fetch nikki whose tagid match
-            where = ('WHERE id IN (SELECT nikkiid FROM Nikki_Tags WHERE '
-                     'tagid=%i) ') % tagid
-        elif search and not tagid:
-            where = ('WHERE datetime LIKE "%%%s%%" OR text LIKE "%%%s%%" '
-                     'OR title LIKE "%%%s%%"') % ((search,) * 3)
-        elif search and tagid:
-            where = ('WHERE (id IN (SELECT nikkiid FROM Nikki_Tags WHERE '
-                     'tagid=%i)) AND (datetime LIKE "%%%s%%" OR '
-                     'text LIKE "%%%s%%" OR title LIKE "%%%s%%")' %
-                     (tagid, search, search, search))
-        else:
-            where = ''
-        if order == 'length':
-            order = 'LENGTH(text)'
-        cmd = ('SELECT * FROM Nikki ' + where + 'ORDER BY ' +
-               order + (' DESC' if reverse else ''))
-        for L in self.exe(cmd):
-            tags_id = self.exe('SELECT tagid FROM Nikki_Tags WHERE '
-                               'nikkiid = ?', (L[0],))
-            tags = ' '.join(self.gettag(i[0]) for i in tags_id) if tags_id else ''
-            formats = self.exe('SELECT start,length,type FROM TextFormat '
-                               'WHERE nikkiid=?', (L[0],))
-            # cursor object only generates once, so we make a list
-            formats = [i for i in formats] if formats else None
-            yield dict(id=L[0], datetime=L[1], text=L[2],
-                       title=L[3], tags=tags, formats=formats)
 
     def delete(self, id):
         self.exe('DELETE FROM Nikki WHERE id = ?', (id,))

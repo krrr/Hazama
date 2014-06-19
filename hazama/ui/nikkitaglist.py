@@ -326,7 +326,7 @@ class NikkiList(QListView):
 
     @staticmethod
     def fillModel(model):
-        for i in nikki.sorted('datetime'):
+        for i in nikki:
             model.insertRow(0)
             model.setData(model.index(0, 0), i['id'])
             model.setData(model.index(0, 1), i['datetime'])
