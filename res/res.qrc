@@ -50,6 +50,9 @@
   <qresource prefix="/">
     <file>appicon32.png</file>
   </qresource>
+  <qresource prefix="/">
+    <file>appicon48.png</file>
+  </qresource>
 
   <qresource prefix="/editor">
     <file>clock.png</file>

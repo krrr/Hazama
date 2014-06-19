@@ -88,6 +88,7 @@ class Fonts:
 app = QApplication(sys.argv)
 appicon = QIcon(':/appicon16.png')
 appicon.addFile(':/appicon32.png')
+appicon.addFile(':/appicon48.png')
 appicon.addFile(':/appicon64.png')
 app.setWindowIcon(appicon)
 # setup fonts after qApp created
