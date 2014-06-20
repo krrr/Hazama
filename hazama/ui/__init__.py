@@ -8,24 +8,32 @@ import time
 import logging
 
 
-def dt_trans_gen():
+
+def datetimeTrans(s):
+    """Convert datetime in database format to locale one"""
+    dt = QDateTime.fromString(s, 'yyyy-MM-dd HH:mm')
+    return (locale.toString(dt, date_fmt + ' ' + time_fmt) if time_fmt
+            else locale.toString(dt, date_fmt))
+
+
+def setDatetimeTrans():
+    """Set datetime format used in datetimeTrans. Set date format to default
+    if it not set."""
+    global time_fmt, date_fmt
+    time_fmt = settings['Main'].get('timeformat', raw=True)
     date_fmt = settings['Main'].get('dateformat', raw=True)
-    time_fmt = settings['Main'].get('timeformat', '', raw=True)
-    global dt_trans
-    if date_fmt:
-        def dt_trans(s):
-            dt = QDateTime.fromString(s, 'yyyy-MM-dd HH:mm')
-            return locale.toString(dt, date_fmt + ' ' + time_fmt)
-    else:
-        def dt_trans(s): return s
+    if date_fmt is None:
+        sys_date_fmt = locale.dateFormat()
+        settings['Main']['dateformat'] = sys_date_fmt
+        date_fmt = sys_date_fmt
 
 
-def currentdt_str():
+def currentDatetime():
+    """Return current datetime in database format"""
     return time.strftime('%Y-%m-%d %H:%M')
 
 
-def set_trans():
-    """Install Qt translations and set locale"""
+def setTranslationLocale():
     lang = settings['Main'].get('lang', 'en')
     logging.info('Set translation(%s)', lang)
     global trans, transQt
@@ -41,7 +49,7 @@ def set_trans():
     locale = QLocale(lang)
 
 
-def show_error_db(hint=''):
+def showDbError(hint=''):
     """If unable to access database, display a error and exit"""
     QMessageBox.critical(
         None,
@@ -95,16 +103,16 @@ class Fonts:
 
 # setup application icon
 app = QApplication(sys.argv)
-appicon = QIcon(':/appicon16.png')
-appicon.addFile(':/appicon32.png')
-appicon.addFile(':/appicon48.png')
-appicon.addFile(':/appicon64.png')
-app.setWindowIcon(appicon)
+app_icon = QIcon(':/appicon16.png')
+app_icon.addFile(':/appicon32.png')
+app_icon.addFile(':/appicon48.png')
+app_icon.addFile(':/appicon64.png')
+app.setWindowIcon(app_icon)
 # setup fonts after qApp created
 font = Fonts()
 font.load()
-# setup translation
-set_trans()
-dt_trans_gen()
+
+setTranslationLocale()
 setCustomStyleSheet()
+setDatetimeTrans()
 

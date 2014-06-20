@@ -27,6 +27,6 @@ try:
     nikki = db.Nikki(_db_path)
 except db.DatabaseError as e:
     import ui
-    ui.show_error_db(str(e))
+    ui.showDbError(str(e))
     sys.exit(-1)
 

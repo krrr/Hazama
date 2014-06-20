@@ -1,6 +1,6 @@
 from PySide.QtGui import *
 from PySide.QtCore import *
-from ui import font, dt_trans, currentdt_str
+from ui import font, datetimeTrans, currentDatetime
 from ui.editor import Editor
 from ui.customobjects import NTextDocument, MultiSortFilterProxyModel
 from config import settings, nikki
@@ -56,7 +56,7 @@ class NListDelegate(QStyledItemDelegate):
         painter.setPen(Qt.black)
         painter.setFont(font.date)
         painter.drawText(x+14, y, w, self.title_h, Qt.AlignBottom,
-                         dt_trans(dt))
+                         datetimeTrans(dt))
         if title:
             painter.setFont(font.title)
             title_w = w-self.dt_w-13
@@ -296,7 +296,7 @@ class NikkiList(QListView):
         editor = self.editors[id]
         isNew = id == -1
         if needSave:
-            dt = currentdt_str() if editor.datetime is None else editor.datetime
+            dt = currentDatetime() if editor.datetime is None else editor.datetime
             text = editor.textEditor.toPlainText()
             title = editor.titleEditor.text()
             tags = editor.tagEditor.text()
