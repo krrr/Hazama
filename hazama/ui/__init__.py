@@ -3,6 +3,7 @@ from PySide.QtCore import QLocale, QTranslator, QLibraryInfo, QDateTime
 from config import settings
 from ui import rc
 import sys
+import os
 import time
 import logging
 
@@ -61,6 +62,14 @@ def setStdEditMenuIcons(menu):
     sel.setIcon(QIcon.fromTheme('edit-select-all'))
 
 
+def setCustomStyleSheet():
+    if '-stylesheet' in sys.argv:
+        logging.info('Set custom StyleSheet by command line arg')
+    elif os.path.isfile('custom.qss'):
+        logging.info('Set custom StyleSheet')
+        app.setStyleSheet(open('custom.qss').read())
+
+
 class Fonts:
     """Manage all fonts used in application"""
     def __init__(self):
@@ -97,4 +106,5 @@ font.load()
 # setup translation
 set_trans()
 dt_trans_gen()
+setCustomStyleSheet()
 
