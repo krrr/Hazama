@@ -1,13 +1,13 @@
 from PySide.QtGui import *
 from PySide.QtCore import *
-from ui.editor_ui import Ui_Editor
+from ui.editor_ui import Ui_editor
 from ui.customobjects import TagCompleter
 from ui.customwidgets import DateTimeDialog
 from ui import font, datetimeTrans, currentDatetime
 from config import settings, nikki
 
 
-class Editor(QWidget, Ui_Editor):
+class Editor(QWidget, Ui_editor):
     """Widget used to edit diary's body,title,tag,datetime.
     Signal closed: (id of nikki, needSave),
     """

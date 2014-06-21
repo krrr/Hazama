@@ -3,11 +3,11 @@ from PySide.QtCore import *
 import ui
 from ui.customwidgets import SearchBox, SortOrderMenu
 from ui.configdialog import ConfigDialog
-from ui.mainwindow_ui import Ui_MainWindow
+from ui.mainwindow_ui import Ui_mainWindow
 from config import settings, nikki
 
 
-class MainWindow(QMainWindow, Ui_MainWindow):
+class MainWindow(QMainWindow, Ui_mainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
         self.setupUi(self)
@@ -28,10 +28,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # Qt Designer doesn't allow us to add widget in toolbar
         # setup count label
         self.countLabel = QLabel(self.toolBar)
+        self.countLabel.setObjectName('countLabel')
         self.countLabel.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.countLabel.setAlignment(Qt.AlignVCenter | Qt.AlignRight)
         self.countLabel.setIndent(6)
-        self.countLabel.setStyleSheet('color: rgb(144, 144, 144)')
         self.updateCountLabel()
         self.toolBar.addWidget(self.countLabel)
         # setup search box

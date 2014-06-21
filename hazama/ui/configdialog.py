@@ -1,13 +1,13 @@
 from PySide.QtGui import *
 from PySide.QtCore import *
-from ui.configdialog_ui import Ui_Settings
+from ui.configdialog_ui import Ui_configDialog
 from ui import font
 from config import settings
 import db
 import logging
 
 
-class ConfigDialog(QDialog, Ui_Settings):
+class ConfigDialog(QDialog, Ui_configDialog):
     langChanged = Signal()
     needExport = Signal(bool)  # arg: export_all
     bkRestored = Signal()

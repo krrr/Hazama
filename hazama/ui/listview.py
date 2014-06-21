@@ -9,9 +9,6 @@ import random
 
 
 class NListDelegate(QStyledItemDelegate):
-    stylesheet = ('QListView{background-color: rgb(242, 241, 231);'
-                  'border: solid 0px; margin-top: 1px}')
-
     def __init__(self, parent=None):
         super(NListDelegate, self).__init__(parent)
         self.title_h = QFontInfo(font.title).pixelSize() + 10  # title area height
@@ -101,10 +98,6 @@ class NListDelegate(QStyledItemDelegate):
 
 
 class TListDelegate(QStyledItemDelegate):
-    """Default TagList Delegate.Also contains TList's stylesheet"""
-    stylesheet = ('QListWidget{background-color: rgb(234,182,138);'
-                  'border: solid 0px}')
-
     def __init__(self, parent=None):
         super(TListDelegate, self).__init__(parent)
         self.h = QFontInfo(font.default).pixelSize()+8
@@ -150,7 +143,6 @@ class TagList(QListWidget):
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollMode(QAbstractItemView.ScrollPerPixel)
         self.setUniformItemSizes(True)
-        self.setStyleSheet(TListDelegate.stylesheet)
         self.trackList = None  # update in mousePressEvent
         self.currentItemChanged.connect(self.emitCurrentTagChanged)
 
@@ -215,7 +207,6 @@ class NikkiList(QListView):
         super(NikkiList, self).__init__(parent)
         self.setSelectionMode(self.ExtendedSelection)
         self.setItemDelegate(NListDelegate(self))
-        self.setStyleSheet(NListDelegate.stylesheet)
         # setup models
         self.model = QStandardItemModel(0, 7, self)
         self.fillModel(self.model)
@@ -373,7 +364,7 @@ class NikkiList(QListView):
     def resetDelegate(self):
         self.setItemDelegate(NListDelegate(self))
         # without this spacing between items will be strange
-        self.setStyleSheet(self.styleSheet())
+        self.setStyleSheet('')
 
     def sort(self):
         sortBy = settings['Main'].get('listsortby', 'datetime')

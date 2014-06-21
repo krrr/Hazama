@@ -1,5 +1,5 @@
 from PySide.QtGui import QApplication, QIcon, QFont, QFontMetrics, QMessageBox
-from PySide.QtCore import QLocale, QTranslator, QLibraryInfo, QDateTime
+from PySide.QtCore import QLocale, QTranslator, QLibraryInfo, QDateTime, QFile, QIODevice
 from config import settings
 from ui import rc
 import sys
@@ -70,12 +70,18 @@ def setStdEditMenuIcons(menu):
     sel.setIcon(QIcon.fromTheme('edit-select-all'))
 
 
-def setCustomStyleSheet():
+def setStyleSheet():
     if '-stylesheet' in sys.argv:
-        logging.info('Set custom StyleSheet by command line arg')
-    elif os.path.isfile('custom.qss'):
-        logging.info('Set custom StyleSheet')
-        app.setStyleSheet(open('custom.qss').read())
+        logging.info('Override default StyleSheet by command line arg')
+    else:
+        f = QFile(':/default.qss')
+        f.open(QIODevice.ReadOnly | QIODevice.Text)
+        ss = str(f.readAll())
+        f.close()
+        if os.path.isfile('custom.qss'):
+            logging.info('Set custom StyleSheet')
+            ss += open('custom.qss', encoding='utf-8').read()
+        app.setStyleSheet(ss)
 
 
 class Fonts:
@@ -113,6 +119,6 @@ font = Fonts()
 font.load()
 
 setTranslationLocale()
-setCustomStyleSheet()
+setStyleSheet()
 setDatetimeTrans()
 

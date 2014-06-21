@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>MainWindow</class>
- <widget class="QMainWindow" name="MainWindow">
+ <class>mainWindow</class>
+ <widget class="QMainWindow" name="mainWindow">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -29,9 +29,6 @@
     </property>
     <item>
      <widget class="NSplitter" name="splitter">
-      <property name="styleSheet">
-       <string notr="true">QSplitter::handle{background: rgb(181,61,0)}</string>
-      </property>
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
       </property>
@@ -239,7 +236,7 @@
   <connection>
    <sender>tListAct</sender>
    <signal>triggered(bool)</signal>
-   <receiver>MainWindow</receiver>
+   <receiver>mainWindow</receiver>
    <slot>toggleTagList()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -255,7 +252,7 @@
   <connection>
    <sender>nList</sender>
    <signal>countChanged()</signal>
-   <receiver>MainWindow</receiver>
+   <receiver>mainWindow</receiver>
    <slot>updateCountLabel()</slot>
    <hints>
     <hint type="sourcelabel">

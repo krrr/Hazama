@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Editor</class>
- <widget class="QWidget" name="Editor">
+ <class>editor</class>
+ <widget class="QWidget" name="editor">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -9,9 +9,6 @@
     <width>400</width>
     <height>300</height>
    </rect>
-  </property>
-  <property name="styleSheet">
-   <string notr="true">QWidget#Editor {background-color: rgb(232, 245, 255);}</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="spacing">
@@ -139,7 +136,7 @@
   <connection>
    <sender>box</sender>
    <signal>rejected()</signal>
-   <receiver>Editor</receiver>
+   <receiver>editor</receiver>
    <slot>closeNoSave()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -155,7 +152,7 @@
   <connection>
    <sender>box</sender>
    <signal>accepted()</signal>
-   <receiver>Editor</receiver>
+   <receiver>editor</receiver>
    <slot>close()</slot>
    <hints>
     <hint type="sourcelabel">
