@@ -12,20 +12,20 @@ import logging
 def datetimeTrans(s):
     """Convert datetime in database format to locale one"""
     dt = QDateTime.fromString(s, 'yyyy-MM-dd HH:mm')
-    return (locale.toString(dt, date_fmt + ' ' + time_fmt) if time_fmt
-            else locale.toString(dt, date_fmt))
+    return (locale.toString(dt, dateFmt + ' ' + timeFmt) if timeFmt
+            else locale.toString(dt, dateFmt))
 
 
 def setDatetimeTrans():
     """Set datetime format used in datetimeTrans. Set date format to default
     if it not set."""
-    global time_fmt, date_fmt
-    time_fmt = settings['Main'].get('timeformat', raw=True)
-    date_fmt = settings['Main'].get('dateformat', raw=True)
-    if date_fmt is None:
-        sys_date_fmt = locale.dateFormat()
-        settings['Main']['dateformat'] = sys_date_fmt
-        date_fmt = sys_date_fmt
+    global timeFmt, dateFmt
+    timeFmt = settings['Main'].get('timeformat', raw=True)
+    dateFmt = settings['Main'].get('dateformat', raw=True)
+    if dateFmt is None:
+        sysDateFmt = locale.dateFormat()
+        settings['Main']['dateformat'] = sysDateFmt
+        dateFmt = sysDateFmt
 
 
 def currentDatetime():
@@ -103,11 +103,11 @@ class Fonts:
 
 # setup application icon
 app = QApplication(sys.argv)
-app_icon = QIcon(':/appicon16.png')
-app_icon.addFile(':/appicon32.png')
-app_icon.addFile(':/appicon48.png')
-app_icon.addFile(':/appicon64.png')
-app.setWindowIcon(app_icon)
+appIcon = QIcon(':/appicon16.png')
+appIcon.addFile(':/appicon32.png')
+appIcon.addFile(':/appicon48.png')
+appIcon.addFile(':/appicon64.png')
+app.setWindowIcon(appIcon)
 # setup fonts after qApp created
 font = Fonts()
 font.load()
