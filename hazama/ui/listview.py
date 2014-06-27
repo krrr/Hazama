@@ -11,7 +11,9 @@ import random
 class NListDelegate(QStyledItemDelegate):
     def __init__(self, parent=None):
         super(NListDelegate, self).__init__(parent)
-        self.title_h = QFontInfo(font.title).pixelSize() + 10  # title area height
+        self.title_h = max(QFontInfo(font.title).pixelSize(),
+                           QFontInfo(font.date).pixelSize()) + 4  # dt and title font area
+        self.titleArea_h = self.title_h + 4
         self.text_h = (QFontMetrics(font.text).lineSpacing() *
                        settings['Main'].getint('previewlines', 4))
         self.tagPath_h = QFontInfo(qApp.font()).pixelSize() + 4
@@ -49,30 +51,30 @@ class NListDelegate(QStyledItemDelegate):
             painter.drawRect(x+2, y+1, w-4, self.all_h-2)
         # draw datetime and title
         painter.setPen(self.c_gray)
-        painter.drawLine(x+10, y+self.title_h, x+w-10, y+self.title_h)
+        painter.drawLine(x+10, y+self.titleArea_h, x+w-10, y+self.titleArea_h)
         painter.setPen(Qt.black)
         painter.setFont(font.date)
-        painter.drawText(x+14, y, w, self.title_h, Qt.AlignBottom,
-                         datetimeTrans(dt))
+        painter.drawText(x+14, y+self.titleArea_h-self.title_h, w, self.title_h,
+                         Qt.AlignVCenter, datetimeTrans(dt))
         if title:
             painter.setFont(font.title)
             title_w = w-self.dt_w-13
             title = font.title_m.elidedText(title, Qt.ElideRight, title_w)
-            painter.drawText(x+self.dt_w, y, title_w, self.title_h,
-                             Qt.AlignBottom | Qt.AlignRight, title)
+            painter.drawText(x+self.dt_w, y+self.titleArea_h-self.title_h, title_w, self.title_h,
+                             Qt.AlignVCenter | Qt.AlignRight, title)
         # draw text
         painter.save()
         self.doc.setText(text, formats)
         self.doc.setTextWidth(w-26)
-        painter.translate(x+14, y+self.title_h+2)
+        painter.translate(x+14, y+self.titleArea_h+2)
         self.doc.drawContents(painter, QRect(0, 0, w-26, self.text_h))
         painter.restore()
         # draw tags
         if tags:
             painter.save()
             painter.setPen(self.c_gray)
-            painter.setFont(qApp.font())
-            painter.translate(x + 15, y+self.title_h+6+self.text_h)
+            painter.setFont(font.default)
+            painter.translate(x + 15, y+self.titleArea_h+6+self.text_h)
             for t in tags.split():
                 w = font.default_m.width(t) + 4
                 tagPath = QPainterPath()
@@ -89,7 +91,7 @@ class NListDelegate(QStyledItemDelegate):
 
     def sizeHint(self, option, index):
         tag_h = self.tag_h if index.sibling(index.row(), 4).data() else 0
-        self.all_h = self.title_h + self.text_h + tag_h + 10
+        self.all_h = self.titleArea_h + 2 + self.text_h + tag_h + 6
         return QSize(-1, self.all_h+3)  # 3 is spacing between entries
 
     def createEditor(self, *__):
@@ -207,6 +209,7 @@ class NikkiList(QListView):
         super(NikkiList, self).__init__(parent)
         self.setSelectionMode(self.ExtendedSelection)
         self.setItemDelegate(NListDelegate(self))
+        self.setSpacing(0)
         # setup models
         self.model = QStandardItemModel(0, 7, self)
         self.fillModel(self.model)
@@ -364,7 +367,7 @@ class NikkiList(QListView):
     def resetDelegate(self):
         self.setItemDelegate(NListDelegate(self))
         # without this spacing between items will be strange
-        self.setStyleSheet('')
+        self.setSpacing(0)
 
     def sort(self):
         sortBy = settings['Main'].get('listsortby', 'datetime')
