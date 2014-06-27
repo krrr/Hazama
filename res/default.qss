@@ -1,0 +1,22 @@
+QLabel#countLabel {
+    color: rgb(144, 144, 144)
+}
+
+QWidget#editor {
+    background-color: rgb(232, 245, 255);
+}
+
+QListView#nList {
+    background-color: rgb(242, 241, 231);
+    border: 0px;
+    margin-top: 1px;
+}
+
+QListWidget#tList {
+    background-color: rgb(234,182,138);
+    border: 0px;
+}
+
+QMainWindow QSplitter::handle {
+    background: rgb(181, 61, 0)
+}
