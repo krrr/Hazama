@@ -19,7 +19,6 @@ class ConfigDialog(QDialog, Ui_configDialog):
         super(ConfigDialog, self).__init__(parent, Qt.WindowTitleHint)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setupUi(self)
-        self.setFont(font.sys)
         # load settings
         self.aindCheck.setChecked(settings['Editor'].getint('autoindent', 1))
         self.tfocusCheck.setChecked(settings['Editor'].getint('titlefocus', 0))

@@ -90,7 +90,6 @@ class Fonts:
         self.title = QFont()
         self.date = QFont()
         self.text = QFont()
-        self.sys = app.font()
         self.default = app.font()
         self.default_m = QFontMetrics(self.default)
         self.title_m = self.date_m = self.date_m = None
