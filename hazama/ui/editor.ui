@@ -18,7 +18,7 @@
     <number>0</number>
    </property>
    <item>
-    <widget class="QLineEdit" name="titleEditor"/>
+    <widget class="QLineEditWithMenuIcon" name="titleEditor"/>
    </item>
    <item>
     <widget class="NTextEdit" name="textEditor"/>
