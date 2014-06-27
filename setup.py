@@ -113,7 +113,7 @@ else:
 setup(name='Hazama',
       author='krrr',
       url='https://github.com/krrr/Hazama',
-      version="0.13",
+      version="0.14",
       description='A simple cross-platform diary program',
       requires=['PySide'],
       cmdclass=cmdclass,

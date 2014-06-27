@@ -4,7 +4,7 @@ import sys
 import os
 import time
 
-__version__ = 0.13
+__version__ = 0.14
 
 try:
     program_path = os.path.dirname(os.path.realpath(__file__))
