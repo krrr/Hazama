@@ -154,10 +154,10 @@ class SearchBox(QLineEditWithMenuIcon):
         self.button.move(w - 18 - pos_y, pos_y)
 
     def update(self, text):
-        """Update button icon and PlaceholderText font style"""
+        """Update button icon"""
         if self.isTextBefore == bool(text): return
         ico_name = 'search_clr' if text else 'search'
-        self.button.setStyleSheet('QToolButton{border: none;'
+        self.button.setStyleSheet('QToolButton {border: none;'
                                   'background: url(:/images/%s.png);'
                                   'background-position: center}' % ico_name)
         self.isTextBefore = bool(text)
