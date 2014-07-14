@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import db
 import logging
 import sys
