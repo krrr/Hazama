@@ -1,12 +1,11 @@
 Hazama
 ======
-Hazama is a GUI application just for keeping diary.
+Hazama is a GUI application for keeping diary, simple and highly customizable.
 
 Features:
  - Rich text support
  - Tagging
  - Export to plain text
- - Highly customizable
 
 [Screenshot](https://github.com/krrr/Hazama/raw/master/res/other_intro.png)
 
