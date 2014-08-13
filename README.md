@@ -1,11 +1,12 @@
 Hazama
 ======
-Hazama is a GUI application for keeping diary.
+Hazama is a GUI application just for keeping diary.
 
 Features:
  - Rich text support
  - Tagging
  - Export to plain text
+ - Highly customizable
 
 [Screenshot](https://github.com/krrr/Hazama/raw/master/res/other_intro.png)
 
@@ -19,7 +20,7 @@ Installation
 ```sh
 git clone https://github.com/krrr/Hazama
 cd Hazama
-setup.py build_qt
-python hazama/hazama.py
+./setup.py build_qt
+hazama/hazama.py
 ```
 Requirements: Python3, PySide, pyside-tools(build)
