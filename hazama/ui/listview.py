@@ -75,18 +75,27 @@ class NListDelegate(QStyledItemDelegate):
             painter.setPen(self.c_gray)
             painter.setFont(font.default)
             painter.translate(x + 15, y+self.titleArea_h+6+self.text_h)
+            real_x, max_x = x+15, w-10
             for t in tags.split():
-                w = font.default_m.width(t) + 4
+                oneTag_w = font.default_m.width(t) + 4
+                real_x += oneTag_w + 15
+                if real_x > max_x: break
                 tagPath = QPainterPath()
                 tagPath.moveTo(8, 0)
-                tagPath.lineTo(8+w, 0)
-                tagPath.lineTo(8+w, self.tagPath_h)
+                tagPath.lineTo(8+oneTag_w, 0)
+                tagPath.lineTo(8+oneTag_w, self.tagPath_h)
                 tagPath.lineTo(8, self.tagPath_h)
                 tagPath.lineTo(0, self.tagPath_h/2)
                 tagPath.closeSubpath()
                 painter.drawPath(tagPath)
-                painter.drawText(8, 1, w, self.tagPath_h, Qt.AlignCenter, t)
-                painter.translate(w+15, 0)  # translate by offset
+                painter.drawText(8, 1, oneTag_w, self.tagPath_h, Qt.AlignCenter, t)
+                painter.translate(oneTag_w+15, 0)  # translate by offset
+            else:
+                painter.restore()
+                return
+            # too many tags
+            painter.setPen(Qt.DotLine)
+            painter.drawLine(-4, self.tagPath_h/2, 2, self.tagPath_h/2)
             painter.restore()
 
     def sizeHint(self, option, index):
