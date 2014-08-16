@@ -18,10 +18,8 @@ def setDatetimeTrans():
     """Set datetime format used in datetimeTrans. Set date format to default
     if it not set."""
     global timeFmt, dateFmt
-    timeFmt = settings['Main'].get('timeformat', raw=True)
-    dateFmt = settings['Main'].get('dateformat', raw=True)
-    if dateFmt is None:
-        dateFmt = settings['Main']['dateformat'] = locale.dateFormat()
+    timeFmt = settings['Main'].get('timeformat')
+    dateFmt = settings['Main'].get('dateformat', locale.dateFormat())
 
 
 def currentDatetime():
