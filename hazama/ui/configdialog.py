@@ -7,13 +7,15 @@ import db
 import logging
 
 
+languages = {'en': 'English', 'zh_CN': '简体中文', 'ja_JP': '日本語'}
+languagesR = {b: a for a, b in languages.items()}
+
+
 class ConfigDialog(QDialog, Ui_configDialog):
     langChanged = Signal()
     needExport = Signal(bool)  # arg: export_all
     bkRestored = Signal()
     accepted = Signal()
-    lang2index = {'en': 0, 'zh_CN': 1, 'ja': 2}  # index used in lang combo
-    index2lang = {b: a for (a, b) in lang2index.items()}
 
     def __init__(self, parent=None):
         super(ConfigDialog, self).__init__(parent, Qt.WindowTitleHint)
@@ -23,8 +25,12 @@ class ConfigDialog(QDialog, Ui_configDialog):
         self.aindCheck.setChecked(settings['Editor'].getint('autoindent', 1))
         self.tfocusCheck.setChecked(settings['Editor'].getint('titlefocus', 0))
         self.bkCheck.setChecked(settings['Main'].getint('backup', 1))
-        self.langCombo.setCurrentIndex(self.lang2index[
-                                       settings['Main'].get('lang', 'en')])
+        # load settings(language ComboBox)
+        for l in sorted(languagesR):
+            self.langCombo.addItem(l)
+        lang = settings['Main'].get('lang', 'en')
+        langIndex = self.langCombo.findText(languages.get(lang, 'English'))
+        self.langCombo.setCurrentIndex(langIndex)
         self.rstCombo.model().item(0).setSelectable(False)
         self.rstCombo.addItems(db.list_backups())
         self.preLinesBox.setValue(settings['Main'].getint('previewlines', 4))
@@ -50,7 +56,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
             settings['Font'][i.configName] = i.font().toString()
         if not self.defFontGBox.isChecked() and settings['Font']['default']:
             del settings['Font']['default']
-        lang = self.index2lang[self.langCombo.currentIndex()]
+        lang = languagesR[self.langCombo.currentText()]
         if settings['Main'].get('lang', 'en') != lang:
             settings['Main']['lang'] = lang
             self.langChanged.emit()

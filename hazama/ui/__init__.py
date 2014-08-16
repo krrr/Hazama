@@ -8,12 +8,10 @@ import time
 import logging
 
 
-
 def datetimeTrans(s):
     """Convert datetime in database format to locale one"""
     dt = QDateTime.fromString(s, 'yyyy-MM-dd HH:mm')
-    return (locale.toString(dt, dateFmt + ' ' + timeFmt) if timeFmt
-            else locale.toString(dt, dateFmt))
+    return locale.toString(dt, (dateFmt + ' ' + timeFmt) if timeFmt else dateFmt)
 
 
 def setDatetimeTrans():
@@ -23,9 +21,7 @@ def setDatetimeTrans():
     timeFmt = settings['Main'].get('timeformat', raw=True)
     dateFmt = settings['Main'].get('dateformat', raw=True)
     if dateFmt is None:
-        sysDateFmt = locale.dateFormat()
-        settings['Main']['dateformat'] = sysDateFmt
-        dateFmt = sysDateFmt
+        dateFmt = settings['Main']['dateformat'] = locale.dateFormat()
 
 
 def currentDatetime():
@@ -36,17 +32,19 @@ def currentDatetime():
 def setTranslationLocale():
     lang = settings['Main'].get('lang', 'en')
     logging.info('Set translation(%s)', lang)
-    global trans, transQt
+    global trans, transQt  # avoid being collected
     trans = QTranslator()
-    trans.load('lang/' + lang)
+    trans.load(lang, 'lang/')
     transQt = QTranslator()
     ret = transQt.load('qt_' + lang,
                        QLibraryInfo.location(QLibraryInfo.TranslationsPath))
     if not ret:  # frozen
-        transQt.load('lang/qt_' + lang)
+        transQt.load('qt_'+lang, 'lang/')
     for i in [trans, transQt]: app.installTranslator(i)
     global locale
-    locale = QLocale(lang)
+    sysLocale = QLocale.system()
+    # special case: application language is different from system's
+    locale = sysLocale if lang == sysLocale.name() else QLocale(lang)
 
 
 def showDbError(hint=''):
