@@ -2,7 +2,9 @@
 *.qm
 *.db
 *.ini
+*.qss
 xmlsample
+build
 .idea
 test.py
 hazama/ui/*_ui.py
