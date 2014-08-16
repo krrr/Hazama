@@ -10,7 +10,7 @@ __version__ = 0.14
 try:
     program_path = os.path.dirname(os.path.realpath(__file__))
 except NameError:  # frozen
-    program_path = os.path.dirname(sys.argv[0])
+    program_path = os.path.dirname(os.path.realpath(sys.argv[0]))
 os.chdir(program_path)
 
 if __name__ == '__main__':
