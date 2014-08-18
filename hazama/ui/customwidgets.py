@@ -167,19 +167,18 @@ class SearchBox(QLineEditWithMenuIcon):
 
 
 class DateTimeDialog(QDialog):
-    timeFmt = "yyyy-MM-dd HH:mm"
-
-    def __init__(self, timeStr, parent=None):
+    def __init__(self, timeStr, format, parent=None):
         super(DateTimeDialog, self).__init__(parent, Qt.WindowTitleHint)
+        self.format = format
         self.setWindowModality(Qt.WindowModal)
         self.setWindowTitle(self.tr('Edit datetime'))
         self.setMinimumWidth(100)
         self.verticalLayout = QVBoxLayout(self)
-        dt = QDateTime.fromString(timeStr, self.timeFmt)
-        self.dtEdit = QDateTimeEdit(dt)
-        self.dtEdit.setDisplayFormat(self.timeFmt)
+        locale = QLocale()
+        self.dtEdit = QDateTimeEdit(locale.toDateTime(timeStr, format), self)
+        self.dtEdit.setDisplayFormat(format)
         self.verticalLayout.addWidget(self.dtEdit)
-        self.btnBox = QDialogButtonBox()
+        self.btnBox = QDialogButtonBox(self)
         self.btnBox.setOrientation(Qt.Horizontal)
         self.btnBox.setStandardButtons(QDialogButtonBox.Ok |
                                        QDialogButtonBox.Cancel)
@@ -188,9 +187,9 @@ class DateTimeDialog(QDialog):
         self.btnBox.rejected.connect(self.reject)
 
     @staticmethod
-    def getDateTime(timeStr, parent):
+    def getDateTime(timeStr, format, parent):
         """Run Dialog,return None if canceled else time string"""
-        dialog = DateTimeDialog(timeStr, parent)
+        dialog = DateTimeDialog(timeStr, format, parent)
         ret = dialog.exec_()
         dialog.deleteLater()
         return dialog.dtEdit.dateTime().toString(dialog.timeFmt) if ret else None

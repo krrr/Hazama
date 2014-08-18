@@ -3,7 +3,7 @@ from PySide.QtCore import *
 from ui.editor_ui import Ui_editor
 from ui.customobjects import TagCompleter
 from ui.customwidgets import DateTimeDialog
-from ui import font, datetimeTrans, currentDatetime, datetimeToDate, datetimeTransR
+from ui import font, datetimeTrans, currentDatetime, datetimeToDate, datetimeFmt
 from config import settings, nikki
 
 
@@ -61,9 +61,9 @@ class Editor(QWidget, Ui_editor):
     @Slot()
     def on_dtBtn_clicked(self):
         """Show datetime edit dialog"""
-        dt = (currentDatetime() if self.datetime is None
-              else datetimeTransR(self.datetime))
-        new_dt = DateTimeDialog.getDateTime(dt, self)
+        dt = (datetimeTrans(currentDatetime()) if self.datetime is None
+              else self.datetime)
+        new_dt = DateTimeDialog.getDateTime(dt, datetimeFmt, self)
         if new_dt is not None and new_dt != self.datetime:
             self.datetime = datetimeTrans(new_dt)
             self.dtLabel.setText(self.datetime)

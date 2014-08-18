@@ -113,6 +113,7 @@ font = Fonts()
 font.load()
 # setup i18n
 locale = setTranslationLocale()
+QLocale.setDefault(locale)
 timeFmt = settings['Main'].get('timeformat')
 dateFmt = settings['Main'].get('dateformat', locale.dateFormat())
 datetimeFmt = (dateFmt + ' ' + timeFmt) if timeFmt else dateFmt
