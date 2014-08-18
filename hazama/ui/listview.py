@@ -1,6 +1,6 @@
 from PySide.QtGui import *
 from PySide.QtCore import *
-from ui import font, datetimeTrans, currentDatetime, datetimeTransR
+from ui import font, datetimeTrans, currentDatetime
 from ui.editor import Editor
 from ui.customobjects import NTextDocument, MultiSortFilterProxyModel
 from config import settings, nikki
@@ -55,7 +55,7 @@ class NListDelegate(QStyledItemDelegate):
         painter.setPen(Qt.black)
         painter.setFont(font.date)
         painter.drawText(x+14, y+self.titleArea_h-self.title_h, w, self.title_h,
-                         Qt.AlignVCenter, dt)
+                         Qt.AlignVCenter, datetimeTrans(dt))
         if title:
             painter.setFont(font.title)
             title_w = w-self.dt_w-13
@@ -299,13 +299,12 @@ class NikkiList(QListView):
         editor = self.editors[id]
         isNew = id == -1
         if needSave:
-            dt = (datetimeTrans(currentDatetime()) if editor.datetime is None
-                  else editor.datetime)
+            dt = currentDatetime() if editor.datetime is None else editor.datetime
             text = editor.textEditor.toPlainText()
             title = editor.titleEditor.text()
             tags = editor.tagEditor.text()
             formats = editor.textEditor.getFormats()
-            realId = nikki.save(id=id, datetime=datetimeTransR(dt), text=text,
+            realId = nikki.save(id=id, datetime=dt, text=text,
                                 formats=formats, title=title, new=isNew,
                                 tags=tags if editor.tagModified else None)
             # write to model
@@ -333,7 +332,7 @@ class NikkiList(QListView):
         for i in nikki:
             model.insertRow(0)
             model.setData(model.index(0, 0), i['id'])
-            model.setData(model.index(0, 1), datetimeTrans(i['datetime']))
+            model.setData(model.index(0, 1), i['datetime'])
             model.setData(model.index(0, 2), i['text'])
             model.setData(model.index(0, 3), i['title'])
             model.setData(model.index(0, 4), i['tags'])

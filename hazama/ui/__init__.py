@@ -8,19 +8,10 @@ import time
 import logging
 
 
-def datetimeTrans(s):
+def datetimeTrans(s, forceDateOnly=False):
     """Convert datetime in database format to locale one"""
     dt = QDateTime.fromString(s, 'yyyy-MM-dd HH:mm')
-    return locale.toString(dt, datetimeFmt)
-
-def datetimeTransR(s):
-    dt = locale.toDateTime(s, datetimeFmt)
-    return QDateTime.toString(dt, 'yyyy-MM-dd HH:mm')
-
-def datetimeToDate(s):
-    """Cut time part of locale's datetime, used in Editor window's title"""
-    dt = locale.toDateTime(s, datetimeFmt)
-    return locale.toString(dt, dateFmt)
+    return locale.toString(dt, dateFmt if forceDateOnly else datetimeFmt)
 
 def currentDatetime():
     """Return current datetime in database format"""
