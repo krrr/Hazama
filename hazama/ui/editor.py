@@ -3,7 +3,7 @@ from PySide.QtCore import *
 from ui.editor_ui import Ui_editor
 from ui.customobjects import TagCompleter
 from ui.customwidgets import DateTimeDialog
-from ui import font, datetimeTrans, currentDatetime
+from ui import font, datetimeTrans, currentDatetime, datetimeToDate, datetimeTransR
 from config import settings, nikki
 
 
@@ -61,20 +61,20 @@ class Editor(QWidget, Ui_editor):
     @Slot()
     def on_dtBtn_clicked(self):
         """Show datetime edit dialog"""
-        dt = currentDatetime() if self.datetime is None else self.datetime
+        dt = (currentDatetime() if self.datetime is None
+              else datetimeTransR(self.datetime))
         new_dt = DateTimeDialog.getDateTime(dt, self)
         if new_dt is not None and new_dt != self.datetime:
-            self.datetime = new_dt
-            self.dtLabel.setText(datetimeTrans(new_dt))
+            self.datetime = datetimeTrans(new_dt)
+            self.dtLabel.setText(self.datetime)
             self.timeModified = True
 
     def showEvent(self, event):
-        title = ((self.titleEditor.text() if self.titleEditor.text() else None) or
-                (datetimeTrans(self.datetime).split()[0] if self.datetime else None) or
+        title = (self.titleEditor.text() or
+                (datetimeToDate(self.datetime) if self.datetime else None) or
                  self.tr('New Diary'))
         self.setWindowTitle("%s - Hazama" % title)
-        self.dtLabel.setText('' if self.datetime is None
-                             else datetimeTrans(self.datetime))
+        self.dtLabel.setText('' if self.datetime is None else self.datetime)
         if settings['Editor'].getint('titlefocus', 0):
             self.titleEditor.setCursorPosition(0)
         else:
