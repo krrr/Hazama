@@ -87,7 +87,10 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         self.nList.setFocus()
 
     def updateCountLabel(self):
-        """Called when diary saving/deleting or on first show"""
-        c = self.nList.model.rowCount()
-        if c > 1: self.countLabel.setText(self.tr('%i diaries') % c)
+        """Update label that display count of diaries in Main List"""
+        filtered = (self.nList.modelProxy.filterFixedString(0)
+                    or self.nList.modelProxy.filterFixedString(1))
+        c = self.nList.modelProxy.rowCount() if filtered else self.nList.model.rowCount()
+        text = self.tr('%i results') if filtered else self.tr('%i diaries')
+        self.countLabel.setText(text % c)
 

@@ -141,9 +141,13 @@ class MultiSortFilterProxyModel(QSortFilterProxyModel):
                 return False
         return True
 
-    def setFilterFixedString(self, keyNum, s):
-        self.strings[keyNum] = s
+    def setFilterFixedString(self, keyNum, pattern):
+        self.strings[keyNum] = pattern
+        # let model update filter
         super(MultiSortFilterProxyModel, self).setFilterFixedString('')
+
+    def filterFixedString(self, keyNum):
+        return self.strings[keyNum]
 
     def addFilterKey(self, keyNum, cols):
         """cols is a list contains columns"""

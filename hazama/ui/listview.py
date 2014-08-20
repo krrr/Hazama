@@ -411,7 +411,9 @@ class NikkiList(QListView):
 
     def setFilterBySearchString(self, s):
         self.modelProxy.setFilterFixedString(1, s)
+        self.countChanged.emit()
 
     def setFilterByTag(self, s):
         self.modelProxy.setFilterFixedString(0, s)
+        self.countChanged.emit()
 
