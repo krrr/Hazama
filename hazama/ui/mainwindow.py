@@ -90,10 +90,10 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         self.nList.setFocus()
 
     def updateCountLabel(self):
-        """Update label that display count of diaries in Main List"""
+        """Update label that display count of diaries in Main List.
+        'XX diaries' format is just fine, don't use 'XX diaries,XX results'."""
         filtered = (self.nList.modelProxy.filterFixedString(0)
                     or self.nList.modelProxy.filterFixedString(1))
         c = self.nList.modelProxy.rowCount() if filtered else self.nList.model.rowCount()
-        text = self.tr('%i results') if filtered else self.tr('%i diaries')
-        self.countLabel.setText(text % c)
+        self.countLabel.setText(self.tr('%i diaries') % c)
 

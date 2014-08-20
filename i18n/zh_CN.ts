@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
-<TS version="2.0" language="zh">
+<!DOCTYPE TS><TS version="1.1" language="zh">
 <context>
     <name>ConfigDialog</name>
     <message>
@@ -32,7 +31,7 @@
         <translation type="obsolete">修改创建时间</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/customwidgets.py" line="174"/>
+        <location filename="../hazama/ui/customwidgets.py" line="176"/>
         <source>Edit datetime</source>
         <translation>修改日期时间</translation>
     </message>
@@ -178,7 +177,7 @@ If database path is correct, should recover this file by hand or restore from ba
         <translation type="obsolete">设置</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/mainwindow.py" line="95"/>
+        <location filename="../hazama/ui/mainwindow.py" line="97"/>
         <source>%i diaries</source>
         <translation>%i 篇日记</translation>
     </message>
@@ -190,7 +189,7 @@ If database path is correct, should recover this file by hand or restore from ba
     <message>
         <location filename="../hazama/ui/mainwindow.py" line="94"/>
         <source>%i results</source>
-        <translation>%i 件结果</translation>
+        <translation type="obsolete">%i 件结果</translation>
     </message>
 </context>
 <context>
@@ -335,7 +334,7 @@ If database path is correct, should recover this file by hand or restore from ba
 <context>
     <name>SearchBox</name>
     <message>
-        <location filename="../hazama/ui/customwidgets.py" line="166"/>
+        <location filename="../hazama/ui/customwidgets.py" line="168"/>
         <source>Search</source>
         <translation>搜索</translation>
     </message>
@@ -535,7 +534,7 @@ If database path is correct, should recover this file by hand or restore from ba
         <translation type="obsolete">修改日期</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/customwidgets.py" line="243"/>
+        <location filename="../hazama/ui/customwidgets.py" line="245"/>
         <source>Title</source>
         <translation>标题</translation>
     </message>
@@ -545,17 +544,17 @@ If database path is correct, should recover this file by hand or restore from ba
         <translation type="obsolete">大小</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/customwidgets.py" line="247"/>
+        <location filename="../hazama/ui/customwidgets.py" line="249"/>
         <source>Reverse</source>
         <translation>倒序排列</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/customwidgets.py" line="245"/>
+        <location filename="../hazama/ui/customwidgets.py" line="247"/>
         <source>Length</source>
         <translation>长度</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/customwidgets.py" line="241"/>
+        <location filename="../hazama/ui/customwidgets.py" line="243"/>
         <source>Date</source>
         <translation>日期</translation>
     </message>
