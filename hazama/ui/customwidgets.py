@@ -143,6 +143,8 @@ class SearchBox(QLineEditWithMenuIcon):
         self.button.setFixedSize(18, 18)
         self.button.setCursor(Qt.ArrowCursor)
         self.button.clicked.connect(self.clear)
+        clearSc = QShortcut(QKeySequence(Qt.Key_Escape), self)
+        clearSc.activated.connect(self.clear)
         self.textChanged.connect(self.update)
         self.retranslate()
         self.isTextBefore = True

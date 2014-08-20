@@ -42,6 +42,9 @@ class MainWindow(QMainWindow, Ui_mainWindow):
             self.tListAct.trigger()
         else:
             self.tList.hide()
+        # setup shortcuts
+        searchSc = QShortcut(QKeySequence.Find, self)
+        searchSc.activated.connect(self.searchBox.setFocus)
 
     def closeEvent(self, event):
         settings['Main']['windowgeo'] = str(self.saveGeometry().toHex())
