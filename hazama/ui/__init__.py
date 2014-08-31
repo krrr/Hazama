@@ -8,6 +8,10 @@ import time
 import logging
 
 
+locale = None
+timeFmt = dateFmt = datetimeFmt = None
+
+
 def datetimeTrans(s, forceDateOnly=False):
     """Convert datetime in database format to locale one"""
     dt = QDateTime.fromString(s, 'yyyy-MM-dd HH:mm')
@@ -32,8 +36,12 @@ def setTranslationLocale():
     for i in [_trans, _transQt]: app.installTranslator(i)
     sysLocale = QLocale.system()
     # special case: application language is different from system's
-    return sysLocale if lang == sysLocale.name() else QLocale(lang)
-
+    global locale, timeFmt, dateFmt, datetimeFmt
+    locale = sysLocale if lang == sysLocale.name() else QLocale(lang)
+    QLocale.setDefault(locale)
+    timeFmt = settings['Main'].get('timeformat')
+    dateFmt = settings['Main'].get('dateformat', locale.dateFormat())
+    datetimeFmt = (dateFmt + ' ' + timeFmt) if timeFmt else dateFmt
 
 def showDbError(hint=''):
     """If unable to access database, display a error and exit"""
@@ -102,12 +110,7 @@ app.setWindowIcon(appIcon)
 # setup fonts after qApp created
 font = Fonts()
 font.load()
-# setup i18n
-locale = setTranslationLocale()
-QLocale.setDefault(locale)
-timeFmt = settings['Main'].get('timeformat')
-dateFmt = settings['Main'].get('dateformat', locale.dateFormat())
-datetimeFmt = (dateFmt + ' ' + timeFmt) if timeFmt else dateFmt
 
+setTranslationLocale()
 setStyleSheet()
 
