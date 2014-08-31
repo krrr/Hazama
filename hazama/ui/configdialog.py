@@ -56,12 +56,12 @@ class ConfigDialog(QDialog, Ui_configDialog):
             settings['Font'][i.configName] = i.font().toString()
         if not self.defFontGBox.isChecked() and settings['Font']['default']:
             del settings['Font']['default']
+        font.load()
         lang = languagesR[self.langCombo.currentText()]
         if settings['Main'].get('lang', 'en') != lang:
             settings['Main']['lang'] = lang
             self.langChanged.emit()
         logging.info('Settings saved')
-        font.load()
         self.accepted.emit()
         self.close()
 
@@ -86,13 +86,21 @@ class ConfigDialog(QDialog, Ui_configDialog):
 
     def handleFontBtn(self):
         btn = self.sender()
-        f, ok = QFontDialog.getFont(btn.font(), self)
-        if ok:
-            self.setFontButton(btn, f)
+        dlg = QFontDialog(self)
+        dlg.setCurrentFont(btn.font())
+        # Set sample text in dialog with some hack
+        try:
+            sample = dlg.findChildren(QLineEdit)[3]
+            sample.setText('AaBbYy 2013 %s' % self.langCombo.currentText())
+        except (IndexError, AttributeError):
+            pass
+        ret = dlg.exec_()
+        if ret:
+            self.setFontButton(btn, dlg.selectedFont())
 
     @staticmethod
-    def setFontButton(btn, _font):
-        """Set Font Button's text and text's font according to parm. _font"""
-        p = lambda f: '%s %spt' % (f.family(), f.pointSize())
-        btn.setFont(_font)
-        btn.setText(p(_font))
+    def setFontButton(btn, f):
+        """Set Font Button's text and font"""
+        btn.setFont(f)
+        btn.setText('%s %spt' % (f.family(), f.pointSize()))
+
