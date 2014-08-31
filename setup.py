@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 import sys
+sys.path.append(path.realpath('hazama/'))
+from hazama import __version__
 import os
 from os import path
 from glob import glob
@@ -114,7 +116,7 @@ else:
 setup(name='Hazama',
       author='krrr',
       url='https://github.com/krrr/Hazama',
-      version="0.14",
+      version=__version__,
       description='A simple cross-platform diary program',
       requires=['PySide'],
       cmdclass=cmdclass,
