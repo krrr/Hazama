@@ -59,7 +59,6 @@ class MainWindow(QMainWindow, Ui_mainWindow):
     def retranslate(self):
         """Set translation after language changed in ConfigDialog"""
         ui.setTranslationLocale()
-        ui.setDatetimeTrans()
         self.retranslateUi(self)
         self.searchBox.retranslate()
         self.updateCountLabel()
