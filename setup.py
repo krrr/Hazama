@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 import sys
-sys.path.append(path.realpath('hazama/'))
-from hazama import __version__
 import os
 from os import path
 from glob import glob
 from distutils.core import Command
 from distutils.spawn import find_executable
+sys.path.append(path.realpath('hazama/'))
+from hazama import __version__
 
 
 class build_qt(Command):
