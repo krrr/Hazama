@@ -65,6 +65,12 @@
          <height>0</height>
         </size>
        </property>
+       <property name="horizontalScrollBarPolicy">
+        <enum>Qt::ScrollBarAlwaysOff</enum>
+       </property>
+       <property name="selectionMode">
+        <enum>QAbstractItemView::ExtendedSelection</enum>
+       </property>
       </widget>
      </widget>
     </item>
@@ -168,7 +174,7 @@
  <customwidgets>
   <customwidget>
    <class>NikkiList</class>
-   <extends>QListWidget</extends>
+   <extends>QListView</extends>
    <header>listview</header>
    <slots>
     <signal>countChanged()</signal>

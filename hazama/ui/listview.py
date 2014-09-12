@@ -216,9 +216,7 @@ class NikkiList(QListView):
 
     def __init__(self, parent=None):
         super(NikkiList, self).__init__(parent)
-        self.setSelectionMode(self.ExtendedSelection)
         self.setItemDelegate(NListDelegate(self))
-        self.setSpacing(0)
         # setup models
         self.model = QStandardItemModel(0, 7, self)
         self.fillModel(self.model)
