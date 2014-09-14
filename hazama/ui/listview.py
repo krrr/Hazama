@@ -18,7 +18,7 @@ class NListDelegate(QStyledItemDelegate):
                        settings['Main'].getint('previewlines', 4))
         self.tagPath_h = QFontInfo(qApp.font()).pixelSize() + 4
         self.tag_h = self.tagPath_h + 4
-        self.dt_w = QFontMetrics(font.title).width('2000/00/00 00:00') + 20
+        self.dt_w = font.date_m.width(datetimeTrans('2000-01-01 00:00')) + 40
         self.all_h = None  # updated in sizeHint before each item being painting
         # doc is used to draw text(diary's body)
         self.doc = NTextDocument()
@@ -55,11 +55,11 @@ class NListDelegate(QStyledItemDelegate):
         painter.drawLine(x+10, y+self.titleArea_h, x+w-10, y+self.titleArea_h)
         painter.setPen(self.c_text)
         painter.setFont(font.date)
-        painter.drawText(x+14, y+self.titleArea_h-self.title_h, w, self.title_h,
+        painter.drawText(x+14, y+self.titleArea_h-self.title_h, self.dt_w, self.title_h,
                          Qt.AlignVCenter, datetimeTrans(dt))
         if title:
             painter.setFont(font.title)
-            title_w = w-self.dt_w-13
+            title_w = w - self.dt_w - 13
             title = font.title_m.elidedText(title, Qt.ElideRight, title_w)
             painter.drawText(x+self.dt_w, y+self.titleArea_h-self.title_h, title_w, self.title_h,
                              Qt.AlignVCenter | Qt.AlignRight, title)
