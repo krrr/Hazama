@@ -26,6 +26,7 @@ class NListDelegate(QStyledItemDelegate):
         self.doc.setUndoRedoEnabled(False)
         self.doc.setDocumentMargin(0)
         # setup colors
+        self.c_text = qApp.palette().color(QPalette.Active, QPalette.Text)
         self.c_bg = QColor(255, 236, 176)
         self.c_border = QColor(214, 172, 41)
         self.c_inActBg = QColor(255, 236, 176, 40)
@@ -52,7 +53,7 @@ class NListDelegate(QStyledItemDelegate):
         # draw datetime and title
         painter.setPen(self.c_gray)
         painter.drawLine(x+10, y+self.titleArea_h, x+w-10, y+self.titleArea_h)
-        painter.setPen(Qt.black)
+        painter.setPen(self.c_text)
         painter.setFont(font.date)
         painter.drawText(x+14, y+self.titleArea_h-self.title_h, w, self.title_h,
                          Qt.AlignVCenter, datetimeTrans(dt))
