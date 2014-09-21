@@ -78,7 +78,7 @@
   </widget>
   <widget class="QToolBar" name="toolBar">
    <property name="contextMenuPolicy">
-    <enum>Qt::CustomContextMenu</enum>
+    <enum>Qt::PreventContextMenu</enum>
    </property>
    <property name="movable">
     <bool>false</bool>
@@ -168,6 +168,14 @@
    </property>
    <property name="shortcut">
     <string notr="true"/>
+   </property>
+  </action>
+  <action name="mapAct">
+   <property name="text">
+    <string>HeatMap</string>
+   </property>
+   <property name="shortcut">
+    <string notr="true">F4</string>
    </property>
   </action>
  </widget>
