@@ -1,29 +1,23 @@
-QLabel#countLabel {
-    color: rgb(144, 144, 144)
-}
+QLabel#countLabel {color: #909090;}
 
-QWidget#editor {
-    background-color: rgb(232, 245, 255);
-}
+QWidget#editor {background-color: #e8f5ff;}
 
 QListView#nList {
-    background-color: rgb(242, 241, 231);
+    background-color: #f2f1e7;
     border: 0px;
     margin-top: 1px;
 }
 
 QListWidget#tList {
-    background-color: rgb(234,182,138);
+    background-color: #eab68a;
     border: 0px;
 }
 
-QMainWindow QSplitter::handle {
-    background: rgb(181, 61, 0)
-}
+QMainWindow QSplitter::handle {background: #b53d00;}
 
 QMainWindow QToolBar {
-    background: rgb(242,241,231);
-    border-bottom: 1px solid rgb(181, 61, 0);
+    background: #f2f1e7;
+    border-bottom: 1px solid #b53d00;
     padding: 2px;
     spacing: 2px
 }
