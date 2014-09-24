@@ -1,9 +1,9 @@
 from PySide.QtCore import *
 from PySide.QtGui import *
+import re
+from html.parser import HTMLParser
 from ui import setStdEditMenuIcons
 from ui.customobjects import TextFormatter, NTextDocument
-from html.parser import HTMLParser
-import re
 from config import settings
 
 
@@ -238,13 +238,13 @@ class SortOrderMenu(QMenu):
 
     def __init__(self, parent=None):
         super(SortOrderMenu, self).__init__(parent)
-        self.aboutToShow.connect(self.setActions)
         # create actions
-        self.datetime = QAction(self.tr('Date'), self)
+        group = QActionGroup(self)
+        self.datetime = QAction(self.tr('Date'), group)
         self.datetime.name = 'datetime'
-        self.title = QAction(self.tr('Title'), self)
+        self.title = QAction(self.tr('Title'), group)
         self.title.name = 'title'
-        self.length = QAction(self.tr('Length'), self)
+        self.length = QAction(self.tr('Length'), group)
         self.length.name = 'length'
         self.reverse = QAction(self.tr('Reverse'), self)
         self.orders = (self.datetime, self.title, self.length)
@@ -256,15 +256,10 @@ class SortOrderMenu(QMenu):
         self.reverse.setCheckable(True)
         self.addAction(self.reverse)
         self.reverse.triggered[bool].connect(self.signalEmitter)
-
-    def setActions(self):
-        """Set actions checked/unchecked before showing"""
-        order = settings['Main'].get('listsortby', 'datetime')
-        reverse = settings['Main'].getint('listreverse', 1)
-        for a in self.orders: a.setChecked(False)
-        toEnable = getattr(self, order, self.datetime)
-        toEnable.setChecked(True)
-        self.reverse.setChecked(reverse)
+        # restore from settings
+        orderSetting = settings['Main'].get('listsortby', 'datetime')
+        getattr(self, orderSetting, self.datetime).setChecked(True)
+        self.reverse.setChecked(settings['Main'].getint('listreverse', 1))
 
     def signalEmitter(self, checked):
         """Save new order to settings and emit a signal"""
@@ -276,5 +271,4 @@ class SortOrderMenu(QMenu):
         else:
             settings['Main']['listreverse'] = str(checked.real)
             self.orderChanged.emit()
-
 
