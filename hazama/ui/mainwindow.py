@@ -1,9 +1,12 @@
 from PySide.QtGui import *
 from PySide.QtCore import *
-import ui
+import logging
+from itertools import chain
+from ui import font, setTranslationLocale
 from ui.customwidgets import SearchBox, SortOrderMenu
 from ui.configdialog import ConfigDialog
 from ui.mainwindow_ui import Ui_mainWindow
+from ui.heatmap import HeatMap, cellColors
 from config import settings, nikki
 
 
@@ -11,10 +14,9 @@ class MainWindow(QMainWindow, Ui_mainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
         self.setupUi(self)
-        self.cfgDialog = None  # create on on_cfgAct_triggered
+        self.cfgDialog = self.heatMap = None  # create on on_cfgAct_triggered
         geo = settings['Main'].get('windowgeo')
         self.restoreGeometry(QByteArray.fromHex(geo))
-        # self.nList.load()
         # setup TagList width
         tListW = settings['Main'].getint('taglistwidth', 0)
         if not self.isMaximized():
@@ -23,8 +25,7 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         sorMenu = SortOrderMenu(self)
         sorMenu.orderChanged.connect(self.nList.sort)
         self.sorAct.setMenu(sorMenu)
-        sortBtn = self.toolBar.widgetForAction(self.sorAct)
-        sortBtn.setPopupMode(QToolButton.InstantPopup)
+        self.toolBar.widgetForAction(self.sorAct).setPopupMode(QToolButton.InstantPopup)
         # Qt Designer doesn't allow us to add widget in toolbar
         # setup count label
         self.countLabel = QLabel(self.toolBar)
@@ -45,6 +46,7 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         # setup shortcuts
         searchSc = QShortcut(QKeySequence.Find, self)
         searchSc.activated.connect(self.searchBox.setFocus)
+        self.addAction(self.mapAct)
 
     def closeEvent(self, event):
         settings['Main']['windowgeo'] = str(self.saveGeometry().toHex())
@@ -58,7 +60,7 @@ class MainWindow(QMainWindow, Ui_mainWindow):
 
     def retranslate(self):
         """Set translation after language changed in ConfigDialog"""
-        ui.setTranslationLocale()
+        setTranslationLocale()
         self.retranslateUi(self)
         self.searchBox.retranslate()
         self.updateCountLabel()
@@ -75,6 +77,44 @@ class MainWindow(QMainWindow, Ui_mainWindow):
             self.cfgDialog.bkRestored.connect(self.nList.reload)
             self.cfgDialog.accepted.connect(self.nList.resetDelegate)
             self.cfgDialog.show()
+
+    @Slot()
+    def on_mapAct_triggered(self):
+        ratio = {QLocale.Chinese: 1, QLocale.English: 5, QLocale.Japanese: 1.2,
+                 }.get(QLocale().language(), 1)
+        logging.debug('HeatMap got length ratio %s' % ratio)
+
+        def colorFunc(y, m, d):
+            """Iter through model once and cache result. Return QColor used to draw cell bg."""
+            if not getattr(colorFunc, 'cached', None):
+                colorFunc.cached = cached = {}
+                model = self.nList.model
+                for i in range(model.rowCount()):
+                    dt, length = model.index(i, 1).data(), model.index(i, 6).data()
+                    year, month, last = dt.split('-')
+                    cached[(int(year), int(month), int(last[:2]))] = length
+            data = colorFunc.cached.get((y, m, d), 0)
+            if data == 0:
+                return QColor(*cellColors[0])
+            elif data < 200 * ratio:
+                return QColor(*cellColors[1])
+            elif data < 550 * ratio:
+                return QColor(*cellColors[2])
+            else:
+                return QColor(*cellColors[3])
+        try:
+            self.heatMap.activateWindow()
+        except (AttributeError, RuntimeError):
+            self.heatMap = HeatMap(self, objectName='heatMap', font=font.date)
+            self.heatMap.closeSc = QShortcut(QKeySequence(Qt.Key_Escape), self.heatMap,
+                                             activated=self.heatMap.close)
+            self.heatMap.setColorFunc(colorFunc)
+            self.heatMap.setAttribute(Qt.WA_DeleteOnClose)
+            self.heatMap.resize(self.size())
+            self.heatMap.move(self.pos())
+            self.heatMap.setWindowFlags(Qt.Window | Qt.WindowTitleHint)
+            self.heatMap.setWindowTitle('HeatMap')
+            self.heatMap.show()
 
     def toggleTagList(self, checked):
         self.tList.setVisible(checked)

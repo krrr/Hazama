@@ -175,7 +175,7 @@
     <string>HeatMap</string>
    </property>
    <property name="shortcut">
-    <string notr="true">F4</string>
+    <string>Ctrl+M</string>
    </property>
   </action>
  </widget>
