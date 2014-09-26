@@ -19,5 +19,48 @@ QMainWindow QToolBar {
     background: #f2f1e7;
     border-bottom: 1px solid #b53d00;
     padding: 2px;
-    spacing: 2px
+    spacing: 0px
+}
+
+/* HeatMap page */
+QWidget#heatMap {background: #e8f6ff;}
+
+QFrame#heatMapBar {
+    border-bottom: 1px solid lightgray;
+    padding: 0px 4px 0px 4px;
+    background: gray;
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 #f2f1e7,
+        stop:0.8 #f2f1e7,
+        stop:1 rgb(233,231,214));
+}
+
+QPushButton#heatMapBtn {
+    font-size: 18pt;
+    color: #367ab2;
+    border: none;
+}
+QPushButton#heatMapBtn:hover {color: #92bcde}
+
+QWidget#heatMap QToolButton {
+    border: 1px solid gray;
+    border-radius: 4px;
+}
+QWidget#heatMap QToolButton:hover {
+    background: rgba(70, 70, 70, 120)
+}
+QWidget#heatMap QToolButton:pressed {background: rgba(70, 70, 70, 180);}
+
+QGraphicsView#heatMapView {
+    qproperty-cellBorderColor: darkgray;
+    color: #367ab2;
+    background: transparent;
+    margin: 1px;
+    border: none;
+    padding: 3px;
+}
+
+QGraphicsView#heatMapSample {
+    background: transparent;
+    border: none;
 }

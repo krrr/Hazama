@@ -21,6 +21,13 @@
     <file>config.png</file>
   </qresource>
 
+  <qresource prefix="/heatmap">
+    <file>arrow-left.png</file>
+  </qresource>
+  <qresource prefix="/heatmap">
+    <file>arrow-right.png</file>
+  </qresource>
+
   <qresource prefix="/menu">
     <file>list_delete.png</file>
   </qresource>
