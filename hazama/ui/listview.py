@@ -159,7 +159,7 @@ class TagList(QListWidget):
         self.currentItemChanged.connect(self.emitCurrentTagChanged)
 
     def load(self):
-        logging.debug('Tag List load')
+        logging.debug('load Tag List')
         item_all = QListWidgetItem(self)
         item_all.setData(Qt.DisplayRole, self.tr('All'))
         for t in nikki.gettag(getcount=True):

@@ -17,6 +17,7 @@ def datetimeTrans(s, forceDateOnly=False):
     dt = QDateTime.fromString(s, 'yyyy-MM-dd HH:mm')
     return locale.toString(dt, dateFmt if forceDateOnly else datetimeFmt)
 
+
 def currentDatetime():
     """Return current datetime in database format"""
     return time.strftime('%Y-%m-%d %H:%M')
@@ -24,7 +25,7 @@ def currentDatetime():
 
 def setTranslationLocale():
     lang = settings['Main'].get('lang', 'en')
-    logging.info('Set translation(%s)', lang)
+    logging.info('set translation(%s)', lang)
     global _trans, _transQt  # avoid being collected
     _trans = QTranslator()
     _trans.load(lang, 'lang/')
@@ -42,6 +43,7 @@ def setTranslationLocale():
     timeFmt = settings['Main'].get('timeformat')
     dateFmt = settings['Main'].get('dateformat', locale.dateFormat())
     datetimeFmt = (dateFmt + ' ' + timeFmt) if timeFmt else dateFmt
+
 
 def showDbError(hint=''):
     """If unable to access database, display a error and exit"""
@@ -66,14 +68,14 @@ def setStdEditMenuIcons(menu):
 
 def setStyleSheet():
     if '-stylesheet' in sys.argv:
-        logging.info('Override default StyleSheet by command line arg')
+        logging.info('override default StyleSheet by command line arg')
     else:
         f = QFile(':/default.qss')
         f.open(QIODevice.ReadOnly | QIODevice.Text)
         ss = str(f.readAll())
         f.close()
         if os.path.isfile('custom.qss'):
-            logging.info('Set custom StyleSheet')
+            logging.info('set custom StyleSheet')
             ss += open('custom.qss', encoding='utf-8').read()
         app.setStyleSheet(ss)
 
