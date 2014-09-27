@@ -9,7 +9,7 @@ Features:
 
 [Screenshots](https://github.com/krrr/Hazama/wiki/Screenshots)
 
-For document, please view [wiki](https://github.com/krrr/Hazama/wiki) page.
+[Usage](https://github.com/krrr/Hazama/wiki/Usage)
 
 
 Installation
