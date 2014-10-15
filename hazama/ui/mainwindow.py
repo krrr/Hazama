@@ -86,13 +86,6 @@ class MainWindow(QMainWindow, Ui_mainWindow):
 
         def colorFunc(y, m, d):
             """Iter through model once and cache result. Return QColor used to draw cell bg."""
-            if not getattr(colorFunc, 'cached', None):
-                colorFunc.cached = cached = {}
-                model = self.nList.model
-                for i in range(model.rowCount()):
-                    dt, length = model.index(i, 1).data(), model.index(i, 6).data()
-                    year, month, last = dt.split('-')
-                    cached[(int(year), int(month), int(last[:2]))] = length
             data = colorFunc.cached.get((y, m, d), 0)
             if data == 0:
                 return QColor(*cellColors[0])
@@ -102,6 +95,14 @@ class MainWindow(QMainWindow, Ui_mainWindow):
                 return QColor(*cellColors[2])
             else:
                 return QColor(*cellColors[3])
+
+        colorFunc.cached = {}
+        model = self.nList.model
+        for i in range(model.rowCount()):
+            dt, length = model.index(i, 1).data(), model.index(i, 6).data()
+            year, month, last = dt.split('-')
+            colorFunc.cached[(int(year), int(month), int(last[:2]))] = length
+
         try:
             self.heatMap.activateWindow()
         except (AttributeError, RuntimeError):
