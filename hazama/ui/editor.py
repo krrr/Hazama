@@ -29,7 +29,7 @@ class Editor(QWidget, Ui_editor):
         self.dtBtn.setIconSize(QSize(sz, sz))
         # set up tagEditor
         self.tagEditor.setTextMargins(QMargins(2, 0, 2, 0))
-        completer = TagCompleter(nikki.gettag(), self.tagEditor)
+        completer = TagCompleter(list(nikki.gettags()), self.tagEditor)
         self.tagEditor.setCompleter(completer)
         self.timeModified = self.tagModified = False
         # setup shortcuts

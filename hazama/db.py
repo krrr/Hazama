@@ -68,7 +68,7 @@ class Nikki:
         id = l[0]
         tags_id = self.exe('SELECT tagid FROM Nikki_Tags WHERE '
                            'nikkiid = ?', (id,))
-        tags = ' '.join(self.gettag(i[0]) for i in tags_id) if tags_id else ''
+        tags = ' '.join(self._gettag(i[0]) for i in tags_id) if tags_id else ''
         formats = self.exe('SELECT start,length,type FROM TextFormat '
                            'WHERE nikkiid=?', (id,))
         # cursor object only generates once, so we make a list
@@ -143,21 +143,27 @@ class Nikki:
     def count(self):
         return self.exe('SELECT COUNT(id) FROM Nikki').fetchone()[0]
 
-    def gettag(self, tagid=None, *, getcount=False):
-        if tagid:  # get tags by id
-            return self.exe(
-                'SELECT name FROM Tags WHERE id = ?', (tagid,)).fetchone()[0]
-        else:  # get all tags
-            if getcount:  # get with counts, used in TagList
-                return self.exe(sql_tag_with_count)
-            else:  # get without counts, used in TagCompleter
-                result = self.exe('SELECT name FROM Tags')
-                return [n[0] for n in result]
+    def gettags(self, getcount=False):
+        """Get all tags from database,return a generator.If getcount is True,
+        return two-tuples (name, count) generator"""
+        if getcount:  # get with counts, used in TagList
+            return ((r[0], r[1]) for r in self.exe(sql_tag_with_count))
+        else:
+            return (n[0] for n in self.exe('SELECT name FROM Tags'))
 
-    def gettagid(self, name):
+    def _gettag(self, tagid):
+        return self.exe(
+            'SELECT name FROM Tags WHERE id = ?', (tagid,)).fetchone()[0]
+
+    def _gettagid(self, name):
         """Get tag-id by name"""
         return self.exe('SELECT id FROM Tags WHERE name=?',
                         (name,)).fetchone()[0]
+
+    def changetagname(self, oldname, name):
+        """Change tag's name only,leave associated diaries unchanged"""
+        self.exe('UPDATE Tags SET name=? WHERE name=?', (name, oldname))
+        self.commit()
 
     def save(self, new, id, datetime, title, tags, text, formats, batch=False):
         """
@@ -185,11 +191,11 @@ class Nikki:
                 self.exe('DELETE FROM Nikki_Tags WHERE nikkiid=?', (id,))
             for t in tags.split():
                 try:
-                    tag_id = self.gettagid(t)
+                    tag_id = self._gettagid(t)
                 except TypeError:  # tag not exists
                     self.exe('INSERT INTO Tags VALUES(NULL,?)', (t,))
                     self.commit()
-                    tag_id = self.gettagid(t)
+                    tag_id = self._gettagid(t)
                 self.exe('INSERT INTO Nikki_Tags VALUES(?,?)', (id, tag_id))
         if not batch:
             self.commit()

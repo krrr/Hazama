@@ -1,11 +1,11 @@
 from PySide.QtGui import *
 from PySide.QtCore import *
+import logging
+import random
 from ui import font, datetimeTrans, currentDatetime
 from ui.editor import Editor
 from ui.customobjects import NTextDocument, MultiSortFilterProxyModel
 from config import settings, nikki
-import logging
-import random
 
 
 class NListDelegate(QStyledItemDelegate):
@@ -162,10 +162,9 @@ class TagList(QListWidget):
         logging.debug('load Tag List')
         item_all = QListWidgetItem(self)
         item_all.setData(Qt.DisplayRole, self.tr('All'))
-        for t in nikki.gettag(getcount=True):
-            item = QListWidgetItem(self)
-            item.setData(Qt.DisplayRole, t[0])
-            item.setData(Qt.UserRole, t[1])
+        for name, count in nikki.gettags(getcount=True):
+            item = QListWidgetItem(name, self)
+            item.setData(Qt.UserRole, count)
 
     def reload(self):
         if self.isVisible():
@@ -415,4 +414,3 @@ class NikkiList(QListView):
     def setFilterByTag(self, s):
         self.modelProxy.setFilterFixedString(0, s)
         self.countChanged.emit()
-
