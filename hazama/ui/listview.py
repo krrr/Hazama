@@ -116,7 +116,9 @@ class TListDelegate(QStyledItemDelegate):
 
     def paint(self, painter, option, index):
         x, y, w = option.rect.x(), option.rect.y(), option.rect.width()
-        tag, count = index.data(Qt.DisplayRole), str(index.data(Qt.UserRole))
+        tag, count = index.data(Qt.DisplayRole), index.data(Qt.UserRole)
+        if count is not None:
+            count = str(count)
         painter.setFont(font.default)
         selected = bool(option.state & QStyle.State_Selected)
         textArea = QRect(x+4, y, w-8, self.h)
@@ -135,12 +137,14 @@ class TListDelegate(QStyledItemDelegate):
             # draw tag
             painter.setPen(QColor(20, 20, 20) if selected else
                            QColor(80, 80, 80))
-            tag = font.default_m.elidedText(tag, Qt.ElideRight,
-                                            w-font.date_m.width(count)-12)
+            tag = font.default_m.elidedText(
+                tag, Qt.ElideRight,
+                w-12 if count is None else w-font.date_m.width(count)-12)
             painter.drawText(textArea, Qt.AlignVCenter | Qt.AlignLeft, tag)
             # draw tag count
-            painter.setFont(font.date)
-            painter.drawText(textArea, Qt.AlignVCenter | Qt.AlignRight, count)
+            if count is not None:
+                painter.setFont(font.date)
+                painter.drawText(textArea, Qt.AlignVCenter | Qt.AlignRight, count)
 
     def sizeHint(self, option, index):
         return QSize(-1, self.h)
@@ -160,11 +164,14 @@ class TagList(QListWidget):
 
     def load(self):
         logging.debug('load Tag List')
-        item_all = QListWidgetItem(self)
-        item_all.setData(Qt.DisplayRole, self.tr('All'))
-        for name, count in nikki.gettags(getcount=True):
-            item = QListWidgetItem(name, self)
-            item.setData(Qt.UserRole, count)
+        itemAll = QListWidgetItem(self.tr('All'), self)
+        if settings['Main'].getint('taglistcount', 1):
+            for name, count in nikki.gettags(getcount=True):
+                item = QListWidgetItem(name, self)
+                item.setData(Qt.UserRole, count)
+        else:
+            for name in nikki.gettags(getcount=False):
+                item = QListWidgetItem(name, self)
 
     def reload(self):
         if self.isVisible():
