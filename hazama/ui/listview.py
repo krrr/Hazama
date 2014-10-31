@@ -179,7 +179,7 @@ class TagList(QListWidget):
         index = self.indexAt(event.pos())
         if index.row() > 0:
             menu = QMenu()
-            menu.addAction(QAction(self.tr('Edit tag'), menu,
+            menu.addAction(QAction(self.tr('Rename'), menu,
                                    triggered=lambda: self.edit(index)))
             menu.exec_(event.globalPos())
 
