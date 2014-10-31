@@ -83,6 +83,22 @@
         </layout>
        </item>
        <item>
+        <widget class="QGroupBox" name="listBox">
+         <property name="title">
+          <string>Lists</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_8">
+          <item>
+           <widget class="QCheckBox" name="tListCountCheck">
+            <property name="text">
+             <string>Show counts in TagList</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
         <widget class="QGroupBox" name="editorBox">
          <property name="title">
           <string>Editor</string>

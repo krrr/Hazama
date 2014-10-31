@@ -23,6 +23,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
         self.setupUi(self)
         # load settings
         self.aindCheck.setChecked(settings['Editor'].getint('autoindent', 1))
+        self.tListCountCheck.setChecked(settings['Main'].getint('taglistcount', 1))
         self.tfocusCheck.setChecked(settings['Editor'].getint('titlefocus', 0))
         self.bkCheck.setChecked(settings['Main'].getint('backup', 1))
         # load settings(language ComboBox)
@@ -49,6 +50,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
 
     def accept(self):
         settings['Editor']['autoindent'] = str(self.aindCheck.isChecked().real)
+        settings['Main']['taglistcount'] = str(self.tListCountCheck.isChecked().real)
         settings['Editor']['titlefocus'] = str(self.tfocusCheck.isChecked().real)
         settings['Main']['backup'] = str(self.bkCheck.isChecked().real)
         settings['Main']['previewlines'] = str(self.preLinesBox.value())
@@ -103,4 +105,3 @@ class ConfigDialog(QDialog, Ui_configDialog):
         """Set Font Button's text and font"""
         btn.setFont(f)
         btn.setText('%s %spt' % (f.family(), f.pointSize()))
-
