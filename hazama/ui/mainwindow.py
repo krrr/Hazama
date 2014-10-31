@@ -97,7 +97,7 @@ class MainWindow(QMainWindow, Ui_mainWindow):
                 return QColor(*cellColors[3])
 
         colorFunc.cached = {}
-        model = self.nList.model
+        model = self.nList.originModel
         for i in range(model.rowCount()):
             dt, length = model.index(i, 1).data(), model.index(i, 6).data()
             year, month, last = dt.split('-')
@@ -134,6 +134,5 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         'XX diaries' format is just fine, don't use 'XX diaries,XX results'."""
         filtered = (self.nList.modelProxy.filterFixedString(0)
                     or self.nList.modelProxy.filterFixedString(1))
-        c = self.nList.modelProxy.rowCount() if filtered else self.nList.model.rowCount()
+        c = self.nList.modelProxy.rowCount() if filtered else self.nList.originModel.rowCount()
         self.countLabel.setText(self.tr('%i diaries') % c)
-

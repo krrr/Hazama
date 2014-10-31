@@ -104,10 +104,6 @@ class NListDelegate(QStyledItemDelegate):
         self.all_h = self.titleArea_h + 2 + self.text_h + tag_h + 6
         return QSize(-1, self.all_h+3)  # 3 is spacing between entries
 
-    def createEditor(self, *__):
-        """Disable default editor. Editor is implemented in the View"""
-        return None
-
 
 class TListDelegate(QStyledItemDelegate):
     def __init__(self, parent=None):
@@ -146,32 +142,81 @@ class TListDelegate(QStyledItemDelegate):
                 painter.setFont(font.date)
                 painter.drawText(textArea, Qt.AlignVCenter | Qt.AlignRight, count)
 
+    def createEditor(self, parent, option, index):
+        # delegate will hold the reference to editor
+        editor = QLineEdit(parent, objectName='tagListEdit')
+        editor.oldText = index.data()
+        return editor
+
+    def updateEditorGeometry(self, editor, option, index):
+        rect = option.rect
+        rect.translate(1,1)
+        rect.setWidth(rect.width()-2)
+        rect.setHeight(rect.height()-1)
+        editor.setGeometry(rect)
+
     def sizeHint(self, option, index):
         return QSize(-1, self.h)
 
 
 class TagList(QListWidget):
     currentTagChanged = Signal(str)  # str is tag-name or ''
+    tagNameModified = Signal(str)  # arg: newTagName
+    _afterEditEnded= False
 
     def __init__(self, *args, **kwargs):
         super(TagList, self).__init__(*args, **kwargs)
         self.setItemDelegate(TListDelegate(self))
+        self.setEditTriggers(QAbstractItemView.EditKeyPressed)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollMode(QAbstractItemView.ScrollPerPixel)
         self.setUniformItemSizes(True)
         self.trackList = None  # update in mousePressEvent
         self.currentItemChanged.connect(self.emitCurrentTagChanged)
 
+    def contextMenuEvent(self, event):
+        # ignore "All" item. cursor must over the item
+        index = self.indexAt(event.pos())
+        if index.row() > 0:
+            menu = QMenu()
+            menu.addAction(QAction(self.tr('Edit tag'), menu,
+                                   triggered=lambda: self.edit(index)))
+            menu.exec_(event.globalPos())
+
+    def closeEditor(self, editor, hint):
+        # if we clicked some other tags to end editing, that tag will be seleced,
+        # which is annoying. here use a flag to stop it in mouse event.
+        if self.hasFocus():
+            # focus have moved from *Editor* to TagList, selection will change soon
+            self._afterEditEnded = True
+        super(TagList, self).closeEditor(editor, hint)
+
+    def commitData(self, editor):
+        newName = editor.text()
+        if editor.isModified() and newName and ' ' not in newName:
+            try:
+                nikki.changetagname(editor.oldText, newName)
+            except Exception:
+                logging.warning('failed to change tag name')
+                return
+            logging.info('tag [%s] changed to [%s]', editor.oldText, newName)
+            super(TagList, self).commitData(editor)
+            # editor.oldText is set in delegate
+            self.tagNameModified.emit(newName)
+
     def load(self):
         logging.debug('load Tag List')
         itemAll = QListWidgetItem(self.tr('All'), self)
+        itemFlag = Qt.ItemIsEditable | Qt.ItemIsSelectable | Qt.ItemIsEnabled
         if settings['Main'].getint('taglistcount', 1):
             for name, count in nikki.gettags(getcount=True):
                 item = QListWidgetItem(name, self)
+                item.setFlags(itemFlag)
                 item.setData(Qt.UserRole, count)
         else:
             for name in nikki.gettags(getcount=False):
                 item = QListWidgetItem(name, self)
+                item.setFlags(itemFlag)
 
     def reload(self):
         if self.isVisible():
@@ -208,12 +253,14 @@ class TagList(QListWidget):
                 scrollbar.setValue(scrollbar.value() - change)
 
     def mouseReleaseEvent(self, event):
-        if self.trackList is not None:
-            if len(self.trackList) <= 4:  # haven't moved
+        if self.trackList is not None and len(self.trackList) <= 4:  # haven't moved
+            if not self._afterEditEnded:
                 pEvent = QMouseEvent(QEvent.MouseButtonPress, event.pos(),
                                      event.globalPos(), Qt.LeftButton,
                                      Qt.LeftButton, Qt.NoModifier)
                 QListWidget.mousePressEvent(self, pEvent)
+            else:  # cancel selection change
+                self._afterEditEnded = False
         self.trackList = None
 
 
@@ -224,11 +271,13 @@ class NikkiList(QListView):
     def __init__(self, parent=None):
         super(NikkiList, self).__init__(parent)
         self.setItemDelegate(NListDelegate(self))
+        # disable default editor. Editor is implemented in the View
+        self.setEditTriggers(QAbstractItemView.NoEditTriggers)
         # setup models
-        self.model = QStandardItemModel(0, 7, self)
-        self.fillModel(self.model)
+        self.originModel = QStandardItemModel(0, 7, self)
+        self.fillModel(self.originModel)
         self.modelProxy = MultiSortFilterProxyModel(self)
-        self.modelProxy.setSourceModel(self.model)
+        self.modelProxy.setSourceModel(self.originModel)
         self.modelProxy.setDynamicSortFilter(True)
         self.modelProxy.addFilterKey(0, cols=[4])
         self.modelProxy.addFilterKey(1, cols=[1, 2, 3])
@@ -315,16 +364,16 @@ class NikkiList(QListView):
             # write to model
             self.modelProxy.setSourceModel(None)
             if isNew:
-                self.model.insertRow(0)
+                self.originModel.insertRow(0)
                 row = 0
             else:
-                row = self.model.findItems(str(realId))[0].row()
+                row = self.originModel.findItems(str(realId))[0].row()
             cols = (realId, dt, text, title, tags, formats, len(text))
             for c, d in zip(range(7), cols):
-                self.model.setData(self.model.index(row, c), d)
-            self.modelProxy.setSourceModel(self.model)
+                self.originModel.setData(self.originModel.index(row, c), d)
+            self.modelProxy.setSourceModel(self.originModel)
             self.setCurrentIndex(self.modelProxy.mapFromSource(
-                self.model.index(row, 0)))
+                self.originModel.index(row, 0)))
         if isNew:
             self.countChanged.emit()
         if editor.tagModified:
@@ -346,10 +395,10 @@ class NikkiList(QListView):
 
     def reload(self):
         self.modelProxy.setSourceModel(None)
-        self.model.deleteLater()
-        self.model = QStandardItemModel(0, 7, self)
-        self.fillModel(self.model)
-        self.modelProxy.setSourceModel(self.model)
+        self.originModel.deleteLater()
+        self.originModel = QStandardItemModel(0, 7, self)
+        self.fillModel(self.originModel)
+        self.modelProxy.setSourceModel(self.originModel)
 
     def delNikki(self):
         if len(self.selectedIndexes()) == 0: return
@@ -363,7 +412,7 @@ class NikkiList(QListView):
                        for i in self.selectedIndexes()]
             for i in indexes: nikki.delete(i.data())
             for i in sorted([i.row() for i in indexes], reverse=True):
-                self.model.removeRow(i)
+                self.originModel.removeRow(i)
             self.countChanged.emit()
             self.tagsChanged.emit()  # tags might changed
 
@@ -400,7 +449,7 @@ class NikkiList(QListView):
         if len(self.editors) > 1: return
         id = list(self.editors.keys())[0]
         assert id != -1
-        index = self.model.findItems(str(id))[0].index()
+        index = self.originModel.findItems(str(id))[0].index()
         rowInProxy = self.modelProxy.mapFromSource(index).row()
         if ((step == -1 and rowInProxy == 0) or
            (step == 1 and rowInProxy == self.modelProxy.rowCount() - 1)):
@@ -421,3 +470,17 @@ class NikkiList(QListView):
     def setFilterByTag(self, s):
         self.modelProxy.setFilterFixedString(0, s)
         self.countChanged.emit()
+
+    @Slot(str)
+    def refreshFilteredTags(self, newTagName):
+        """Refresh items with old tag in current modelProxy after a tag's name
+        changed, and replace old tag name in filter"""
+        model, modelP = self.originModel, self.modelProxy
+        needRefresh = [modelP.mapToSource(modelP.index(i, 0))
+                       for i in range(modelP.rowCount())]
+        modelP.setSourceModel(None)
+        for i in needRefresh:
+            diary = nikki[i.data()]
+            model.setData(i.sibling(i.row(), 4), diary['tags'])
+        self.setFilterByTag(newTagName)
+        modelP.setSourceModel(model)

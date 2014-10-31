@@ -190,6 +190,8 @@
     <slot>delNikki()</slot>
     <slot>startEditorNew()</slot>
     <slot>setFilterByTag(QString)</slot>
+    <slot>reload()</slot>
+    <slot>refreshFilteredTags(QString)</slot>
    </slots>
   </customwidget>
   <customwidget>
@@ -198,6 +200,7 @@
    <header>listview</header>
    <slots>
     <signal>currentTagChanged(QString)</signal>
+    <signal>tagNameModified(QString)</signal>
     <slot>reload()</slot>
    </slots>
   </customwidget>
@@ -297,6 +300,22 @@
    <signal>currentTagChanged(QString)</signal>
    <receiver>nList</receiver>
    <slot>setFilterByTag(QString)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>50</x>
+     <y>241</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>305</x>
+     <y>241</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>tList</sender>
+   <signal>tagNameModified(QString)</signal>
+   <receiver>nList</receiver>
+   <slot>refreshFilteredTags(QString)</slot>
    <hints>
     <hint type="sourcelabel">
      <x>50</x>

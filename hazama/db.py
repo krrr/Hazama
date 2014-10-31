@@ -18,6 +18,8 @@ SELECT Tags.name, (SELECT COUNT(*) FROM Nikki_Tags
                    WHERE Nikki_Tags.tagid=Tags.id) AS count
 FROM Tags'''
 
+sql_nikki_formats = 'SELECT start,length,type FROM TextFormat WHERE nikkiid=?'
+
 
 class Nikki:
     """This class hold a SQLite3 database,handling save/read/import/export.
@@ -62,18 +64,23 @@ class Nikki:
         return self
 
     def __next__(self):
-        l = self.iter_all.fetchone()
-        if l is None:
+        r = self.iter_all.fetchone()
+        if r is None:
             raise StopIteration
-        id = l[0]
-        tags_id = self.exe('SELECT tagid FROM Nikki_Tags WHERE '
-                           'nikkiid = ?', (id,))
-        tags = ' '.join(self._gettag(i[0]) for i in tags_id) if tags_id else ''
-        formats = self.exe('SELECT start,length,type FROM TextFormat '
-                           'WHERE nikkiid=?', (id,))
+        tags = self._getnikkitags(r[0])
+        formats = self.exe(sql_nikki_formats, (r[0],))
         # cursor object only generates once, so we make a list
         formats = list(formats) if formats else None
-        return dict(id=id, title=l[3], datetime=l[1], text=l[2],
+        return dict(id=r[0], title=r[3], datetime=r[1], text=r[2],
+                    tags=tags, formats=formats)
+
+    def __getitem__(self, key):
+        r = self.exe('SELECT * FROM Nikki WHERE id=?', (key,)).fetchone()
+        tags = self._getnikkitags(r[0])
+        formats = self.exe(sql_nikki_formats, (r[0],))
+        # cursor object only generates once, so we make a list
+        formats = list(formats) if formats else None
+        return dict(id=r[0], title=r[3], datetime=r[1], text=r[2],
                     tags=tags, formats=formats)
 
     def connect(self, db_path):
@@ -151,9 +158,12 @@ class Nikki:
         else:
             return (n[0] for n in self.exe('SELECT name FROM Tags'))
 
-    def _gettag(self, tagid):
-        return self.exe(
-            'SELECT name FROM Tags WHERE id = ?', (tagid,)).fetchone()[0]
+    def _getnikkitags(self, id):
+        tags_id = self.exe('SELECT tagid FROM Nikki_Tags WHERE '
+                           'nikkiid=?', (id,))
+        return ' '.join(self.exe('SELECT name FROM Tags WHERE id = ?',
+                                 (i[0],)).fetchone()[0]
+                        for i in tags_id) if tags_id else ''
 
     def _gettagid(self, name):
         """Get tag-id by name"""
