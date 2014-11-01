@@ -32,7 +32,7 @@
         <translation type="obsolete">修改创建时间</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/customwidgets.py" line="176"/>
+        <location filename="../hazama/ui/customwidgets.py" line="196"/>
         <source>Edit datetime</source>
         <translation>修改日期时间</translation>
     </message>
@@ -178,7 +178,7 @@ If database path is correct, should recover this file by hand or restore from ba
         <translation type="obsolete">设置</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/mainwindow.py" line="138"/>
+        <location filename="../hazama/ui/mainwindow.py" line="173"/>
         <source>%i diaries</source>
         <translation>%i 篇日记</translation>
     </message>
@@ -191,6 +191,26 @@ If database path is correct, should recover this file by hand or restore from ba
         <location filename="../hazama/ui/mainwindow.py" line="94"/>
         <source>%i results</source>
         <translation type="obsolete">%i 件结果</translation>
+    </message>
+    <message>
+        <location filename="../hazama/ui/mainwindow.py" line="55"/>
+        <source>Date</source>
+        <translation>日期</translation>
+    </message>
+    <message>
+        <location filename="../hazama/ui/mainwindow.py" line="57"/>
+        <source>Title</source>
+        <translation>标题</translation>
+    </message>
+    <message>
+        <location filename="../hazama/ui/mainwindow.py" line="59"/>
+        <source>Length</source>
+        <translation>长度</translation>
+    </message>
+    <message>
+        <location filename="../hazama/ui/mainwindow.py" line="61"/>
+        <source>Reverse</source>
+        <translation>倒序排列</translation>
     </message>
 </context>
 <context>
@@ -254,37 +274,37 @@ If database path is correct, should recover this file by hand or restore from ba
 <context>
     <name>NTextEdit</name>
     <message>
-        <location filename="../hazama/ui/customwidgets.py" line="37"/>
+        <location filename="../hazama/ui/customwidgets.py" line="35"/>
         <source>Format</source>
         <translation>格式</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/customwidgets.py" line="39"/>
+        <location filename="../hazama/ui/customwidgets.py" line="37"/>
         <source>Highlight</source>
         <translation>高亮</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/customwidgets.py" line="45"/>
+        <location filename="../hazama/ui/customwidgets.py" line="43"/>
         <source>Strike out</source>
         <translation>删除线</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/customwidgets.py" line="42"/>
+        <location filename="../hazama/ui/customwidgets.py" line="40"/>
         <source>Bold</source>
         <translation>粗体</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/customwidgets.py" line="48"/>
+        <location filename="../hazama/ui/customwidgets.py" line="46"/>
         <source>Underline</source>
         <translation>下划线</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/customwidgets.py" line="51"/>
+        <location filename="../hazama/ui/customwidgets.py" line="49"/>
         <source>Italic</source>
         <translation>斜体</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/customwidgets.py" line="54"/>
+        <location filename="../hazama/ui/customwidgets.py" line="52"/>
         <source>Clear format</source>
         <translation>清除格式</translation>
     </message>
@@ -292,22 +312,22 @@ If database path is correct, should recover this file by hand or restore from ba
 <context>
     <name>NikkiList</name>
     <message>
-        <location filename="../hazama/ui/listview.py" line="287"/>
+        <location filename="../hazama/ui/listview.py" line="288"/>
         <source>Edit</source>
         <translation>编辑</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/listview.py" line="290"/>
+        <location filename="../hazama/ui/listview.py" line="291"/>
         <source>Delete</source>
         <translation>删除</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/listview.py" line="294"/>
+        <location filename="../hazama/ui/listview.py" line="295"/>
         <source>Random</source>
         <translation>随机</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/listview.py" line="405"/>
+        <location filename="../hazama/ui/listview.py" line="407"/>
         <source>Delete selected diaries</source>
         <translation>删除选中的日记</translation>
     </message>
@@ -317,17 +337,17 @@ If database path is correct, should recover this file by hand or restore from ba
         <translation type="obsolete">选中的日记将被永久删除，确认码？</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/listview.py" line="422"/>
+        <location filename="../hazama/ui/listview.py" line="424"/>
         <source>Export Diary</source>
         <translation>导出日记</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/listview.py" line="423"/>
+        <location filename="../hazama/ui/listview.py" line="425"/>
         <source>Plain Text (*.txt);;Rich Text (*.rtf)</source>
         <translation>纯文本 (*.txt);;富文本 (*.rtf)</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/listview.py" line="407"/>
+        <location filename="../hazama/ui/listview.py" line="409"/>
         <source>Selected diaries will be deleted permanently!</source>
         <translation>选中的日记将被永久删除！</translation>
     </message>
@@ -335,7 +355,7 @@ If database path is correct, should recover this file by hand or restore from ba
 <context>
     <name>SearchBox</name>
     <message>
-        <location filename="../hazama/ui/customwidgets.py" line="168"/>
+        <location filename="../hazama/ui/customwidgets.py" line="188"/>
         <source>Search</source>
         <translation>搜索</translation>
     </message>
@@ -537,7 +557,7 @@ If database path is correct, should recover this file by hand or restore from ba
     <message>
         <location filename="../hazama/ui/customwidgets.py" line="245"/>
         <source>Title</source>
-        <translation>标题</translation>
+        <translation type="obsolete">标题</translation>
     </message>
     <message>
         <location filename="Hazama.py" line="752"/>
@@ -547,17 +567,17 @@ If database path is correct, should recover this file by hand or restore from ba
     <message>
         <location filename="../hazama/ui/customwidgets.py" line="249"/>
         <source>Reverse</source>
-        <translation>倒序排列</translation>
+        <translation type="obsolete">倒序排列</translation>
     </message>
     <message>
         <location filename="../hazama/ui/customwidgets.py" line="247"/>
         <source>Length</source>
-        <translation>长度</translation>
+        <translation type="obsolete">长度</translation>
     </message>
     <message>
         <location filename="../hazama/ui/customwidgets.py" line="243"/>
         <source>Date</source>
-        <translation>日期</translation>
+        <translation type="obsolete">日期</translation>
     </message>
 </context>
 <context>
@@ -571,7 +591,7 @@ If database path is correct, should recover this file by hand or restore from ba
 <context>
     <name>TagList</name>
     <message>
-        <location filename="../hazama/ui/listview.py" line="241"/>
+        <location filename="../hazama/ui/listview.py" line="242"/>
         <source>All</source>
         <translation>全部</translation>
     </message>
