@@ -100,6 +100,28 @@ class NTextEdit(QTextEdit, TextFormatter):
         parser = QtHtmlParser()
         return parser.feed(self.toHtml())
 
+    def checkFormats(self):
+        """Check formats in current selection and check or uncheck actions"""
+        checkFuncs = [lambda x: x.background().color() == self.HlColor,
+                      lambda x: x.fontWeight() == QFont.Bold,
+                      lambda x: x.fontStrikeOut(),
+                      lambda x: x.fontUnderline(),
+                      lambda x: x.fontItalic()]
+        cur = self.textCursor()
+        start, end = cur.anchor(), cur.position()
+        if start > end:
+            start, end = end, start
+        results = [True] * 5
+        for pos in range(end, start, -1):
+            cur.setPosition(pos)
+            charFmt = cur.charFormat()
+            for i, f in enumerate(checkFuncs):
+                if results[i] and not f(charFmt):
+                    results[i] = False
+            if not any(results): break
+        for i, c in enumerate(results):
+            self.acts[i].setChecked(c)
+
     def clearFormat(self):
         fmt = QTextCharFormat()
         self.textCursor().setCharFormat(fmt)
