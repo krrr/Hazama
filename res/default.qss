@@ -13,6 +13,10 @@ QListWidget#tList {
     border: 0px;
 }
 
+QLineEdit#tagListEdit {
+    border: none;
+}
+
 QMainWindow QSplitter::handle {background: #b53d00;}
 
 QMainWindow QToolBar {
