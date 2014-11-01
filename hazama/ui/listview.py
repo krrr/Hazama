@@ -182,6 +182,7 @@ class TagList(QListWidget):
             menu.addAction(QAction(self.tr('Rename'), menu,
                                    triggered=lambda: self.edit(index)))
             menu.exec_(event.globalPos())
+            menu.deleteLater()
 
     def closeEditor(self, editor, hint):
         # if we clicked some other tags to end editing, that tag will be seleced,
@@ -283,7 +284,7 @@ class NikkiList(QListView):
         self.modelProxy.addFilterKey(1, cols=[1, 2, 3])
         self.setModel(self.modelProxy)
         self.sort()
-        # setup context menu
+        # setup actions
         self.editAct = QAction(self.tr('Edit'), self,
                                triggered=self.startEditor)
         self.delAct = QAction(QIcon(':/menu/list_delete.png'),
@@ -295,22 +296,23 @@ class NikkiList(QListView):
                                shortcut=QKeySequence(Qt.Key_F7),
                                triggered=self.selectRandomly)
         for i in [self.editAct, self.delAct, self.randAct]: self.addAction(i)
-        self.menu = QMenu(self)
-        self.menu.addAction(self.editAct)
-        self.menu.addAction(self.delAct)
-        self.menu.addSeparator()
-        self.menu.addAction(self.randAct)
         # setup editors
         self.editors = {}
         self.doubleClicked.connect(self.startEditor)
         self.activated.connect(self.startEditor)
 
     def contextMenuEvent(self, event):
+        menu = QMenu()
+        menu.addAction(self.editAct)
+        menu.addAction(self.delAct)
+        menu.addSeparator()
+        menu.addAction(self.randAct)
         selectionCount = len(self.selectedIndexes())
         self.editAct.setDisabled(selectionCount != 1)
         self.delAct.setDisabled(selectionCount == 0)
         self.randAct.setDisabled(selectionCount == 0)
-        self.menu.popup(event.globalPos())
+        menu.exec_(event.globalPos())
+        menu.deleteLater()
 
     def selectRandomly(self):
         randRow = random.randrange(0, self.modelProxy.rowCount())
