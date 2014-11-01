@@ -191,15 +191,15 @@ class SearchBox(QLineEditWithMenuIcon):
 
 
 class DateTimeDialog(QDialog):
-    def __init__(self, dt, format, parent=None):
+    def __init__(self, dt, displayFmt, parent=None):
         super(DateTimeDialog, self).__init__(parent, Qt.WindowTitleHint)
-        self.format = format
+        self.format = displayFmt
         self.setWindowModality(Qt.WindowModal)
         self.setWindowTitle(self.tr('Edit datetime'))
         self.setMinimumWidth(100)
         self.verticalLayout = QVBoxLayout(self)
         self.dtEdit = QDateTimeEdit(dt, self)
-        self.dtEdit.setDisplayFormat(format)
+        self.dtEdit.setDisplayFormat(displayFmt)
         self.verticalLayout.addWidget(self.dtEdit)
         self.btnBox = QDialogButtonBox(self)
         self.btnBox.setOrientation(Qt.Horizontal)
@@ -210,9 +210,11 @@ class DateTimeDialog(QDialog):
         self.btnBox.rejected.connect(self.reject)
 
     @staticmethod
-    def getDateTime(dt, format, parent):
-        """Run Dialog,return None if canceled else time string"""
-        dialog = DateTimeDialog(dt, format, parent)
+    def getDateTime(dt, displayFmt, parent):
+        """Show a model datetime dialog, let user change it.
+        :param displayFmt: the Qt datetime format that used to display
+        :return: None if canceled else datetime"""
+        dialog = DateTimeDialog(dt, displayFmt, parent)
         ret = dialog.exec_()
         dialog.deleteLater()
         return dialog.dtEdit.dateTime() if ret else None
