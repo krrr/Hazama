@@ -1,10 +1,8 @@
 from PySide.QtCore import *
 from PySide.QtGui import *
-import re
 from html.parser import HTMLParser
 from ui import setStdEditMenuIcons
 from ui.customobjects import TextFormatter, NTextDocument
-from config import settings
 
 
 class QLineEditWithMenuIcon(QLineEdit):
@@ -254,45 +252,3 @@ class QtHtmlParser(HTMLParser):
     def handle_entityref(self, name):
         # handle_data will ignore &,<,>
         self.pos_plain += 1
-
-
-class SortOrderMenu(QMenu):
-    """Menu used to Change sort order of NList."""
-    orderChanged = Signal()
-
-    def __init__(self, parent=None):
-        super(SortOrderMenu, self).__init__(parent)
-        # create actions
-        group = QActionGroup(self)
-        self.datetime = QAction(self.tr('Date'), group)
-        self.datetime.name = 'datetime'
-        self.title = QAction(self.tr('Title'), group)
-        self.title.name = 'title'
-        self.length = QAction(self.tr('Length'), group)
-        self.length.name = 'length'
-        self.reverse = QAction(self.tr('Reverse'), self)
-        self.orders = (self.datetime, self.title, self.length)
-        for a in self.orders:
-            a.setCheckable(True)
-            self.addAction(a)
-            a.triggered[bool].connect(self.signalEmitter)
-        self.addSeparator()
-        self.reverse.setCheckable(True)
-        self.addAction(self.reverse)
-        self.reverse.triggered[bool].connect(self.signalEmitter)
-        # restore from settings
-        orderSetting = settings['Main'].get('listsortby', 'datetime')
-        getattr(self, orderSetting, self.datetime).setChecked(True)
-        self.reverse.setChecked(settings['Main'].getint('listreverse', 1))
-
-    def signalEmitter(self, checked):
-        """Save new order to settings and emit a signal"""
-        sender = self.sender()
-        if hasattr(sender, 'name'):
-            if checked:
-                settings['Main']['listsortby'] = sender.name
-                self.orderChanged.emit()
-        else:
-            settings['Main']['listreverse'] = str(checked.real)
-            self.orderChanged.emit()
-

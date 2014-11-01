@@ -3,7 +3,7 @@ from PySide.QtCore import *
 import logging
 from itertools import chain
 from ui import font, setTranslationLocale
-from ui.customwidgets import SearchBox, SortOrderMenu
+from ui.customwidgets import SearchBox
 from ui.configdialog import ConfigDialog
 from ui.mainwindow_ui import Ui_mainWindow
 from ui.heatmap import HeatMap, cellColors
@@ -22,9 +22,7 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         if not self.isMaximized():
             self.splitter.setSizes([tListW, self.width()-tListW])
         # setup sort menu
-        sorMenu = SortOrderMenu(self)
-        sorMenu.orderChanged.connect(self.nList.sort)
-        self.sorAct.setMenu(sorMenu)
+        self.createSortMenu()
         self.toolBar.widgetForAction(self.sorAct).setPopupMode(QToolButton.InstantPopup)
         # Qt Designer doesn't allow us to add widget in toolbar
         # setup count label
@@ -47,6 +45,32 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         searchSc = QShortcut(QKeySequence.Find, self)
         searchSc.activated.connect(self.searchBox.setFocus)
         self.addAction(self.mapAct)
+
+    def createSortMenu(self):
+        """Add sort order menu to sorAct."""
+        menu = QMenu(self)
+        group = QActionGroup(menu)
+        datetime = QAction(self.tr('Date'), group)
+        datetime.name = 'datetime'
+        title = QAction(self.tr('Title'), group)
+        title.name = 'title'
+        length = QAction(self.tr('Length'), group)
+        length.name = 'length'
+        reverse = QAction(self.tr('Reverse'), menu)
+        orders = (datetime, title, length)
+        for a in orders:
+            a.setCheckable(True)
+            menu.addAction(a)
+            a.triggered[bool].connect(self.sortOrderChanged)
+        menu.addSeparator()
+        reverse.setCheckable(True)
+        menu.addAction(reverse)
+        reverse.triggered[bool].connect(self.sortOrderChanged)
+        # restore from settings
+        orderSetting = settings['Main'].get('listsortby', 'datetime')
+        locals().get(orderSetting, datetime).setChecked(True)
+        reverse.setChecked(settings['Main'].getint('listreverse', 1))
+        self.sorAct.setMenu(menu)
 
     def closeEvent(self, event):
         settings['Main']['windowgeo'] = str(self.saveGeometry().toHex())
@@ -116,6 +140,15 @@ class MainWindow(QMainWindow, Ui_mainWindow):
             self.heatMap.setWindowFlags(Qt.Window | Qt.WindowTitleHint)
             self.heatMap.setWindowTitle('HeatMap')
             self.heatMap.show()
+
+    def sortOrderChanged(self, checked):
+        if hasattr(self.sender(), 'name'):
+            if checked:
+                settings['Main']['listsortby'] = self.sender().name
+                self.nList.sort()
+        else:
+            settings['Main']['listreverse'] = str(checked.real)
+            self.nList.sort()
 
     def toggleTagList(self, checked):
         self.tList.setVisible(checked)
