@@ -6,6 +6,7 @@ from ui.customobjects import TextFormatter, NTextDocument
 
 
 class QLineEditWithMenuIcon(QLineEdit):
+    """A QLineEdit with system theme icons in context-menu"""
     def contextMenuEvent(self, event):
         menu = self.createStandardContextMenu()
         setStdEditMenuIcons(menu)
@@ -189,6 +190,7 @@ class SearchBox(QLineEditWithMenuIcon):
 
 
 class DateTimeDialog(QDialog):
+    """A dialog that let user change datetime, just like QColorDialog."""
     def __init__(self, dt, displayFmt, parent=None):
         super(DateTimeDialog, self).__init__(parent, Qt.WindowTitleHint)
         self.format = displayFmt
@@ -210,6 +212,8 @@ class DateTimeDialog(QDialog):
     @staticmethod
     def getDateTime(dt, displayFmt, parent):
         """Show a model datetime dialog, let user change it.
+        :param parent: parent widget
+        :param dt: datetime to change
         :param displayFmt: the Qt datetime format that used to display
         :return: None if canceled else datetime"""
         dialog = DateTimeDialog(dt, displayFmt, parent)
