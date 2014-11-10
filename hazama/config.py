@@ -29,4 +29,3 @@ except db.DatabaseError as e:
     import ui
     ui.showDbError(str(e))
     sys.exit(-1)
-

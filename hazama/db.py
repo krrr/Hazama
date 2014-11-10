@@ -270,4 +270,3 @@ def check_backup():
                 os.remove(os.path.join('backup', i))
             else:
                 break
-

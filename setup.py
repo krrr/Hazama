@@ -121,4 +121,3 @@ setup(name='Hazama',
       requires=['PySide'],
       cmdclass=cmdclass,
       **extra_opts)
-

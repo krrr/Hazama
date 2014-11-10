@@ -121,4 +121,3 @@ font.load()
 
 setTranslationLocale()
 setStyleSheet()
-

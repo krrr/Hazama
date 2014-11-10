@@ -86,4 +86,3 @@ class Editor(QWidget, Ui_editor):
             self.textEditor.setFocus()
             self.textEditor.moveCursor(QTextCursor.Start)
         event.accept()
-

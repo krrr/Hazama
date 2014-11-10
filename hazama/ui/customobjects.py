@@ -139,4 +139,3 @@ class MultiSortFilterProxyModel(QSortFilterProxyModel):
         self.keys.remove(keyNum)
         del self.strings[keynum]
         del self.keyColumns[keyNum]
-
