@@ -2,17 +2,9 @@ from PySide.QtGui import *
 from PySide.QtCore import *
 from itertools import chain
 
-
-cellLen = 9
-cellSpacing = 2
-monthSpacingX = 14
-monthSpacingY = 20
+# the default colors that represent heat of data
 cellColors = ((255, 255, 255), (255, 243, 208),
               (255, 221, 117), (255, 202, 40))
-
-_cellDis = cellLen + cellSpacing
-_monthDisX = _cellDis * 6 + cellLen + monthSpacingX
-_monthDisY = _cellDis * 4 + cellLen + monthSpacingY
 
 
 class HeatMap(QWidget):
@@ -100,7 +92,11 @@ class HeatMap(QWidget):
 
 class HeatMapView(QGraphicsView):
     cellColorFunc = lambda *args: Qt.white  # dummy
-    nameFontPx = 9
+    cellLen = 9
+    cellSpacing = 2
+    monthSpacingX = 14
+    monthSpacingY = 20
+    nameFontPx = 9  # month name
 
     def __init__(self, *args, **kwargs):
         super(HeatMapView, self).__init__(*args, **kwargs)
@@ -111,30 +107,41 @@ class HeatMapView(QGraphicsView):
         f.setPixelSize(self.nameFontPx)
         self.nameH = QFontMetrics(f).height()
         self.setFont(f)
-        self.scene.setSceneRect(0, 0, _monthDisX*3-monthSpacingX,
-                                _monthDisY*4-monthSpacingY+self.nameH)
+        # for convenience
+        self._cd = cellDis = self.cellLen + self.cellSpacing
+        self._mdx = monthDisX = cellDis * 6 + self.cellLen + self.monthSpacingX
+        self._mdy = monthDisY = cellDis * 4 + self.cellLen + self.monthSpacingY
+        self.scene.setSceneRect(0, 0, monthDisX*3-self.monthSpacingX,
+                                monthDisY*4-self.monthSpacingY+self.nameH)
         self.setScene(self.scene)
 
     def setupMap(self):
         locale, date, font, nameH = QLocale(), QDate(), self.font(), self.nameH
+        cellDis, monthDisX, monthDisY = self._cd, self._mdx, self._mdy
         for m in range(12):
             date.setDate(self.year, m+1, 1)
-            # cells. 7 days per line, index of line: (d//7)
-            monthItems = [QGraphicsRectItem(_cellDis*d-(d//7)*_cellDis*7, _cellDis*(d//7),
-                                            cellLen, cellLen)
+            # cells. 7 days per row, index of row: (d//7)
+            monthItems = [QGraphicsRectItem(cellDis*d-(d//7)*cellDis*7, cellDis*(d//7),
+                                            self.cellLen, self.cellLen)
                           for d in range(date.daysInMonth())]
             for (d, item) in enumerate(monthItems, 1):
-                item.setPen(QPen(self.cellBorderColor))
-                item.setBrush(self.cellColorFunc(self.year, m+1, d))
+                date.setDate(self.year, m+1, d)
+                if date <= QDate.currentDate():
+                    item.setPen(QPen(self.cellBorderColor))
+                    item.setBrush(self.cellColorFunc(self.year, m+1, d))
+                else:
+                    p = QPen(Qt.gray)
+                    p.setStyle(Qt.DotLine)
+                    item.setPen(p)
             monthGroup = self.scene.createItemGroup(monthItems)
             # 3 months per line
-            x, y = _monthDisX*m-(m//3)*_monthDisX*3, _monthDisY*(m//3)
+            x, y = monthDisX*m-(m//3)*monthDisX*3, monthDisY*(m//3)
             monthGroup.setPos(x, y+nameH)
             # month name
             monthText = self.scene.addSimpleText(locale.toString(date, 'MMM'), font)
             monthText.setPen(self.palette().color(QPalette.WindowText))
             nameW = monthText.boundingRect().width()
-            monthText.setPos(x+(_monthDisX-monthSpacingX-nameW)/2, y)
+            monthText.setPos(x+(monthDisX-self.monthSpacingX-nameW)/2, y)
 
     def resizeEvent(self, event):
         self.fitInView(self.scene.sceneRect(), Qt.KeepAspectRatio)
@@ -158,18 +165,22 @@ class HeatMapView(QGraphicsView):
 
 
 class ColorSampleView(QGraphicsView):
-    def __init__(self, parent=None, cellLen=9):
+    cellLen = 9
+    cellColors = cellColors
+
+    def __init__(self, parent=None, cellLen=None):
         super(ColorSampleView, self).__init__(parent, objectName='heatMapSample',
                                               alignment=Qt.AlignRight)
-        self.cellLen = cellLen
+        if cellLen:
+            self.cellLen = cellLen
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.scene = QGraphicsScene(self)
-        self.scene.setSceneRect(0, 0, cellLen*len(cellColors), cellLen)
+        self.scene.setSceneRect(0, 0, self.cellLen*len(self.cellColors), self.cellLen)
         self.setScene(self.scene)
 
     def setupMap(self):
-        for index, color in enumerate(cellColors):
+        for index, color in enumerate(self.cellColors):
             item = QGraphicsRectItem(self.cellLen*index, 0, self.cellLen, self.cellLen)
             item.setPen(QPen(Qt.darkGray))
             item.setBrush(QColor(*color))
