@@ -46,6 +46,11 @@ class HeatMap(QWidget):
         barLayout.addWidget(self.colorView)
         layout.addWidget(self.bar)
         layout.addWidget(self.view)
+        # setup shortcuts
+        self.preSc = QShortcut(QKeySequence(Qt.Key_Left), self, self.yearPre)
+        self.nextSc = QShortcut(QKeySequence(Qt.Key_Right), self, self.yearNext)
+        self.pre5Sc = QShortcut(QKeySequence(Qt.Key_Up), self, self.yearPre5)
+        self.next5Sc = QShortcut(QKeySequence(Qt.Key_Down), self, self.yearNext5)
 
     def setupYearMenu(self):
         group, menu, curtYear = self._yearActGroup, self.yearMenu, self.view.year
@@ -63,15 +68,18 @@ class HeatMap(QWidget):
     def setColorFunc(self, f):
         self.view.cellColorFunc = f
 
-    def yearPre(self):
-        self.view.year -= 1
+    def _moveYear(self, offset):
+        self.view.year += offset
         self.yearBtn.setText(str(self.view.year))
         self.setupYearMenu()
 
-    def yearNext(self):
-        self.view.year += 1
-        self.yearBtn.setText(str(self.view.year))
-        self.setupYearMenu()
+    def yearPre(self): self._moveYear(-1)
+
+    def yearNext(self): self._moveYear(1)
+
+    def yearPre5(self): self._moveYear(-5)
+
+    def yearNext5(self): self._moveYear(5)
 
     def yearMenuAct(self):
         yearStr = self.sender().text()
