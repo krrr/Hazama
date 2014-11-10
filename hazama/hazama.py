@@ -5,7 +5,7 @@ import os
 import time
 
 
-__version__ = '0.15'
+__version__ = '0.20'
 
 
 if __name__ == '__main__':
