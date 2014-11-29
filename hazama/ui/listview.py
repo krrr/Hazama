@@ -280,8 +280,8 @@ class NikkiList(QListView):
         self.modelProxy = MultiSortFilterProxyModel(self)
         self.modelProxy.setSourceModel(self.originModel)
         self.modelProxy.setDynamicSortFilter(True)
-        self.modelProxy.addFilterKey(0, cols=[4])
-        self.modelProxy.addFilterKey(1, cols=[1, 2, 3])
+        self.modelProxy.addFilter(cols=[4], cs=Qt.CaseSensitive)
+        self.modelProxy.addFilter(cols=[1, 2, 3], cs=Qt.CaseInsensitive)
         self.setModel(self.modelProxy)
         self.sort()
         # setup actions
@@ -466,11 +466,11 @@ class NikkiList(QListView):
         self.editors[newId].restoreGeometry(geo)
 
     def setFilterBySearchString(self, s):
-        self.modelProxy.setFilterFixedString(1, s)
+        self.modelProxy.setFilterPattern(1, s)
         self.countChanged.emit()
 
     def setFilterByTag(self, s):
-        self.modelProxy.setFilterFixedString(0, s)
+        self.modelProxy.setFilterPattern(0, s)
         self.countChanged.emit()
 
     @Slot(str)

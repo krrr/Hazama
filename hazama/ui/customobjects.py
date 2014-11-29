@@ -100,42 +100,53 @@ class NSplitter(QSplitter):
 
 
 class MultiSortFilterProxyModel(QSortFilterProxyModel):
-    """Simple Multi-Column ProxyModel, only supports fixed string"""
-    def __init__(self, *args):
-        super(MultiSortFilterProxyModel, self).__init__(*args)
-        self.keys = []
-        self.keyColumns = {}
-        self.strings = {}
+    """Multi-filter ProxyModel, every filter may associated with multiple columns,
+    if any of columns match then it will pass that filter."""
+    class Filter:
+        cols = regExp = None
+
+    def __init__(self, *args, **kwargs):
+        super(MultiSortFilterProxyModel, self).__init__(*args, **kwargs)
+        self._filters = []
 
     def filterAcceptsRow(self, sourceRow, sourceParent):
-        def checkOneKey(k):
-            pattern = self.strings[k]
-            for c in self.keyColumns[k]:
-                if pattern in str(model.data(model.index(sourceRow, c))):
+        model = self.sourceModel()
+
+        def checkOneFilter(f):
+            for c in f.cols:
+                if f.regExp.indexIn(model.data(model.index(sourceRow, c))) != -1:
                     return True
             return False
 
-        model = self.sourceModel()
-        for k in self.keys:
-            if not checkOneKey(k):
+        for f in self._filters:
+            if not checkOneFilter(f):
                 return False
         return True
 
-    def setFilterFixedString(self, keyNum, pattern):
-        self.strings[keyNum] = pattern
-        # let model update filter
+    def setFilterPattern(self, id, pattern):
+        """Set the filter's pattern specified by filter id"""
+        self._filters[id].regExp.setPattern(pattern)
+        # let filter model update
         super(MultiSortFilterProxyModel, self).setFilterFixedString('')
 
-    def filterFixedString(self, keyNum):
-        return self.strings[keyNum]
+    def filterPattern(self, id):
+        """Return the filter's pattern specified by filter id"""
+        return self._filters[id].regExp.pattern()
 
-    def addFilterKey(self, keyNum, cols):
-        """cols is a list contains columns"""
-        self.keys.append(keyNum)
-        self.keyColumns[keyNum] = cols
-        self.strings[keyNum] = ''
+    def addFilter(self, cols, patternSyntax=QRegExp.FixedString, cs=None):
+        """Add new filter into proxy model.
+        :param cols: a list contains columns to be filtered
+        :param cs: Qt::CaseSensitivity, if None then use model's setting
+        :return: the id of new filter, id starts from zero"""
+        assert patternSyntax in [QRegExp.FixedString, QRegExp.Wildcard,
+                                 QRegExp.WildcardUnix, QRegExp.RegExp], 'wrong pattern syntax'
+        f = MultiSortFilterProxyModel.Filter()
+        f.cols = tuple(cols)
+        f.regExp = QRegExp('', self.filterCaseSensitivity() if cs is None else cs,
+                           patternSyntax)
+        self._filters.append(f)
+        return len(self._filters) - 1
 
-    def removeFilterKey(self, keyNum):
-        self.keys.remove(keyNum)
-        del self.strings[keynum]
-        del self.keyColumns[keyNum]
+    def removeFilter(self, id):
+        """Remove the filter specified by its id"""
+        del self._filters[id]
