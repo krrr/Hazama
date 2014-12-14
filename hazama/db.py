@@ -71,6 +71,8 @@ class Nikki:
 
     def __getitem__(self, key):
         r = self.exe('SELECT * FROM Nikki WHERE id=?', (key,)).fetchone()
+        if r is None:
+            raise IndexError
         return self._makedict(r)
 
     def connect(self, db_path):
