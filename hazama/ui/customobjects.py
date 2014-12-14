@@ -35,6 +35,9 @@ class TextFormatter:
     """
     HlColor = QColor(248, 162, 109, 100)
 
+    # why these methods has silly parameter pre? it is used by NTextEdit
+    # (format context menu and format shortcut), and deleting this parm will
+    # add a pile of methods to NTextEdit.
     def setHL(self, pre=False):
         fmt = QTextCharFormat()
         doFormat = True if pre else self.hlAct.isChecked()
