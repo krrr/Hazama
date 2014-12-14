@@ -434,7 +434,7 @@ class NikkiList(QListView):
         if path == '': return    # dialog canceled
         if _type.endswith('txt)'):
             selected = (None if export_all else
-                        restore_dict(i) for i in self.selectedIndexes())
+                        (restore_dict(i) for i in self.selectedIndexes()))
             nikki.exporttxt(path, selected)
 
     def resetDelegate(self):
