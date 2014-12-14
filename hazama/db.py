@@ -60,28 +60,19 @@ class Nikki:
         logging.info(str(self))
 
     def __iter__(self):
-        self.iter_all = self.exe('SELECT * FROM Nikki')
+        self._iter_all = self.exe('SELECT * FROM Nikki')
         return self
 
     def __next__(self):
-        r = self.iter_all.fetchone()
+        r = self._iter_all.fetchone()
         if r is None:
+            del self._iter_all
             raise StopIteration
-        tags = self._getnikkitags(r[0])
-        formats = self.exe(sql_nikki_formats, (r[0],))
-        # cursor object only generates once, so we make a list
-        formats = list(formats) if formats else None
-        return dict(id=r[0], title=r[3], datetime=r[1], text=r[2],
-                    tags=tags, formats=formats)
+        return self._makedict(r)
 
     def __getitem__(self, key):
         r = self.exe('SELECT * FROM Nikki WHERE id=?', (key,)).fetchone()
-        tags = self._getnikkitags(r[0])
-        formats = self.exe(sql_nikki_formats, (r[0],))
-        # cursor object only generates once, so we make a list
-        formats = list(formats) if formats else None
-        return dict(id=r[0], title=r[3], datetime=r[1], text=r[2],
-                    tags=tags, formats=formats)
+        return self._makedict(r)
 
     def connect(self, db_path):
         self.path = db_path
@@ -89,6 +80,29 @@ class Nikki:
         self.conn.execute('PRAGMA foreign_keys = ON')
         self.commit, self.exe, self.close = (
             self.conn.commit, self.conn.execute, self.conn.close)
+
+    def sorted(self, order, reverse=True):
+        assert order in ['datetime', 'title', 'length']
+        order = order.replace('length', 'LENGTH(text)')
+        cmd = ('SELECT * FROM Nikki ORDER BY ' +
+               order + (' DESC' if reverse else ''))
+        for r in self.exe(cmd):
+            yield self._makedict(r)
+
+    def _makedict(self, r):
+        """Make a dictionary that represents one diary"""
+        tags_id = self.exe('SELECT tagid FROM Nikki_Tags WHERE '
+                           'nikkiid=?', (r[0],))
+        tags = ' '.join(self.exe('SELECT name FROM Tags WHERE id = ?',
+                                 (i[0],)).fetchone()[0]
+                        for i in tags_id) if tags_id else ''
+
+        formats = self.exe(sql_nikki_formats, (r[0],))
+        # cursor object only generates once, so we make a list
+        formats = list(formats) if formats else None
+
+        return dict(id=r[0], title=r[3], datetime=r[1], text=r[2],
+                    tags=tags, formats=formats)
 
     def importxml(self, path):
         """Import XML file"""
@@ -157,13 +171,6 @@ class Nikki:
             return ((r[0], r[1]) for r in self.exe(sql_tag_with_count))
         else:
             return (n[0] for n in self.exe('SELECT name FROM Tags'))
-
-    def _getnikkitags(self, id):
-        tags_id = self.exe('SELECT tagid FROM Nikki_Tags WHERE '
-                           'nikkiid=?', (id,))
-        return ' '.join(self.exe('SELECT name FROM Tags WHERE id = ?',
-                                 (i[0],)).fetchone()[0]
-                        for i in tags_id) if tags_id else ''
 
     def _gettagid(self, name):
         """Get tag-id by name"""
