@@ -8,10 +8,9 @@ import logging
 
 
 # template used to format txt file
-default_tpl = '''***{0[title]}***
-[Date: {0[datetime]}]
-
-{0[text]}\n\n\n\n'''
+default_tpl = '''********{title}********
+[Date: {datetime}   Tags: {tags}]\n
+{text}\n\n\n\n'''
 
 sql_tag_with_count = '''
 SELECT Tags.name, (SELECT COUNT(*) FROM Nikki_Tags
@@ -141,20 +140,20 @@ class Nikki:
 
     def exporttxt(self, path, selected=None):
         """Export to TXT file using template(string format).
-        When selected is a list contains nikki data,only export diary in list."""
+        If selected contains diary dictionaries, only export diaries in it."""
         file = open(path, 'w', encoding='utf-8')
         try:
             with open('template.txt', encoding='utf-8') as f:
                 tpl = f.read()
-            hint = 'custom'
+            tpl_type = 'custom'
         except OSError:
             tpl = default_tpl
-            hint = 'default'
+            tpl_type = 'default'
         for n in (self.sorted('datetime', False) if selected is None
                   else selected):
-            file.write(tpl.format(n))
+            file.write(tpl.format(**n))
         file.close()
-        logging.info('Exporting successful(use %s template)', hint)
+        logging.info('Exporting successful(using %s template)', tpl_type)
 
     def delete(self, id):
         self.exe('DELETE FROM Nikki WHERE id = ?', (id,))
