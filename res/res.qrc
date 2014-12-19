@@ -67,4 +67,8 @@
   <qresource prefix="/editor">
     <file>clock.png</file>
   </qresource>
+
+  <qresource prefix="/cfg">
+    <file>check.png</file>
+  </qresource>
 </RCC>

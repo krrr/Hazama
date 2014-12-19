@@ -97,7 +97,6 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         except (AttributeError, RuntimeError):
             self.cfgDialog = ConfigDialog(self)
             self.cfgDialog.langChanged.connect(self.retranslate)
-            self.cfgDialog.needExport.connect(self.nList.handleExport)
             self.cfgDialog.bkRestored.connect(self.nList.reload)
             self.cfgDialog.accepted.connect(self.nList.resetDelegate)
             self.cfgDialog.show()

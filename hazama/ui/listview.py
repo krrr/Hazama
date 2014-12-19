@@ -417,7 +417,7 @@ class NikkiList(QListView):
             self.countChanged.emit()
             self.tagsChanged.emit()  # tags might changed
 
-    def handleExport(self, export_all):
+    def handleExport(self, path, export_all):
         def restore_dict(index):
             "restore diary dictionary using data from model"
             row = index.row()
@@ -426,15 +426,9 @@ class NikkiList(QListView):
             return dict(id=id, title=title, datetime=dt, text=text,
                         tags=tags, formats=formats)
 
-        path, _type = QFileDialog.getSaveFileName(
-            parent=self,
-            caption=self.tr('Export Diary'),
-            filter=self.tr('Plain Text (*.txt);;Rich Text (*.rtf)'))
-        if path == '': return    # dialog canceled
-        if _type.endswith('txt)'):
-            selected = (None if export_all else
-                        (restore_dict(i) for i in self.selectedIndexes()))
-            nikki.exporttxt(path, selected)
+        selected = (None if export_all else
+                    (restore_dict(i) for i in self.selectedIndexes()))
+        nikki.exporttxt(path, selected)
 
     def resetDelegate(self):
         self.setItemDelegate(NListDelegate(self))

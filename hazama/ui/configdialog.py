@@ -13,7 +13,6 @@ languagesR = {b: a for a, b in languages.items()}
 
 class ConfigDialog(QDialog, Ui_configDialog):
     langChanged = Signal()
-    needExport = Signal(bool)  # arg: export_all
     bkRestored = Signal()
     accepted = Signal()
 
@@ -21,6 +20,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
         super(ConfigDialog, self).__init__(parent, Qt.WindowTitleHint)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setupUi(self)
+        self.openOutBtn.hide()  # can't set initial state in creator
         # load settings
         self.aindCheck.setChecked(settings['Editor'].getint('autoindent', 1))
         self.tListCountCheck.setChecked(settings['Main'].getint('taglistcount', 1))
@@ -69,8 +69,27 @@ class ConfigDialog(QDialog, Ui_configDialog):
 
     @Slot()
     def on_exportBtn_clicked(self):
-        export_all = not bool(self.exportOption.currentIndex())
-        self.needExport.emit(export_all)
+        export_all = self.exportOption.currentIndex() == 0
+        nList = self.parent().nList
+
+        path, _type = QFileDialog.getSaveFileName(
+            parent=self,
+            caption=self.tr('Export Diary'),
+            filter=self.tr('Plain Text (*.txt)'))
+        if path == '': return    # dialog cancelled
+        try:
+            nList.handleExport(path, export_all)
+        except Exception as e:
+            QMessageBox.warning(self, self.tr('Export Failed'), '%-20s' % e)
+            return
+
+        if not self.openOutBtn.isVisible():
+            self.openOutBtn.show()
+        else:  # two or more export happened
+            self.openOutBtn.clicked.disconnect()
+        self.openOutBtn.setFocus()
+        self.openOutBtn.clicked.connect(
+            lambda: QDesktopServices.openUrl('file:///' + path))
 
     @Slot(str)
     def on_rstCombo_activated(self, filename):

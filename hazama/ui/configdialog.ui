@@ -295,6 +295,23 @@
               </property>
              </widget>
             </item>
+            <item>
+             <widget class="QPushButton" name="openOutBtn">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
+              <property name="text">
+               <string>Open output file</string>
+              </property>
+              <property name="icon">
+               <iconset resource="../../res/res.qrc">
+                <normaloff>:/cfg/check.png</normaloff>:/cfg/check.png</iconset>
+              </property>
+              <property name="flat">
+               <bool>false</bool>
+              </property>
+             </widget>
+            </item>
            </layout>
           </item>
          </layout>
@@ -530,7 +547,9 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="../../res/res.qrc"/>
+ </resources>
  <connections>
   <connection>
    <sender>buttonBox</sender>
