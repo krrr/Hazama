@@ -1,6 +1,5 @@
 from PySide.QtCore import *
 from PySide.QtGui import *
-from html.parser import HTMLParser
 from ui import setStdEditMenuIcons
 from ui.customobjects import TextFormatter, NTextDocument
 
@@ -32,23 +31,29 @@ class NTextEdit(QTextEdit, TextFormatter):
                               round(hl.blue()*fac + bg.blue()*(1-fac)))
         self.autoIndent = False
         self.setTabChangesFocus(True)
-        # create format menu
+        # setup format menu
+        onHLAct = lambda: super(NTextEdit, self).setHL(self.hlAct.isChecked())
+        onBDAct = lambda: super(NTextEdit, self).setBD(self.bdAct.isChecked())
+        onSOAct = lambda: super(NTextEdit, self).setSO(self.soAct.isChecked())
+        onULAct = lambda: super(NTextEdit, self).setUL(self.ulAct.isChecked())
+        onItaAct = lambda: super(NTextEdit, self).setIta(self.itaAct.isChecked())
+
         self.subMenu = QMenu(self.tr('Format'), self)
         # shortcuts of format actions only used to display shortcut-hint in menu
         self.hlAct = QAction(QIcon(':/fmt/highlight.png'), self.tr('Highlight'),
-                             self, triggered=self.setHL,
+                             self, triggered=onHLAct,
                              shortcut=QKeySequence('Ctrl+H'))
         self.bdAct = QAction(QIcon(':/fmt/bold.png'), self.tr('Bold'),
-                             self, triggered=self.setBD,
+                             self, triggered=onBDAct,
                              shortcut=QKeySequence.Bold)
         self.soAct = QAction(QIcon(':/fmt/strikeout.png'), self.tr('Strike out'),
-                             self, triggered=self.setSO,
+                             self, triggered=onSOAct,
                              shortcut=QKeySequence('Ctrl+T'))
         self.ulAct = QAction(QIcon(':/fmt/underline.png'), self.tr('Underline'),
-                             self, triggered=self.setUL,
+                             self, triggered=onULAct,
                              shortcut=QKeySequence.Underline)
         self.itaAct = QAction(QIcon(':/fmt/italic.png'), self.tr('Italic'),
-                              self, triggered=self.setIta,
+                              self, triggered=onItaAct,
                               shortcut=QKeySequence.Italic)
         self.clrAct = QAction(self.tr('Clear format'), self,
                               shortcut=QKeySequence('Ctrl+D'),
@@ -65,7 +70,7 @@ class NTextEdit(QTextEdit, TextFormatter):
             Qt.Key_H: self.hlAct, Qt.Key_B: self.bdAct, Qt.Key_T: self.soAct,
             Qt.Key_U: self.ulAct, Qt.Key_I: self.itaAct}
 
-    def setText(self, text, formats):
+    def setRichText(self, text, formats):
         doc = NTextDocument(self)
         doc.setDefaultFont(self.document().defaultFont())
         doc.setDefaultStyleSheet(self.document().defaultStyleSheet())
@@ -73,8 +78,6 @@ class NTextEdit(QTextEdit, TextFormatter):
         doc.setDefaultTextOption(self.document().defaultTextOption())
         doc.setHlColor(self.HlColor)
         doc.setText(text, formats)
-        doc.clearUndoRedoStacks()
-        doc.setModified(False)
         self.setDocument(doc)
 
     def setAutoIndent(self, enabled):
@@ -83,7 +86,7 @@ class NTextEdit(QTextEdit, TextFormatter):
 
     def contextMenuEvent(self, event):
         if self.textCursor().hasSelection():
-            self.checkFormats()
+            self._setFmtActs()
             self.subMenu.setEnabled(True)
         else:
             self.subMenu.setEnabled(False)
@@ -95,17 +98,17 @@ class NTextEdit(QTextEdit, TextFormatter):
         menu.exec_(event.globalPos())
         menu.deleteLater()
 
-    def getFormats(self):
-        parser = QtHtmlParser()
-        return parser.feed(self.toHtml())
+    def getRichText(self):
+        # getFormats is static method because self.document() will return
+        # QTextDocument, not NTextDocument
+        return self.toPlainText(), NTextDocument.getFormats(self.document())
 
-    def checkFormats(self):
+    def _setFmtActs(self):
         """Check formats in current selection and check or uncheck actions"""
-        checkFuncs = [lambda x: x.background().color() == self.HlColor,
-                      lambda x: x.fontWeight() == QFont.Bold,
-                      lambda x: x.fontStrikeOut(),
-                      lambda x: x.fontUnderline(),
-                      lambda x: x.fontItalic()]
+        fmts = [QTextFormat.BackgroundBrush, QTextFormat.FontWeight,
+                QTextFormat.FontStrikeOut,
+                QTextFormat.TextUnderlineStyle, QTextFormat.FontItalic]
+
         cur = self.textCursor()
         start, end = cur.anchor(), cur.position()
         if start > end:
@@ -114,8 +117,8 @@ class NTextEdit(QTextEdit, TextFormatter):
         for pos in range(end, start, -1):
             cur.setPosition(pos)
             charFmt = cur.charFormat()
-            for i, f in enumerate(checkFuncs):
-                if results[i] and not f(charFmt):
+            for i, f in enumerate(fmts):
+                if results[i] and not charFmt.hasProperty(f):
                     results[i] = False
             if not any(results): break
         for i, c in enumerate(results):
@@ -128,7 +131,7 @@ class NTextEdit(QTextEdit, TextFormatter):
     def keyPressEvent(self, event):
         if event.modifiers() == Qt.ControlModifier and event.key() in self.key2act:
             # set actions before calling format methods
-            self.checkFormats()
+            self._setFmtActs()
             self.key2act[event.key()].trigger()
             event.accept()
         elif event.key() == Qt.Key_Return and self.autoIndent:
@@ -220,39 +223,3 @@ class DateTimeDialog(QDialog):
         ret = dialog.exec_()
         dialog.deleteLater()
         return dialog.dtEdit.dateTime() if ret else None
-
-
-class QtHtmlParser(HTMLParser):
-    """Parse HTML of QTextDocument,return formats information"""
-    typedic = {'font-weight:600': 1, 'background-color:': 2,
-               'font-style:italic': 3, 'text-decoration: line-through': 4,
-               'text-decoration: underline': 5}
-
-    def __init__(self):
-        HTMLParser.__init__(self)
-        self.curt_types = self.html = None
-        self.pos_plain = -1  # first char is \n
-        self.formats = []
-
-    def feed(self, html):
-        self.html = html.split('</head>')[1]
-        HTMLParser.feed(self, self.html)
-        return self.formats
-
-    def handle_starttag(self, tag, attrs):
-        if tag == 'span':
-            self.curt_types = [self.typedic[t] for t in self.typedic
-                               if t in attrs[0][1]]
-
-    def handle_data(self, data):
-        length = len(data)
-        if self.curt_types:
-            for _type in self.curt_types:
-                # (start, length, type)
-                self.formats.append((self.pos_plain, length, _type))
-            self.curt_types = None
-        self.pos_plain += length
-
-    def handle_entityref(self, name):
-        # handle_data will ignore &,<,>
-        self.pos_plain += 1

@@ -332,7 +332,7 @@ class NikkiList(QListView):
             editor.id = id
             editor.tagEditor.setText(tags)
             editor.titleEditor.setText(title)
-            editor.textEditor.setText(text, formats)
+            editor.textEditor.setRichText(text, formats)
             self.editors[id] = editor
             editor.closed.connect(self.closeEditor)
             editor.preSc.activated.connect(self.editorPrevious)
@@ -356,10 +356,9 @@ class NikkiList(QListView):
         isNew = id == -1
         if needSave:
             dt = currentDatetime() if editor.datetime is None else editor.datetime
-            text = editor.textEditor.toPlainText()
+            text, formats = editor.textEditor.getRichText()
             title = editor.titleEditor.text()
             tags = editor.tagEditor.text()
-            formats = editor.textEditor.getFormats()
             realId = nikki.save(id=id, datetime=dt, text=text,
                                 formats=formats, title=title, new=isNew,
                                 tags=tags if editor.tagModified else None)
