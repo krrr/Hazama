@@ -1,16 +1,28 @@
-import richtagparser
+import unittest
+import sys
+import os
+from PySide.QtGui import QTextFormat
 
-html = '''<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
-<html><head><meta name="qrichtext" content="1" /><style type="text/css">
-p, li { white-space: pre-wrap; }
-</style></head><body style=" font-family:'SimSun'; font-size:10pt; font-weight:400; font-style:normal;">
-<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">t<span style=" font-style:italic;">es</span>t<span style=" background-color:#fffaa0;">t</span><span style=" text-decoration: line-through; background-color:#fffaa0;">es</span><span style=" background-color:#fffaa0;">t</span></p>
-<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">t<span style=" text-decoration: underline;">es</span>t&gt;t<span style=" text-decoration: underline;">es</span>t</p>
-<p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><span style=" font-weight:600;">testtest</span></p></body></html>'''
-plaintxt = richtagparser.strip.sub('', html.split('</head>')[1])
-p = richtagparser.QtHtmlParser()
-formats = p.feed(html)
-for i in [(1,2,3), (4,1,2), (5,2,4), (5,2,2), (7,1,2), (10,2,5), (15,2,5),
-    (19,8,1)]:
-    assert i in formats
-assert len(formats)==8
+sys.path.append(os.path.realpath('../hazama/'))
+from ui.customobjects import NTextDocument
+
+
+class NTextDocumentFormatsTest(unittest.TestCase):
+    def test_overlap(self):
+        test_str = 'This is something, string, string.\nparagraph, paragraph!\n    method?'
+        test_fmt = [(0, 2, 1), (0, 2, 2), (0, 10, 3), (5, 15, 4), (34, 3, 5)]
+        # output formats may be duplicated, because Qt store format this way
+        true_result = [
+            (0, 2, 1), (0, 2, 2),
+            (0, 2, 3), (2, 3, 3), (5, 5, 3),  # from (0, 10, 3), broken into three parts
+            (5, 5, 4), (10, 10, 4),  # from (5, 15, 4)
+            (35, 2, 5)  # 34 is \n
+        ]
+        doc = NTextDocument()
+        doc.setText(test_str, test_fmt)
+        result = NTextDocument.getFormats(doc)
+        self.assertEqual(true_result, result)
+
+
+if __name__ == '__main__':
+    unittest.main()
