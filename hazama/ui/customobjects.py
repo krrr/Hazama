@@ -29,48 +29,60 @@ class TagCompleter(QCompleter):
 
 
 class TextFormatter:
-    """setXX methods are used in NTextDocument and NTextEdit(called by
-    context-menu or shortcuts and rely on whether action checked or not).
-    If used in NTextDocument,parameter pre of setXX methods should be True.
-    """
+    """setXX methods are used in NTextDocument and NTextEdit to apply formats."""
     HlColor = QColor(248, 162, 109, 100)
+    Bold, HighLight, Italic, StrikeOut, UnderLine = range(1, 6)
 
-    # why these methods has silly parameter pre? it is used by NTextEdit
-    # (format context menu and format shortcut), and deleting this parm will
-    # add a pile of methods to NTextEdit.
-    def setHL(self, pre=False):
-        fmt = QTextCharFormat()
-        doFormat = True if pre else self.hlAct.isChecked()
-        fmt.setBackground(QBrush(self.HlColor if doFormat else Qt.transparent))
-        self.textCursor().mergeCharFormat(fmt)
+    def setHL(self, apply):
+        """Apply HighLight format to current selection if true, otherwise
+        clear that format"""
+        fmt = self.textCursor().charFormat()
+        if apply:
+            fmt.setBackground(QBrush(self.HlColor))
+            self.textCursor().mergeCharFormat(fmt)
+        else:
+            fmt.clearProperty(QTextFormat.BackgroundBrush)
+            self.textCursor().setCharFormat(fmt)
 
-    def setBD(self, pre=False):
-        fmt = QTextCharFormat()
-        doFormat = True if pre else self.bdAct.isChecked()
-        fmt.setFontWeight(QFont.Bold if doFormat else QFont.Normal)
-        self.textCursor().mergeCharFormat(fmt)
+    def setBD(self, apply):
+        fmt = self.textCursor().charFormat()
+        if apply:
+            fmt.setFontWeight(QFont.Bold)
+            self.textCursor().mergeCharFormat(fmt)
+        else:
+            fmt.clearProperty(QTextFormat.FontWeight)
+            self.textCursor().setCharFormat(fmt)
 
-    def setSO(self, pre=False):
-        fmt = QTextCharFormat()
-        doFormat = True if pre else self.soAct.isChecked()
-        fmt.setFontStrikeOut(doFormat)
-        self.textCursor().mergeCharFormat(fmt)
+    def setSO(self, apply):
+        fmt = self.textCursor().charFormat()
+        if apply:
+            fmt.setFontStrikeOut(True)
+            self.textCursor().mergeCharFormat(fmt)
+        else:
+            fmt.clearProperty(QTextFormat.FontStrikeOut)
+            self.textCursor().setCharFormat(fmt)
 
-    def setUL(self, pre=False):
-        fmt = QTextCharFormat()
-        doFormat = True if pre else self.ulAct.isChecked()
-        fmt.setFontUnderline(doFormat)
-        self.textCursor().mergeCharFormat(fmt)
+    def setUL(self, apply):
+        fmt = self.textCursor().charFormat()
+        if apply:
+            fmt.setFontUnderline(True)
+            self.textCursor().mergeCharFormat(fmt)
+        else:
+            fmt.clearProperty(QTextFormat.TextUnderlineStyle)
+            self.textCursor().setCharFormat(fmt)
 
-    def setIta(self, pre=False):
-        fmt = QTextCharFormat()
-        doFormat = True if pre else self.itaAct.isChecked()
-        fmt.setFontItalic(doFormat)
-        self.textCursor().mergeCharFormat(fmt)
+    def setIta(self, apply):
+        fmt = self.textCursor().charFormat()
+        if apply:
+            fmt.setFontItalic(True)
+            self.textCursor().mergeCharFormat(fmt)
+        else:
+            fmt.clearProperty(QTextFormat.FontItalic)
+            self.textCursor().setCharFormat(fmt)
 
 
 class NTextDocument(QTextDocument, TextFormatter):
-    """QTextDocument with format setting function. Formats are tree-tuple
+    """QTextDocument with format setting function. Formats are three-tuple
     (startIndex, length, type), the same form in database."""
 
     def setText(self, text, formats=None):
@@ -78,20 +90,46 @@ class NTextDocument(QTextDocument, TextFormatter):
                        4: self.setSO, 5: self.setUL}
         self.setPlainText(text)
         if formats:
-            self.cur = QTextCursor(self)
+            self._cur = QTextCursor(self)
             for start, length, _type in formats:
-                self.cur.setPosition(start)
-                self.cur.setPosition(start + length, mode=self.cur.KeepAnchor)
-                type2method[_type](pre=True)
-            del self.cur
+                self._cur.setPosition(start)
+                self._cur.setPosition(start + length, mode=self._cur.KeepAnchor)
+                type2method[_type](apply=True)
+            del self._cur
+
+        self.clearUndoRedoStacks()
+        self.setModified(False)
 
     def textCursor(self):
         """Make methods of TextFormatter to get right cursor"""
-        return self.cur
+        return self._cur
 
     def setHlColor(self, color):
         """Used to set alpha-removed highlight color in NTextEdit"""
         self.HlColor = color
+
+    @staticmethod
+    def getFormats(qTextDoc):
+        qFmtToFmt = [
+            (NTextDocument.Bold, QTextFormat.FontWeight),
+            (NTextDocument.HighLight, QTextFormat.BackgroundBrush),
+            (NTextDocument.Italic, QTextFormat.FontItalic),
+            (NTextDocument.StrikeOut, QTextFormat.FontStrikeOut),
+            (NTextDocument.UnderLine, QTextFormat.TextUnderlineStyle),
+        ]
+
+        out = []
+        block = qTextDoc.begin()
+        while block.isValid():
+            fragIter = block.begin()
+            for i in fragIter:
+                frag = i.fragment()
+                charFmt = frag.charFormat()
+                fmts = [f for f, qF in qFmtToFmt if charFmt.hasProperty(qF)]
+                for f in fmts:
+                    out.append((frag.position(), frag.length(), f))
+            block = block.next()
+        return out
 
 
 class NSplitter(QSplitter):
