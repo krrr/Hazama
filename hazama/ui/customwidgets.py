@@ -15,6 +15,9 @@ class QLineEditWithMenuIcon(QLineEdit):
 
 class NTextEdit(QTextEdit, TextFormatter):
     """The widget used to edit diary contents in Editor window."""
+    # spaces auto-indent will recognize
+    Spaces = (' ', '\u3000')  # full width space U+3000
+
     def __init__(self, *args, **kwargs):
         super(NTextEdit, self).__init__(*args, **kwargs)
         # setup colors
@@ -136,18 +139,16 @@ class NTextEdit(QTextEdit, TextFormatter):
             event.accept()
         elif event.key() == Qt.Key_Return and self.autoIndent:
             # auto-indent support
-            spaceCount = 0
-            cur = self.textCursor()
-            savedPos = cur.position()
-            cur.movePosition(QTextCursor.StartOfBlock)
-            cur.movePosition(QTextCursor.Right, QTextCursor.KeepAnchor)
-            while cur.selectedText() == ' ':
-                spaceCount += 1
-                cur.clearSelection()
-                cur.movePosition(QTextCursor.Right, QTextCursor.KeepAnchor)
-            cur.setPosition(savedPos)
-            super(NTextEdit, self).keyPressEvent(event)
-            cur.insertText(' ' * spaceCount)
+            para = self.textCursor().block().text()
+            if len(para) > 0 and para[0] in NTextEdit.Spaces:
+                space, spaceCount = para[0], 1
+                for c in para[1:]:
+                    if c != space: break
+                    spaceCount += 1
+                super(NTextEdit, self).keyPressEvent(event)
+                self.textCursor().insertText(space * spaceCount)
+            else:
+                super(NTextEdit, self).keyPressEvent(event)
             event.accept()
         else:
             super(NTextEdit, self).keyPressEvent(event)
