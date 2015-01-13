@@ -22,7 +22,7 @@ import os
 import time
 
 
-__version__ = '0.20'
+__version__ = '0.21'
 
 
 if __name__ == '__main__':

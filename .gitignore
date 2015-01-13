@@ -6,6 +6,6 @@
 xmlsample
 build
 .idea
-test.py
+hazama/test.py
 hazama/ui/*_ui.py
 hazama/ui/rc.py
