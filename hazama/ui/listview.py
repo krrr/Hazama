@@ -246,7 +246,7 @@ class TagList(QListWidget):
             text = currentItem.data(Qt.DisplayRole)
         except AttributeError:  # no selection
             return
-        self.currentTagChanged.emit('' if text == self.tr('All') else text)
+        self.currentTagChanged.emit('' if currentItem is self.item(0) else text)
 
     # all three events below for drag scroll
     def mousePressEvent(self, event):
