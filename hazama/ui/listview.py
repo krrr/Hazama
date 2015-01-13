@@ -1,3 +1,9 @@
+"""Main List and TagList
+
+FUTURE: to support style sheet text color in NList entries, one way is to use
+QAbstractTextDocumentLayout.draw insted of QTextDocument.drawContents
+FUTURE: when more than 1000 diaries in database, startup time expands quickly
+"""
 from PySide.QtGui import *
 from PySide.QtCore import *
 import logging
@@ -9,7 +15,8 @@ from config import settings, nikki
 
 
 class NListDelegate(QStyledItemDelegate):
-    def __init__(self, parent=None):
+    """Delegate painting of entries in Main List"""
+    def __init__(self, parent):
         super(NListDelegate, self).__init__(parent)
         self.title_h = max(QFontInfo(font.title).pixelSize(),
                            QFontInfo(font.date).pixelSize()) + 4  # dt and title font area
@@ -266,6 +273,7 @@ class TagList(QListWidget):
 
 
 class NikkiList(QListView):
+    """Main List that display preview of diaries"""
     countChanged = Signal()
     tagsChanged = Signal()
 
@@ -276,7 +284,7 @@ class NikkiList(QListView):
         self.setEditTriggers(QAbstractItemView.NoEditTriggers)
         # setup models
         self.originModel = QStandardItemModel(0, 7, self)
-        self.fillModel(self.originModel)
+        self._fillModel(self.originModel)
         self.modelProxy = MultiSortFilterProxyModel(self)
         self.modelProxy.setSourceModel(self.originModel)
         self.modelProxy.setDynamicSortFilter(True)
@@ -383,7 +391,7 @@ class NikkiList(QListView):
         del self.editors[id]
 
     @staticmethod
-    def fillModel(model):
+    def _fillModel(model):
         for i in nikki:
             model.insertRow(0)
             model.setData(model.index(0, 0), i['id'])
@@ -398,7 +406,7 @@ class NikkiList(QListView):
         self.modelProxy.setSourceModel(None)
         self.originModel.deleteLater()
         self.originModel = QStandardItemModel(0, 7, self)
-        self.fillModel(self.originModel)
+        self._fillModel(self.originModel)
         self.modelProxy.setSourceModel(self.originModel)
 
     def delNikki(self):
@@ -432,8 +440,8 @@ class NikkiList(QListView):
 
     def resetDelegate(self):
         self.setItemDelegate(NListDelegate(self))
-        # without this spacing between items will be strange
-        self.setSpacing(0)
+        # force items to be laid again
+        self.setSpacing(self.spacing())
 
     def sort(self):
         sortBy = settings['Main'].get('listsortby', 'datetime')
