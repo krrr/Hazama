@@ -94,10 +94,10 @@ class ConfigDialog(QDialog, Ui_configDialog):
     @Slot(str)
     def on_rstCombo_activated(self, filename):
         """Restore database backup"""
-        ret = QMessageBox.question(self, self.tr('Restore backup'),
-                                   self.tr('All diaries in book will be '
-                                           'lost.Do it?'),
-                                   QMessageBox.Yes | QMessageBox.No)
+        ret = QMessageBox.question(
+            self, self.tr('Restore backup'),
+            self.tr('All diaries will be replaced with that backup!'),
+            QMessageBox.Yes | QMessageBox.No)
         if ret == QMessageBox.Yes:
             db.restore_backup(filename)
             self.bkRestored.emit()

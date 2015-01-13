@@ -117,7 +117,7 @@
           <item>
            <widget class="QCheckBox" name="tfocusCheck">
             <property name="text">
-             <string>Put cursor in title-edit area after showing</string>
+             <string>Focus on title area initially (otherwise on text area)</string>
             </property>
            </widget>
           </item>
@@ -233,7 +233,7 @@
           <item>
            <widget class="QLabel" name="exportLabel">
             <property name="text">
-             <string>Export diary to single plain text file or RTF file.
+             <string>Export diary to single plain text file.
 </string>
             </property>
             <property name="alignment">

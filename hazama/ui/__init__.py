@@ -51,9 +51,10 @@ def showDbError(hint=''):
     """
     QMessageBox.critical(
         None,
-        app.translate('Errors', 'Unable to access database'),
-        app.translate('Errors', 'SQLite3: %s.\n\nIf database path is correct, '
-                      'should recover this file by hand or restore from backups.') % hint)
+        app.translate('Errors', 'Failed to access database'),
+        app.translate('Errors', 'SQLite3: %s.\n\nPlease check database path(have permission?). '
+                      'If it\'s corrupt, you may have to recover this file by hand or restore '
+                      'from backups.') % hint)
 
 
 def setStdEditMenuIcons(menu):
