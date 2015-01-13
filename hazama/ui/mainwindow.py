@@ -56,20 +56,22 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         title.name = 'title'
         length = QAction(self.tr('Length'), group)
         length.name = 'length'
-        reverse = QAction(self.tr('Reverse'), menu)
-        orders = (datetime, title, length)
-        for a in orders:
-            a.setCheckable(True)
-            menu.addAction(a)
-            a.triggered[bool].connect(self.sortOrderChanged)
-        menu.addSeparator()
-        reverse.setCheckable(True)
-        menu.addAction(reverse)
-        reverse.triggered[bool].connect(self.sortOrderChanged)
+        ascDescGroup = QActionGroup(menu)
+        asc = QAction(self.tr('Ascending'), ascDescGroup)
+        asc.name = 'asc'
+        desc = QAction(self.tr('Descending'), ascDescGroup)
+        desc.name = 'desc'
+        for i in [datetime, title, length, None, asc, desc]:
+            if i is None:
+                menu.addSeparator()
+                continue
+            i.setCheckable(True)
+            menu.addAction(i)
+            i.triggered[bool].connect(self.sortOrderChanged)
         # restore from settings
-        orderSetting = settings['Main'].get('listsortby', 'datetime')
-        locals().get(orderSetting, datetime).setChecked(True)
-        reverse.setChecked(settings['Main'].getint('listreverse', 1))
+        order = settings['Main'].get('listsortby', 'datetime')
+        locals()[order].setChecked(True)
+        (desc if settings['Main'].getint('listreverse', 1) else asc).setChecked(True)
         self.sorAct.setMenu(menu)
 
     def closeEvent(self, event):
@@ -141,13 +143,12 @@ class MainWindow(QMainWindow, Ui_mainWindow):
             self.heatMap.show()
 
     def sortOrderChanged(self, checked):
-        if hasattr(self.sender(), 'name'):
-            if checked:
-                settings['Main']['listsortby'] = self.sender().name
-                self.nList.sort()
-        else:
-            settings['Main']['listreverse'] = str(checked.real)
-            self.nList.sort()
+        name = self.sender().name
+        if name in ['asc', 'desc']:
+            settings['Main']['listreverse'] = str((name == 'desc').real)
+        elif checked:
+            settings['Main']['listsortby'] = name
+        self.nList.sort()
 
     def toggleTagList(self, checked):
         self.tList.setVisible(checked)
