@@ -4,7 +4,8 @@ import os
 from os import path
 from glob import glob
 from distutils.core import Command
-from distutils.spawn import find_executable
+from distutils.errors import DistutilsExecError
+from distutils.spawn import find_executable, spawn
 sys.path.append(path.realpath('hazama/'))
 from hazama import __version__
 
@@ -22,8 +23,8 @@ class build_qt(Command):
 
     def run(self):
         methods = [self.compile_ts, self.compile_ui, self.compile_rc]
-        for a, m in zip([self.ts, self.ui, self.rc], methods):
-            if a:
+        for opt, m in zip([self.ts, self.ui, self.rc], methods):
+            if opt:
                 m()
                 break
         else:
@@ -32,7 +33,7 @@ class build_qt(Command):
     @staticmethod
     def compile_ui():
         for i in glob(path.join('hazama', 'ui', '*.ui')):
-            os.system('pyside-uic -o %s -x %s' % (i.split('.')[0]+'_ui.py', i))
+            spawn(['pyside-uic', '-o', i.split('.')[0]+'_ui.py', '-x', i])
         # fix importing error in generated files
         for i in glob(path.join('hazama', 'ui', '*_ui.py')):
             with open(i, 'r', encoding='utf-8') as f:
@@ -46,23 +47,24 @@ class build_qt(Command):
                 new = ''.join(new)
             with open(i, 'w', encoding='utf-8', newline='\n') as f:
                 f.write(new)
-        print('ui compiled successfully')
 
     @staticmethod
     def compile_rc():
-        os.system('pyside-rcc -py3 %s -o %s' % (path.join('res', 'res.qrc'),
-                                                path.join('hazama', 'ui', 'rc.py')))
-        print('rc compiled successfully')
+        spawn(['pyside-rcc', '-py3', path.join('res', 'res.qrc'), '-o',
+               path.join('hazama', 'ui', 'rc.py')])
 
     @staticmethod
     def compile_ts():
         lang_dir = path.join('hazama', 'lang')
         if not path.isdir(lang_dir): os.mkdir(lang_dir)
-        lres = 'lrelease' if find_executable('lrelease') else 'lrelease-qt4'
+
+        lres = find_executable('lrelease') or find_executable('lrelease-qt4')
+        if lres is None:
+            raise DistutilsExecError('lrelease not found')
+
         for i in glob(path.join('i18n', '*.ts')):
             qm_filename = path.basename(i).split('.')[0] + '.qm'
-            os.system('%s %s -qm %s' % (lres, i,
-                                        path.join(lang_dir, qm_filename)))
+            spawn([lres, i, '-qm', path.join(lang_dir, qm_filename)])
 
 
 class update_ts(Command):
@@ -74,8 +76,7 @@ class update_ts(Command):
     def finalize_options(self): pass
 
     def run(self):
-        os.system('pyside-lupdate %s' % path.join('i18n', 'lupdateguide'))
-        print('ts updated successfully')
+        spawn(['pyside-lupdate', path.join('i18n', 'lupdateguide')])
 
 
 cmdclass = {'build_qt': build_qt, 'update_ts': update_ts}
