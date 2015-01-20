@@ -20,6 +20,7 @@ class NTextEdit(QTextEdit, TextFormatter):
 
     def __init__(self, *args, **kwargs):
         super(NTextEdit, self).__init__(*args, **kwargs)
+        self._doc = None
         # setup colors
         prt = self.palette()
         prt.setColor(prt.Highlight, QColor(180, 180, 180))
@@ -74,7 +75,9 @@ class NTextEdit(QTextEdit, TextFormatter):
             Qt.Key_U: self.ulAct, Qt.Key_I: self.itaAct}
 
     def setRichText(self, text, formats):
-        doc = NTextDocument(self)
+        if self._doc is not None:  # painful job to avoid memory leak
+            self._doc.deleteLater()
+        doc = self._doc = NTextDocument()
         doc.setDefaultFont(self.document().defaultFont())
         doc.setDefaultStyleSheet(self.document().defaultStyleSheet())
         doc.setDefaultCursorMoveStyle(self.document().defaultCursorMoveStyle())
