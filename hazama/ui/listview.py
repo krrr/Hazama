@@ -112,6 +112,137 @@ class NListDelegate(QStyledItemDelegate):
         return QSize(-1, self.all_h+3)  # 3 is spacing between entries
 
 
+class NDocumentLabel(QFrame):
+    """Simple widget rendered in ItemDelegate. setText will delete exceed
+    line limit, this is limited solution. """
+    lines = 4
+
+    def __init__(self, parent=None):
+        super(NDocumentLabel, self).__init__(parent)
+        self.doc = NTextDocument(self)
+        self.setText('\n' * (self.lines - 1), None)
+        self.doc.setDocumentMargin(0)
+        self.doc.setUndoRedoEnabled(False)
+
+    def setFont(self, f):
+        self.doc.setDefaultFont(f)
+        super(NDocumentLabel, self).setFont(f)
+
+    def setText(self, text, formats):
+        self.doc.setText(text, formats)
+        self.doc.setTextWidth(self.width())
+        # delete exceed lines here using QTextCursor will slow down
+        # self.updateGeometry()
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        self.doc.drawContents(painter, event.rect())
+        painter.end()
+
+    def resizeEvent(self, event):
+        self.doc.setTextWidth(event.size().width())
+        super(NDocumentLabel, self).resizeEvent(event)
+
+    def sizeHint(self):
+        return self.doc.size().toSize()  # QSizeF to QSize
+
+
+class TestWidget(QFrame):
+
+    def __init__(self, parent=None):
+        super(TestWidget, self).__init__(parent, objectName='NListItem')
+        self.setAttribute(Qt.WA_DontShowOnScreen)
+
+        self.title = QLabel(self)
+        self.title.setFont(font.title)
+        self.title.setAlignment(Qt.AlignVCenter | Qt.AlignRight)
+        self.datetime = QLabel(self)
+        self.datetime.setFont(font.date)
+
+        self.text = NDocumentLabel(self)
+        self.text.lines = settings['Main'].getint('previewlines', 4)
+        self.text.setFont(font.text)
+
+        self.tag = QLabel(self)
+
+        self._vLayout0 = QVBoxLayout(self)
+        self._vLayout0.setContentsMargins(0, 0, 0, 0)
+        self._hLayout0 = QHBoxLayout()
+
+        self._hLayout0.addWidget(self.datetime)
+        self._hLayout0.addWidget(self.title)
+
+        self._vLayout0.addLayout(self._hLayout0)
+        self._vLayout0.addWidget(self.text)
+        self._vLayout0.addWidget(self.tag)
+
+        self.title.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
+        self.datetime.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
+        self.tag.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
+
+    def refreshStyle(self):
+        """Must be called after dynamic property changed"""
+        self.style().unpolish(self)
+        self.style().polish(self)
+        # no need to call self.update here
+
+
+class NListTestDele(QStyledItemDelegate):
+    def __init__(self, parent=None):
+        super(NListTestDele, self).__init__(parent)
+        self._testW = TestWidget()
+        self._testW.show()  # don't show on screen
+
+        s = """
+#NListItem {
+    margin: 0px;
+    padding: 3px 0px 3px 0px;
+    border-bottom: 1px solid rgb(152,161,168);
+    border-top: 1px solid rgb(152,161,168);
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 white,
+        stop:1 #FBFBFB);
+    }
+#NListItem[selected="true"] {
+    background: lightgray;
+}
+        """
+        self._testW.selected = False
+        self._testW.setStyleSheet(s)
+
+    def paint(self, painter, option, index):
+        selected = bool(option.state & QStyle.State_Selected)
+        active = bool(option.state & QStyle.State_Active)
+
+        self._testW.setProperty('selected', selected)
+        self._testW.setProperty('active', active)
+        self._testW.refreshStyle()
+
+        self._testW.resize(option.rect.size())
+
+        # don't use offset argument of QWidget.render which cause weird behavior
+        painter.translate(option.rect.topLeft())
+        self._testW.render(
+            painter, QPoint(),
+            renderFlags=QWidget.DrawChildren | QWidget.DrawWindowBackground)
+        painter.resetTransform()
+
+    def sizeHint(self, option, index):
+        import time
+        t = time.time()
+        row = index.row()
+        dt, text, title, tags, formats = (index.sibling(row, i).data()
+                                          for i in range(1, 6))
+        self._testW.datetime.setText(dt)
+        self._testW.title.setText(title)
+        self._testW.text.setText(text, formats)
+        self._testW.tag.setText('TAGTAG')
+        # print('testW h:', self._testW.sizeHint().height(),
+        #       'text h:', self._testW.text.sizeHint().height())
+        print(t - time.time(), title)
+        return QSize(-1, self._testW.sizeHint().height())
+
+
 class TListDelegate(QStyledItemDelegate):
     def __init__(self, parent=None):
         super(TListDelegate, self).__init__(parent)
@@ -279,7 +410,10 @@ class NikkiList(QListView):
 
     def __init__(self, parent=None):
         super(NikkiList, self).__init__(parent)
-        self.setItemDelegate(NListDelegate(self))
+        # self.setItemDelegate(NListDelegate(self))
+        self.setItemDelegate(NListTestDele(self))
+        self.setSpacing(-1)
+
         # disable default editor. Editor is implemented in the View
         self.setEditTriggers(QAbstractItemView.NoEditTriggers)
         # setup models
