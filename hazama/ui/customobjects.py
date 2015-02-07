@@ -131,6 +131,28 @@ class NTextDocument(QTextDocument, TextFormatter):
             block = block.next()
         return out
 
+    def drawContentsColor(self, painter, rect, color):
+        """Using given color to draw contents"""
+        painter.save()
+        ctx = QAbstractTextDocumentLayout.PaintContext()
+        ctx.palette.setColor(QPalette.Text, color)
+        if rect.isValid():
+            painter.setClipRect(rect)
+            ctx.clip = rect
+        self.documentLayout().draw(painter, ctx)
+        painter.restore()
+
+    def drawContentsPalette(self, painter, rect, palette):
+        """Using given palette to draw contents instead of app default"""
+        painter.save()
+        ctx = QAbstractTextDocumentLayout.PaintContext()
+        ctx.palette = palette
+        if rect.isValid():
+            painter.setClipRect(rect)
+            ctx.clip = rect
+        self.documentLayout().draw(painter, ctx)
+        painter.restore()
+
 
 class NSplitter(QSplitter):
     """Fix default "Split Horizontal" old cursor on split handle"""

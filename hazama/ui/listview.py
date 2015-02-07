@@ -1,7 +1,5 @@
 """Main List and TagList
 
-FUTURE: to support style sheet text color in NList entries, one way is to use
-QAbstractTextDocumentLayout.draw insted of QTextDocument.drawContents
 FUTURE: when more than 1000 diaries in database, startup time expands quickly
 """
 from PySide.QtGui import *
@@ -33,7 +31,7 @@ class NListDelegate(QStyledItemDelegate):
         self.doc.setUndoRedoEnabled(False)
         self.doc.setDocumentMargin(0)
         # setup colors
-        self.c_text = qApp.palette().color(QPalette.Active, QPalette.Text)
+        self.c_text = Qt.black
         self.c_bg = QColor(255, 236, 176)
         self.c_border = QColor(214, 172, 41)
         self.c_inActBg = QColor(255, 236, 176, 40)
@@ -71,15 +69,13 @@ class NListDelegate(QStyledItemDelegate):
             painter.drawText(x+self.dt_w, y+self.titleArea_h-self.title_h, title_w, self.title_h,
                              Qt.AlignVCenter | Qt.AlignRight, title)
         # draw text
-        painter.save()
         self.doc.setText(text, formats)
         self.doc.setTextWidth(w-26)
         painter.translate(x+14, y+self.titleArea_h+2)
-        self.doc.drawContents(painter, QRect(0, 0, w-26, self.text_h))
-        painter.restore()
+        self.doc.drawContentsColor(painter, QRect(0, 0, w-26, self.text_h), self.c_text)
+        painter.resetTransform()
         # draw tags
         if tags:
-            painter.save()
             painter.setPen(self.c_gray)
             painter.setFont(font.default)
             painter.translate(x + 15, y+self.titleArea_h+6+self.text_h)
@@ -99,12 +95,12 @@ class NListDelegate(QStyledItemDelegate):
                 painter.drawText(8, 1, oneTag_w, self.tagPath_h, Qt.AlignCenter, t)
                 painter.translate(oneTag_w+15, 0)  # translate by offset
             else:
-                painter.restore()
+                painter.resetTransform()
                 return
             # too many tags
             painter.setPen(Qt.DotLine)
             painter.drawLine(-4, self.tagPath_h/2, 2, self.tagPath_h/2)
-            painter.restore()
+            painter.resetTransform()
 
     def sizeHint(self, option, index):
         tag_h = self.tag_h if index.sibling(index.row(), 4).data() else 0
@@ -307,9 +303,9 @@ class TListDelegate(QStyledItemDelegate):
 
     def updateEditorGeometry(self, editor, option, index):
         rect = option.rect
-        rect.translate(1,1)
-        rect.setWidth(rect.width()-2)
-        rect.setHeight(rect.height()-1)
+        rect.translate(1, 1)
+        rect.setWidth(rect.width() - 2)
+        rect.setHeight(rect.height() - 1)
         editor.setGeometry(rect)
 
     def sizeHint(self, option, index):
@@ -319,7 +315,7 @@ class TListDelegate(QStyledItemDelegate):
 class TagList(QListWidget):
     currentTagChanged = Signal(str)  # str is tag-name or ''
     tagNameModified = Signal(str)  # arg: newTagName
-    _afterEditEnded= False
+    _afterEditEnded = False
 
     def __init__(self, *args, **kwargs):
         super(TagList, self).__init__(*args, **kwargs)
@@ -364,7 +360,7 @@ class TagList(QListWidget):
 
     def load(self):
         logging.debug('load Tag List')
-        itemAll = QListWidgetItem(self.tr('All'), self)
+        QListWidgetItem(self.tr('All'), self)
         itemFlag = Qt.ItemIsEditable | Qt.ItemIsSelectable | Qt.ItemIsEnabled
         if settings['Main'].getint('taglistcount', 1):
             for name, count in nikki.gettags(getcount=True):
@@ -580,7 +576,7 @@ class NikkiList(QListView):
 
     def handleExport(self, path, export_all):
         def restore_dict(index):
-            "restore diary dictionary using data from model"
+            """restore diary dictionary using data from model"""
             row = index.row()
             id, dt, text, title, tags, formats = (
                 index.sibling(row, i).data() for i in range(6))
@@ -617,7 +613,7 @@ class NikkiList(QListView):
         rowInProxy = self.modelProxy.mapFromSource(index).row()
         if ((step == -1 and rowInProxy == 0) or
            (step == 1 and rowInProxy == self.modelProxy.rowCount() - 1)):
-             return
+            return
         self.clearSelection()
         self.setCurrentIndex(self.modelProxy.index(rowInProxy+step, 0))
         geo = self.editors[id].saveGeometry()

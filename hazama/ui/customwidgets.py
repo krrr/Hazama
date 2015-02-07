@@ -75,16 +75,17 @@ class NTextEdit(QTextEdit, TextFormatter):
             Qt.Key_U: self.ulAct, Qt.Key_I: self.itaAct}
 
     def setRichText(self, text, formats):
-        if self._doc is not None:  # painful job to avoid memory leak
-            self._doc.deleteLater()
-        doc = self._doc = NTextDocument()
+        doc = NTextDocument(self)  # pass self to let widget hold us
+        # inherit settings
         doc.setDefaultFont(self.document().defaultFont())
         doc.setDefaultStyleSheet(self.document().defaultStyleSheet())
         doc.setDefaultCursorMoveStyle(self.document().defaultCursorMoveStyle())
         doc.setDefaultTextOption(self.document().defaultTextOption())
+
         doc.setHlColor(self.HlColor)
         doc.setText(text, formats)
         self.setDocument(doc)
+        self._doc = doc
 
     def setAutoIndent(self, enabled):
         assert isinstance(enabled, (bool, int))
