@@ -12,7 +12,6 @@ from ui import font, datetimeTrans, currentDatetime
 from ui.editor import Editor
 from ui.customobjects import NTextDocument, MultiSortFilterProxyModel
 from config import settings, nikki
-import time
 
 
 class NListDelegate(QStyledItemDelegate):
@@ -41,7 +40,6 @@ class NListDelegate(QStyledItemDelegate):
         self.c_gray = QColor(93, 73, 57)
 
     def paint(self, painter, option, index):
-        t = time.time()
         x, y, w = option.rect.x(), option.rect.y(), option.rect.width()-1
         row = index.row()
         dt, text, title, tags, formats = (index.sibling(row, i).data()
@@ -107,10 +105,8 @@ class NListDelegate(QStyledItemDelegate):
             painter.setPen(Qt.DotLine)
             painter.drawLine(-4, self.tagPath_h/2, 2, self.tagPath_h/2)
             painter.restore()
-        print(time.time() - t, title)
 
     def sizeHint(self, option, index):
-        print('hint', option.rect, index.sibling(index.row(), 2).data()[:4])
         tag_h = self.tag_h if index.sibling(index.row(), 4).data() else 0
         self.all_h = self.titleArea_h + 2 + self.text_h + tag_h + 6
         return QSize(-1, self.all_h+3)  # 3 is spacing between entries
@@ -165,12 +161,12 @@ class NDocumentLabel(QFrame):
 class TestWidget(QFrame):
     def __init__(self, parent=None):
         super(TestWidget, self).__init__(parent, objectName='NListItem')
-        self.setAttribute(Qt.WA_DontShowOnScreen)
 
         self.title = QLabel(self)
         self.title.setFont(font.title)
         self.title.setAlignment(Qt.AlignVCenter | Qt.AlignRight)
         self.title.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        self.title.setMinimumSize(1, 1)  # title can be elided, so ignore minimalSizeHint
         self.datetime = QLabel(self)
         self.datetime.setFont(font.date)
         self.datetime.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Preferred)
@@ -201,51 +197,56 @@ class TestWidget(QFrame):
         self.style().polish(self)
         # no need to call self.update here
 
+    def setTexts(self, dt, text, title, tags, formats):
+        # Some layout behaviours are full of mystery, even changing order of
+        # calls will break the UI
+        self.datetime.setText(datetimeTrans(dt))
+        # without this width of dt will not updated (for performance reason?)
+        self._hLayout0.activate()
+        # width of title area depends on testW's width
+        self.title.setText(
+            font.title_m.elidedText(title, Qt.ElideRight, self.title.width()))
+        self.text.setText(text, formats)
+        self.tag.setText(tags if tags else 'aaaa')
 
-class NListTestDele(QAbstractItemDelegate):
+
+class NListDelegateNew(QAbstractItemDelegate):
     def __init__(self, parent=None):
-        super(NListTestDele, self).__init__(parent)
+        super(NListDelegateNew, self).__init__(parent)
         self._testW = TestWidget()
-        self._testW.show()  # don't show on screen
 
         s = """
 #NListItem {
     padding: 0px 3px 0px 3px;
-    border-bottom: 1px solid rgb(152,161,168);
+    border-bottom: 1px solid #979a9b;
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-        stop:0 white,
-        stop:1 #FBFBFB);
+        stop:0 #EEF2DE,
+        stop:1 #E3EBC7);
+}
+#NListItem * {
+    color: #3F474E;
 }
 #NListItem[selected="true"] {
-    background: lightgray;
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 #DAECEE,
+        stop:1 #C6E1E4);
 }
 #NListItem #NListItemText {
-    margin-left: 5px; border: 1px solid gray; margin-right: 3px;
+    margin-left: 5px; margin-right: 3px;
 }
         """
         self._testW.setStyleSheet(s)
-        self._testW.heightWithTag = self._testW.sizeHint().height()
-        self._testW.heightNoTag = self._testW.heightWithTag - self._testW.tag.sizeHint().height()
-        self._testW.title.setScaledContents(True)
+        self._testW.setFixedHeight(self._testW.sizeHint().height())
 
     def paint(self, painter, option, index):
-        # seems widget that used to paint will 'remember' some state and
-        # that cause weird behaviour
         row = index.row()
         dt, text, title, tags, formats = (index.sibling(row, i).data()
                                           for i in range(1, 6))
         selected = bool(option.state & QStyle.State_Selected)
         active = bool(option.state & QStyle.State_Active)
 
-        self._testW.tag.setVisible(bool(tags))  # should set before setting size
-        self._testW.setFixedSize(option.rect.size())  # title.width depends on this
-
-        self._testW.datetime.setText(dt)
-        self._testW.title.setText(
-            font.title_m.elidedText(title, Qt.ElideRight, self._testW.title.width()))
-        self._testW.text.setText(text, formats)
-        if tags: self._testW.tag.setText(tags)
-
+        self._testW.setFixedWidth(option.rect.size().width())
+        self._testW.setTexts(dt, text, title, tags, formats)
         self._testW.setProperty('selected', selected)
         self._testW.setProperty('active', active)
         self._testW.refreshStyle()
@@ -258,11 +259,7 @@ class NListTestDele(QAbstractItemDelegate):
         painter.resetTransform()
 
     def sizeHint(self, option, index):
-        # print('hint', option.rect, index.sibling(index.row(), 2).data()[:4])
-        hasTag = bool(index.sibling(index.row(), 4).data())
-        # print('testW h:', self._testW.sizeHint().height(),
-        #       'text h:', self._testW.text.sizeHint().height())
-        return QSize(-1, self._testW.heightWithTag if hasTag else self._testW.heightNoTag)
+        return QSize(-1, self._testW.height())
 
 
 class TListDelegate(QStyledItemDelegate):
@@ -433,7 +430,7 @@ class NikkiList(QListView):
     def __init__(self, parent=None):
         super(NikkiList, self).__init__(parent)
         # self.setItemDelegate(NListDelegate(self))
-        self.setItemDelegate(NListTestDele(self))
+        self.setItemDelegate(NListDelegateNew(self))
         self.setSpacing(0)
 
         # disable default editor. Editor is implemented in the View
