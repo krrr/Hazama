@@ -157,9 +157,9 @@ class TListDelegate(QStyledItemDelegate):
 
     def updateEditorGeometry(self, editor, option, index):
         rect = option.rect
-        rect.translate(1,1)
-        rect.setWidth(rect.width()-2)
-        rect.setHeight(rect.height()-1)
+        rect.translate(1, 1)
+        rect.setWidth(rect.width() - 2)
+        rect.setHeight(rect.height() - 1)
         editor.setGeometry(rect)
 
     def sizeHint(self, option, index):
@@ -169,7 +169,7 @@ class TListDelegate(QStyledItemDelegate):
 class TagList(QListWidget):
     currentTagChanged = Signal(str)  # str is tag-name or ''
     tagNameModified = Signal(str)  # arg: newTagName
-    _afterEditEnded= False
+    _afterEditEnded = False
 
     def __init__(self, *args, **kwargs):
         super(TagList, self).__init__(*args, **kwargs)
@@ -214,7 +214,7 @@ class TagList(QListWidget):
 
     def load(self):
         logging.debug('load Tag List')
-        itemAll = QListWidgetItem(self.tr('All'), self)
+        QListWidgetItem(self.tr('All'), self)
         itemFlag = Qt.ItemIsEditable | Qt.ItemIsSelectable | Qt.ItemIsEnabled
         if settings['Main'].getint('taglistcount', 1):
             for name, count in nikki.gettags(getcount=True):
@@ -427,7 +427,7 @@ class NikkiList(QListView):
 
     def handleExport(self, path, export_all):
         def restore_dict(index):
-            "restore diary dictionary using data from model"
+            """restore diary dictionary using data from model"""
             row = index.row()
             id, dt, text, title, tags, formats = (
                 index.sibling(row, i).data() for i in range(6))
@@ -464,7 +464,7 @@ class NikkiList(QListView):
         rowInProxy = self.modelProxy.mapFromSource(index).row()
         if ((step == -1 and rowInProxy == 0) or
            (step == 1 and rowInProxy == self.modelProxy.rowCount() - 1)):
-             return
+            return
         self.clearSelection()
         self.setCurrentIndex(self.modelProxy.index(rowInProxy+step, 0))
         geo = self.editors[id].saveGeometry()
