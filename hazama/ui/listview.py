@@ -136,13 +136,14 @@ class NDocumentLabel(QFrame):
         self.updateGeometry()
 
     def paintEvent(self, event):
+        # TODO: use contentsRect
         left, top, right, bottom = self.getContentsMargins()
         painter = QPainter(self)
         painter.translate(left, top)
         rect = event.rect()
         rect.setWidth(rect.width() - left - right)
         rect.setHeight(rect.height() - top - bottom)
-        self.doc.drawContents(painter, rect)
+        self.doc.drawContentsPalette(painter, rect, self.palette())
 
     def resizeEvent(self, event):
         left, __, right, __ = self.getContentsMargins()
@@ -155,8 +156,13 @@ class NDocumentLabel(QFrame):
 
 
 class TestWidget(QFrame):
+    """Widget that used to draw an item in ItemDelegate.paint method.
+    This widget's height is 'fixed'(two possible height) because delegate's
+    sizeHint method is called very often. So font fallback will cause problem.
+    """
     def __init__(self, parent=None):
         super(TestWidget, self).__init__(parent, objectName='NListItem')
+        self.heightWithTag = self.heightNoTag = None
 
         self.title = QLabel(self)
         self.title.setFont(font.title)
@@ -173,19 +179,31 @@ class TestWidget(QFrame):
 
         self.tag = QLabel(self)
 
+        # use QToolButton to display icons
+        self.datetimeIco = QToolButton(self, objectName='NListItemDtIco')
+        minSz = max(font.date_m.ascent(), 12)
+        self.datetimeIco.setIconSize(QSize(minSz, minSz))
+        self.datetimeIco.setIcon(QIcon(':/list/calendar-32.png'))
+
+        self.tagIco = QToolButton(self, objectName='NListItemTagIco')
+        minSz = max(font.default_m.ascent(), 12)
+        self.tagIco.setIconSize(QSize(minSz, minSz))
+        self.tagIco.setIcon(QIcon(':/list/tag-32.png'))
+
         self._vLayout0 = QVBoxLayout(self)
-        self._vLayout0.setContentsMargins(0, 0, 0, 0)
-        self._vLayout0.setSpacing(0)
         self._hLayout0 = QHBoxLayout()
-        self._hLayout0.setContentsMargins(0, 0, 0, 0)
-        self._hLayout0.setSpacing(5)
+        self._hLayout1 = QHBoxLayout()
+        for i in [self._vLayout0, self._hLayout0, self._hLayout1]:
+            i.setContentsMargins(0, 0, 0, 0)
+            i.setSpacing(0)
 
-        self._hLayout0.addWidget(self.datetime)
-        self._hLayout0.addWidget(self.title)
-
+        for i in [self.datetimeIco, self.datetime, self.title]:
+            self._hLayout0.addWidget(i)
+        for i in [self.tagIco, self.tag]:
+            self._hLayout1.addWidget(i)
         self._vLayout0.addLayout(self._hLayout0)
         self._vLayout0.addWidget(self.text)
-        self._vLayout0.addWidget(self.tag)
+        self._vLayout0.addLayout(self._hLayout1)
 
     def refreshStyle(self):
         """Must be called after dynamic property changed"""
@@ -203,7 +221,13 @@ class TestWidget(QFrame):
         self.title.setText(
             font.title_m.elidedText(title, Qt.ElideRight, self.title.width()))
         self.text.setText(text, formats)
-        self.tag.setText(tags if tags else 'aaaa')
+        if tags: self.tag.setText(tags)
+        self.tag.setVisible(bool(tags))
+        self.tagIco.setVisible(bool(tags))
+
+    def refreshHeightInfo(self):
+        self.heightWithTag = self.sizeHint().height()
+        self.heightNoTag = self.heightWithTag - self._hLayout1.sizeHint().height()
 
 
 class NListDelegateNew(QAbstractItemDelegate):
@@ -228,11 +252,16 @@ class NListDelegateNew(QAbstractItemDelegate):
         stop:1 #C6E1E4);
 }
 #NListItem #NListItemText {
-    margin-left: 5px; margin-right: 3px;
+    margin: 2px 3px 2px 5px;
+}
+/* icons */
+#NListItem QToolButton {
+    margin: 0px;
+    border: none;
 }
         """
         self._testW.setStyleSheet(s)
-        self._testW.setFixedHeight(self._testW.sizeHint().height())
+        self._testW.refreshHeightInfo()
 
     def paint(self, painter, option, index):
         row = index.row()
@@ -241,7 +270,8 @@ class NListDelegateNew(QAbstractItemDelegate):
         selected = bool(option.state & QStyle.State_Selected)
         active = bool(option.state & QStyle.State_Active)
 
-        self._testW.setFixedWidth(option.rect.size().width())
+        self._testW.setFixedSize(option.rect.size().width(), self._testW.heightWithTag if tags
+                                 else self._testW.heightNoTag)
         self._testW.setTexts(dt, text, title, tags, formats)
         self._testW.setProperty('selected', selected)
         self._testW.setProperty('active', active)
@@ -255,7 +285,8 @@ class NListDelegateNew(QAbstractItemDelegate):
         painter.resetTransform()
 
     def sizeHint(self, option, index):
-        return QSize(-1, self._testW.height())
+        hasTag = bool(index.sibling(index.row(), 4).data())
+        return QSize(-1, self._testW.heightWithTag if hasTag else self._testW.heightNoTag)
 
 
 class TListDelegate(QStyledItemDelegate):

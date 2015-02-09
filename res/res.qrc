@@ -1,4 +1,11 @@
 <RCC>
+  <qresource prefix="/list">
+    <file>calendar-32.png</file>
+  </qresource>
+  <qresource prefix="/list">
+    <file>tag-32.png</file>
+  </qresource>
+
   <qresource prefix="/images">
     <file>tlist.png</file>
   </qresource>
