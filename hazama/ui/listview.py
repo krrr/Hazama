@@ -174,6 +174,7 @@ class TestWidget(QFrame):
         self.text.setFont(font.text)
 
         self.tag = QLabel(self)
+        self.tag.setMinimumSize(1, 1)
 
         # use QToolButton to display icons
         self.datetimeIco = QToolButton(self, objectName='NListItemDtIco')
@@ -225,6 +226,10 @@ class TestWidget(QFrame):
         self.heightWithTag = self.sizeHint().height()
         self.heightNoTag = self.heightWithTag - self._hLayout1.sizeHint().height()
 
+    def resize(self, w, h):
+        if (w, h) != self.size().toTuple():
+            super(TestWidget, self).resize(w, h)
+
 
 class NListDelegateNew(QAbstractItemDelegate):
     def __init__(self, parent=None):
@@ -266,8 +271,8 @@ class NListDelegateNew(QAbstractItemDelegate):
         selected = bool(option.state & QStyle.State_Selected)
         active = bool(option.state & QStyle.State_Active)
 
-        self._testW.setFixedSize(option.rect.size().width(), self._testW.heightWithTag if tags
-                                 else self._testW.heightNoTag)
+        self._testW.resize(option.rect.size().width(), self._testW.heightWithTag
+                           if tags else self._testW.heightNoTag)
         self._testW.setTexts(dt, text, title, tags, formats)
         self._testW.setProperty('selected', selected)
         self._testW.setProperty('active', active)
