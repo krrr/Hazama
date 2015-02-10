@@ -9,6 +9,7 @@ import random
 from ui import font, datetimeTrans, currentDatetime
 from ui.editor import Editor
 from ui.customobjects import NTextDocument, MultiSortFilterProxyModel
+from ui.customwidgets import NElideLabel
 from config import settings, nikki
 
 
@@ -160,11 +161,10 @@ class TestWidget(QFrame):
         super(TestWidget, self).__init__(parent, objectName='NListItem')
         self.heightWithTag = self.heightNoTag = None
 
-        self.title = QLabel(self)
+        self.title = NElideLabel(self)
         self.title.setFont(font.title)
         self.title.setAlignment(Qt.AlignVCenter | Qt.AlignRight)
         self.title.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
-        self.title.setMinimumSize(1, 1)  # title can be elided, so ignore minimalSizeHint
         self.datetime = QLabel(self)
         self.datetime.setFont(font.date)
         self.datetime.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Preferred)
@@ -173,8 +173,7 @@ class TestWidget(QFrame):
         self.text.setLines(settings['Main'].getint('previewlines', 4))
         self.text.setFont(font.text)
 
-        self.tag = QLabel(self)
-        self.tag.setMinimumSize(1, 1)
+        self.tag = NElideLabel(self)
 
         # use QToolButton to display icons
         self.datetimeIco = QToolButton(self, objectName='NListItemDtIco')
@@ -196,6 +195,7 @@ class TestWidget(QFrame):
 
         for i in [self.datetimeIco, self.datetime, self.title]:
             self._hLayout0.addWidget(i)
+        self._hLayout0.insertSpacing(2, 10)
         for i in [self.tagIco, self.tag]:
             self._hLayout1.addWidget(i)
         self._vLayout0.addLayout(self._hLayout0)

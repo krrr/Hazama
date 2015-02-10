@@ -197,6 +197,19 @@ class SearchBox(QLineEditWithMenuIcon):
         self.setPlaceholderText(self.tr('Search'))
 
 
+class NElideLabel(QLabel):
+    elideMode = Qt.ElideRight
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        rect = self.contentsRect()
+        t = self.fontMetrics().elidedText(self.text(), self.elideMode, rect.width())
+        painter.drawText(rect, self.alignment(), t)
+
+    def minimumSizeHint(self):
+        return QSize()  # return invalid size
+
+
 class DateTimeDialog(QDialog):
     """A dialog that let user change datetime, just like QColorDialog."""
     def __init__(self, dt, displayFmt, parent=None):
