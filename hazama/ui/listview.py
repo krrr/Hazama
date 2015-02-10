@@ -109,7 +109,7 @@ class NListDelegate(QStyledItemDelegate):
 
 
 class NDocumentLabel(QFrame):
-    """Simple widget rendered in ItemDelegate. sizeHint will always related
+    """Simple widget to draw QTextDocument. sizeHint will always related
     to fixed number of lines set. If font fallback happen, it may look bad."""
 
     def __init__(self, parent=None, lines=None, **kwargs):
@@ -136,18 +136,14 @@ class NDocumentLabel(QFrame):
         self.updateGeometry()
 
     def paintEvent(self, event):
-        # TODO: use contentsRect
-        left, top, right, bottom = self.getContentsMargins()
         painter = QPainter(self)
-        painter.translate(left, top)
-        rect = event.rect()
-        rect.setWidth(rect.width() - left - right)
-        rect.setHeight(rect.height() - top - bottom)
+        rect = self.contentsRect()
+        painter.translate(rect.topLeft())
+        rect.moveTo(0, 0)  # become clip rect
         self.doc.drawContentsPalette(painter, rect, self.palette())
 
     def resizeEvent(self, event):
-        left, __, right, __ = self.getContentsMargins()
-        self.doc.setTextWidth(event.size().width() - left - right)
+        self.doc.setTextWidth(self.contentsRect().width())
         super(NDocumentLabel, self).resizeEvent(event)
 
     def sizeHint(self):
