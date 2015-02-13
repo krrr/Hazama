@@ -9,12 +9,13 @@ import random
 from ui import font, datetimeTrans, currentDatetime
 from ui.editor import Editor
 from ui.customobjects import NTextDocument, MultiSortFilterProxyModel
-from ui.customwidgets import NElideLabel
+from ui.customwidgets import NElideLabel, NDocumentLabel
 from config import settings, nikki
 
 
 class NListDelegate(QStyledItemDelegate):
-    """Delegate painting of entries in Main List"""
+    """ItemDelegate of old theme 'one-pixel-rect' for NList, Using 'traditional'
+    painting method compared to colorful theme."""
     def __init__(self, parent):
         super(NListDelegate, self).__init__(parent)
         self.title_h = max(QFontInfo(font.title).pixelSize(),
@@ -109,159 +110,90 @@ class NListDelegate(QStyledItemDelegate):
         return QSize(-1, self.all_h+3)  # 3 is spacing between entries
 
 
-class NDocumentLabel(QFrame):
-    """Simple widget to draw QTextDocument. sizeHint will always related
-    to fixed number of lines set. If font fallback happen, it may look bad."""
-
-    def __init__(self, parent=None, lines=None, **kwargs):
-        super(NDocumentLabel, self).__init__(parent, **kwargs)
-        self._lines = self._heightHint = None
-        self.doc = NTextDocument(self)
-        self.doc.setDocumentMargin(0)
-        self.doc.setUndoRedoEnabled(False)
-        self.setLines(lines if lines else 4)
-
-    def setFont(self, f):
-        self.doc.setDefaultFont(f)
-        super(NDocumentLabel, self).setFont(f)
-        self.setLines(self._lines)  # refresh size hint
-
-    def setText(self, text, formats):
-        self.doc.setText(text, formats)
-        # delete exceed lines here using QTextCursor will slow down
-
-    def setLines(self, lines):
-        self._lines = lines
-        self.doc.setText('\n' * (lines - 1), None)
-        self._heightHint = int(self.doc.size().height())
-        self.updateGeometry()
-
-    def paintEvent(self, event):
-        painter = QPainter(self)
-        rect = self.contentsRect()
-        painter.translate(rect.topLeft())
-        rect.moveTo(0, 0)  # become clip rect
-        self.doc.drawContentsPalette(painter, rect, self.palette())
-
-    def resizeEvent(self, event):
-        self.doc.setTextWidth(self.contentsRect().width())
-        super(NDocumentLabel, self).resizeEvent(event)
-
-    def sizeHint(self):
-        __, top, __, bottom = self.getContentsMargins()
-        return QSize(-1, self._heightHint + top + bottom)
-
-
-class TestWidget(QFrame):
-    """Widget that used to draw an item in ItemDelegate.paint method.
-    This widget's height is 'fixed'(two possible height) because delegate's
-    sizeHint method is called very often. So font fallback will cause problem.
-    """
-    def __init__(self, parent=None):
-        super(TestWidget, self).__init__(parent, objectName='NListItem')
-        self.heightWithTag = self.heightNoTag = None
-
-        self.title = NElideLabel(self)
-        self.title.setFont(font.title)
-        self.title.setAlignment(Qt.AlignVCenter | Qt.AlignRight)
-        self.title.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
-        self.datetime = QLabel(self)
-        self.datetime.setFont(font.date)
-        self.datetime.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Preferred)
-
-        self.text = NDocumentLabel(self, objectName='NListItemText')
-        self.text.setLines(settings['Main'].getint('previewlines', 4))
-        self.text.setFont(font.text)
-
-        self.tag = NElideLabel(self)
-
-        # use QToolButton to display icons
-        self.datetimeIco = QToolButton(self, objectName='NListItemDtIco')
-        minSz = max(font.date_m.ascent(), 12)
-        self.datetimeIco.setIconSize(QSize(minSz, minSz))
-        self.datetimeIco.setIcon(QIcon(':/list/calendar-32.png'))
-
-        self.tagIco = QToolButton(self, objectName='NListItemTagIco')
-        minSz = max(font.default_m.ascent(), 12)
-        self.tagIco.setIconSize(QSize(minSz, minSz))
-        self.tagIco.setIcon(QIcon(':/list/tag-32.png'))
-
-        self._vLayout0 = QVBoxLayout(self)
-        self._hLayout0 = QHBoxLayout()
-        self._hLayout1 = QHBoxLayout()
-        for i in [self._vLayout0, self._hLayout0, self._hLayout1]:
-            i.setContentsMargins(0, 0, 0, 0)
-            i.setSpacing(0)
-
-        for i in [self.datetimeIco, self.datetime, self.title]:
-            self._hLayout0.addWidget(i)
-        self._hLayout0.insertSpacing(2, 10)
-        for i in [self.tagIco, self.tag]:
-            self._hLayout1.addWidget(i)
-        self._vLayout0.addLayout(self._hLayout0)
-        self._vLayout0.addWidget(self.text)
-        self._vLayout0.addLayout(self._hLayout1)
-
-    def refreshStyle(self):
-        """Must be called after dynamic property changed"""
-        self.style().unpolish(self)
-        self.style().polish(self)
-        # no need to call self.update here
-
-    def setTexts(self, dt, text, title, tags, formats):
-        # Some layout behaviours are full of mystery, even changing order of
-        # calls will break the UI
-        self.datetime.setText(datetimeTrans(dt))
-        # without this width of dt will not updated (for performance reason?)
-        self._hLayout0.activate()
-        # width of title area depends on testW's width
-        self.title.setText(
-            font.title_m.elidedText(title, Qt.ElideRight, self.title.width()))
-        self.text.setText(text, formats)
-        if tags: self.tag.setText(tags)
-        self.tag.setVisible(bool(tags))
-        self.tagIco.setVisible(bool(tags))
-
-    def refreshHeightInfo(self):
-        self.heightWithTag = self.sizeHint().height()
-        self.heightNoTag = self.heightWithTag - self._hLayout1.sizeHint().height()
-
-    def resize(self, w, h):
-        if (w, h) != self.size().toTuple():
-            super(TestWidget, self).resize(w, h)
-
-
-class NListDelegateNew(QAbstractItemDelegate):
-    def __init__(self, parent=None):
-        super(NListDelegateNew, self).__init__(parent)
-        self._testW = TestWidget()
-
-        s = """
-#NListItem {
-    padding: 0px 3px 0px 3px;
-    border-bottom: 1px solid #979a9b;
-    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-        stop:0 #EEF2DE,
-        stop:1 #E3EBC7);
-}
-#NListItem * {
-    color: #3F474E;
-}
-#NListItem[selected="true"] {
-    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-        stop:0 #DAECEE,
-        stop:1 #C6E1E4);
-}
-#NListItem #NListItemText {
-    margin: 2px 3px 2px 5px;
-}
-/* icons */
-#NListItem QToolButton {
-    margin: 0px;
-    border: none;
-}
+class NListDelegateColorful(QAbstractItemDelegate):
+    """ItemDelegate of theme 'colorful' for NList. Using widget rendering."""
+    class ItemWidget(QFrame):
+        """Widget that used to draw an item in ItemDelegate.paint method.
+        This widget's height is 'fixed'(two possible height) because delegate's
+        sizeHint method is called very often. So font fallback will cause problem.
         """
-        self._testW.setStyleSheet(s)
+        def __init__(self, parent=None):
+            super(NListDelegateColorful.ItemWidget, self).__init__(
+                parent, objectName='NListItem')
+            self.heightWithTag = self.heightNoTag = None
+
+            self.title = NElideLabel(self)
+            self.title.setFont(font.title)
+            self.title.setAlignment(Qt.AlignVCenter | Qt.AlignRight)
+            self.title.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+            self.datetime = QLabel(self)
+            self.datetime.setFont(font.date)
+            self.datetime.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Preferred)
+
+            self.text = NDocumentLabel(self, objectName='NListItemText')
+            self.text.setLines(settings['Main'].getint('previewlines', 4))
+            self.text.setFont(font.text)
+
+            self.tag = NElideLabel(self)
+
+            # use QToolButton to display icons
+            self.datetimeIco = QToolButton(self, objectName='NListItemDtIco')
+            minSz = max(font.date_m.ascent(), 12)
+            self.datetimeIco.setIconSize(QSize(minSz, minSz))
+            self.datetimeIco.setIcon(QIcon(':/list/calendar-32.png'))
+
+            self.tagIco = QToolButton(self, objectName='NListItemTagIco')
+            minSz = max(font.default_m.ascent(), 12)
+            self.tagIco.setIconSize(QSize(minSz, minSz))
+            self.tagIco.setIcon(QIcon(':/list/tag-32.png'))
+
+            self._vLayout0 = QVBoxLayout(self)
+            self._hLayout0 = QHBoxLayout()
+            self._hLayout1 = QHBoxLayout()
+            for i in [self._vLayout0, self._hLayout0, self._hLayout1]:
+                i.setContentsMargins(0, 0, 0, 0)
+                i.setSpacing(0)
+
+            for i in [self.datetimeIco, self.datetime, self.title]:
+                self._hLayout0.addWidget(i)
+            self._hLayout0.insertSpacing(2, 10)
+            for i in [self.tagIco, self.tag]:
+                self._hLayout1.addWidget(i)
+            self._vLayout0.addLayout(self._hLayout0)
+            self._vLayout0.addWidget(self.text)
+            self._vLayout0.addLayout(self._hLayout1)
+
+        def refreshStyle(self):
+            """Must be called after dynamic property changed"""
+            self.style().unpolish(self)
+            self.style().polish(self)
+            # no need to call self.update here
+
+        def setTexts(self, dt, text, title, tags, formats):
+            # Some layout behaviours are full of mystery, even changing order of
+            # calls will break the UI
+            self.datetime.setText(datetimeTrans(dt))
+            # without this width of dt will not updated (for performance reason?)
+            self._hLayout0.activate()
+            # width of title area depends on testW's width
+            self.title.setText(
+                font.title_m.elidedText(title, Qt.ElideRight, self.title.width()))
+            self.text.setText(text, formats)
+            if tags: self.tag.setText(tags)
+            self.tag.setVisible(bool(tags))
+            self.tagIco.setVisible(bool(tags))
+
+        def refreshHeightInfo(self):
+            self.heightWithTag = self.sizeHint().height()
+            self.heightNoTag = self.heightWithTag - self._hLayout1.sizeHint().height()
+
+        def resize(self, w, h):
+            if (w, h) != self.size().toTuple():
+                super(NListDelegateColorful.ItemWidget, self).resize(w, h)
+
+    def __init__(self, parent=None):
+        super(NListDelegateColorful, self).__init__(parent)
+        self._testW = self.ItemWidget()
         self._testW.refreshHeightInfo()
 
     def paint(self, painter, option, index):
@@ -457,10 +389,8 @@ class NikkiList(QListView):
 
     def __init__(self, parent=None):
         super(NikkiList, self).__init__(parent)
-        # self.setItemDelegate(NListDelegate(self))
-        self.setItemDelegate(NListDelegateNew(self))
         self.setSpacing(0)
-
+        self._setDelegate()
         # disable default editor. Editor is implemented in the View
         self.setEditTriggers(QAbstractItemView.NoEditTriggers)
         # setup models
@@ -583,6 +513,14 @@ class NikkiList(QListView):
             model.setData(model.index(0, 5), i['formats'])
             model.setData(model.index(0, 6), len(i['text']))
 
+    def _setDelegate(self):
+        theme = settings['Main'].get('theme')
+        if theme == 'colorful':
+            d = NListDelegateColorful(self)
+        else:
+            d = NListDelegate(self)
+        self.setItemDelegate(d)
+
     def reload(self):
         self.modelProxy.setSourceModel(None)
         self.originModel.deleteLater()
@@ -619,8 +557,9 @@ class NikkiList(QListView):
                     (restore_dict(i) for i in self.selectedIndexes()))
         nikki.exporttxt(path, selected)
 
+    @Slot()
     def resetDelegate(self):
-        self.setItemDelegate(NListDelegate(self))
+        self._setDelegate()
         # force items to be laid again
         self.setSpacing(self.spacing())
 

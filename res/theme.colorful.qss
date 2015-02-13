@@ -1,0 +1,44 @@
+/* ToolBar part */
+QMainWindow QToolBar {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 rgb(236,241,244),
+        stop:1 rgb(226,233,238));
+}
+QMainWindow QToolBar {
+    border-bottom: 1px solid #979a9b;
+}
+
+/* Editor part */
+QWidget#editor {
+    background-color: #E3EBC7;
+}
+QWidget#editor #tagEditor, #titleEditor, #textEditor {
+    background-color: rgba(255, 255, 255, 155);
+}
+QWidget#editor #tagEditor:focus, #titleEditor:focus, #textEditor:focus {
+    background-color: rgba(255, 255, 255, 200);
+}
+
+/* NListItem part */
+QFrame#NListItem {
+    padding: 0px 3px 0px 3px;
+    border-bottom: 1px solid #979a9b;
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 #EEF2DE,
+        stop:1 #E3EBC7);
+}
+QFrame#NListItem * {
+    color: #3F474E;
+}
+QFrame#NListItem[selected="true"] {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 #DAECEE,
+        stop:1 #C6E1E4);
+}
+QFrame#NListItem #NListItemText {
+    margin: 2px 3px 2px 5px;
+}
+QFrame#NListItem QToolButton {  /* icons */
+    margin: 0px;
+    border: none;
+}

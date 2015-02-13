@@ -2,7 +2,7 @@
 *.qm
 *.db
 *.ini
-*.qss
+custom.qss
 xmlsample
 build
 .idea

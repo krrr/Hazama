@@ -13,6 +13,49 @@ class QLineEditWithMenuIcon(QLineEdit):
         menu.deleteLater()
 
 
+class NDocumentLabel(QFrame):
+    """Simple widget to draw QTextDocument. sizeHint will always related
+    to fixed number of lines set. If font fallback happen, it may look bad."""
+
+    def __init__(self, parent=None, lines=None, **kwargs):
+        super(NDocumentLabel, self).__init__(parent, **kwargs)
+        self._lines = self._heightHint = None
+        self.doc = NTextDocument(self)
+        self.doc.setDocumentMargin(0)
+        self.doc.setUndoRedoEnabled(False)
+        self.setLines(lines if lines else 4)
+
+    def setFont(self, f):
+        self.doc.setDefaultFont(f)
+        super(NDocumentLabel, self).setFont(f)
+        self.setLines(self._lines)  # refresh size hint
+
+    def setText(self, text, formats):
+        self.doc.setText(text, formats)
+        # delete exceed lines here using QTextCursor will slow down
+
+    def setLines(self, lines):
+        self._lines = lines
+        self.doc.setText('\n' * (lines - 1), None)
+        self._heightHint = int(self.doc.size().height())
+        self.updateGeometry()
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        rect = self.contentsRect()
+        painter.translate(rect.topLeft())
+        rect.moveTo(0, 0)  # become clip rect
+        self.doc.drawContentsPalette(painter, rect, self.palette())
+
+    def resizeEvent(self, event):
+        self.doc.setTextWidth(self.contentsRect().width())
+        super(NDocumentLabel, self).resizeEvent(event)
+
+    def sizeHint(self):
+        __, top, __, bottom = self.getContentsMargins()
+        return QSize(-1, self._heightHint + top + bottom)
+
+
 class NTextEdit(QTextEdit, TextFormatter):
     """The widget used to edit diary contents in Editor window."""
     # spaces auto-indent will recognize

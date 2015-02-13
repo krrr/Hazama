@@ -70,6 +70,9 @@
   <qresource prefix="/">
     <file>default.qss</file>
   </qresource>
+  <qresource prefix="/">
+    <file>theme.colorful.qss</file>
+  </qresource>
 
   <qresource prefix="/editor">
     <file>clock.png</file>

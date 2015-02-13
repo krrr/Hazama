@@ -87,11 +87,17 @@ def setStyleSheet():
     if '-stylesheet' in sys.argv:
         logging.info('override default StyleSheet by command line arg')
     else:
-        ss = readRcTextFile(':/default.qss')
+        ss = [readRcTextFile(':/default.qss')]
         if os.path.isfile('custom.qss'):
             logging.info('set custom StyleSheet')
-            ss += open('custom.qss', encoding='utf-8').read()
-        app.setStyleSheet(ss)
+            with open('custom.qss', encoding='utf-8') as f:
+                ss.append(f.read())
+        # append theme part
+        theme = settings['Main'].get('theme')
+        if theme == 'colorful':
+            ss.append(readRcTextFile(':/theme.colorful.qss'))
+
+        app.setStyleSheet(''.join(ss))
 
 
 class Fonts:
