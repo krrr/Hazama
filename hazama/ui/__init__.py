@@ -23,6 +23,16 @@ def currentDatetime():
     return time.strftime('%Y-%m-%d %H:%M')
 
 
+def readRcTextFile(path):
+    """Read whole text file from qt resources system"""
+    f = QFile(path)
+    if not f.open(QFile.ReadOnly | QFile.Text):
+        raise Exception('read rc text failed')
+    text = str(f.readAll())
+    f.close()
+    return text
+
+
 def setTranslationLocale():
     lang = settings['Main'].get('lang', 'en')
     logging.info('set translation(%s)', lang)
@@ -77,10 +87,7 @@ def setStyleSheet():
     if '-stylesheet' in sys.argv:
         logging.info('override default StyleSheet by command line arg')
     else:
-        f = QFile(':/default.qss')
-        f.open(QIODevice.ReadOnly | QIODevice.Text)
-        ss = str(f.readAll())
-        f.close()
+        ss = readRcTextFile(':/default.qss')
         if os.path.isfile('custom.qss'):
             logging.info('set custom StyleSheet')
             ss += open('custom.qss', encoding='utf-8').read()
