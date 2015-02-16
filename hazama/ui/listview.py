@@ -110,7 +110,7 @@ class NListDelegate(QStyledItemDelegate):
         return QSize(-1, self.all_h+3)  # 3 is spacing between entries
 
 
-class NListDelegateColorful(QAbstractItemDelegate):
+class NListDelegateColorful(QItemDelegate):
     """ItemDelegate of theme 'colorful' for NList. Using widget rendering."""
     class ItemWidget(QFrame):
         """Widget that used to draw an item in ItemDelegate.paint method.
@@ -203,6 +203,7 @@ class NListDelegateColorful(QAbstractItemDelegate):
         selected = bool(option.state & QStyle.State_Selected)
         active = bool(option.state & QStyle.State_Active)
 
+        tags = ' \u2022 '.join(tags.split())  # use bullet to separate
         self._testW.resize(option.rect.size().width(), self._testW.heightWithTag
                            if tags else self._testW.heightNoTag)
         self._testW.setTexts(dt, text, title, tags, formats)
@@ -214,7 +215,7 @@ class NListDelegateColorful(QAbstractItemDelegate):
         painter.translate(option.rect.topLeft())
         self._testW.render(
             painter, QPoint(),
-            renderFlags=QWidget.DrawChildren | QWidget.DrawWindowBackground)
+            renderFlags=QWidget.DrawChildren)
         painter.resetTransform()
 
     def sizeHint(self, option, index):
@@ -276,6 +277,71 @@ class TListDelegate(QStyledItemDelegate):
         return QSize(-1, self.h)
 
 
+class TListDelegateColorful(QItemDelegate):
+    """ItemDelegate of theme 'colorful' for TList. Using widget rendering."""
+    class ItemWidget(QFrame):
+        # almost the same as NListDelegateColorful.ItemWidget
+        def __init__(self, parent=None):
+            super(TListDelegateColorful.ItemWidget, self).__init__(
+                parent, objectName='TListItem')
+            self._hLayout = QHBoxLayout(self)
+            self._hLayout.setContentsMargins(0, 0, 0, 0)
+
+            self.name = NElideLabel(self, objectName='TListItemName')
+            self.name.setAlignment(Qt.AlignRight)
+            self.name.elideMode = Qt.ElideLeft
+            self.count = QLabel(self, objectName='TListItemCount')
+            self.count.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Preferred)
+            self._hLayout.addWidget(self.count)
+            self._hLayout.addWidget(self.name)
+
+        def refreshStyle(self):
+            self.style().unpolish(self)
+            self.style().polish(self)
+
+        def setFixedWidth(self, w):
+            if w != self.width():
+                super(TListDelegateColorful.ItemWidget, self).setFixedWidth(w)
+
+    def __init__(self, parent=None):
+        super(TListDelegateColorful, self).__init__(parent)
+        self._itemW = self.ItemWidget()
+        self._itemW.setFixedHeight(self._itemW.sizeHint().height())
+        self._countEnabled = settings['Main'].getint('taglistcount', 0)
+        if not self._countEnabled: self._itemW.count.hide()
+
+    def paint(self, painter, option, index):
+        selected = bool(option.state & QStyle.State_Selected)
+        active = bool(option.state & QStyle.State_Active)
+
+        self._itemW.name.setText(index.data(Qt.DisplayRole))
+        if self._countEnabled:
+            countData = index.data(Qt.UserRole)
+            self._itemW.count.setText(str(countData) if countData else '')
+        self._itemW.setProperty('selected', selected)
+        self._itemW.setProperty('active', active)
+        self._itemW.refreshStyle()
+        self._itemW.setFixedWidth(option.rect.width())
+
+        painter.translate(option.rect.topLeft())
+        self._itemW.render(
+            painter, QPoint(),
+            renderFlags=QWidget.DrawChildren)
+        painter.resetTransform()
+
+    def sizeHint(self, option, index):
+        return QSize(-1, self._itemW.height())
+
+    def createEditor(self, parent, option, index):
+        editor = QLineEdit(parent, objectName='tagListEdit')
+        editor.setAlignment(self._itemW.name.alignment())
+        editor.oldText = index.data()
+        return editor
+
+    def updateEditorGeometry(self, editor, option, index):
+        editor.setGeometry(option.rect)
+
+
 class TagList(QListWidget):
     currentTagChanged = Signal(str)  # str is tag-name or ''
     tagNameModified = Signal(str)  # arg: newTagName
@@ -283,12 +349,16 @@ class TagList(QListWidget):
 
     def __init__(self, *args, **kwargs):
         super(TagList, self).__init__(*args, **kwargs)
-        self.setItemDelegate(TListDelegate(self))
+        self.trackList = None  # update in mousePressEvent
+        # setup delegate
+        theme = settings['Main'].get('theme')
+        d = {'colorful': TListDelegateColorful}.get(theme, TListDelegate)
+        self.setItemDelegate(d())  # don't pass parent
+
         self.setEditTriggers(QAbstractItemView.EditKeyPressed)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollMode(QAbstractItemView.ScrollPerPixel)
         self.setUniformItemSizes(True)
-        self.trackList = None  # update in mousePressEvent
         self.currentItemChanged.connect(self.emitCurrentTagChanged)
 
     def contextMenuEvent(self, event):
@@ -325,6 +395,7 @@ class TagList(QListWidget):
     def load(self):
         logging.debug('load Tag List')
         QListWidgetItem(self.tr('All'), self)
+        self.setCurrentRow(0)
         itemFlag = Qt.ItemIsEditable | Qt.ItemIsSelectable | Qt.ItemIsEnabled
         if settings['Main'].getint('taglistcount', 1):
             for name, count in nikki.gettags(getcount=True):
@@ -389,7 +460,6 @@ class NikkiList(QListView):
 
     def __init__(self, parent=None):
         super(NikkiList, self).__init__(parent)
-        self.setSpacing(0)
         self._setDelegate()
         # disable default editor. Editor is implemented in the View
         self.setEditTriggers(QAbstractItemView.NoEditTriggers)

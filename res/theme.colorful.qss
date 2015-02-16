@@ -1,3 +1,18 @@
+QMainWindow QSplitter::handle {background: #979A9B;}
+QListView#tList {
+    padding-top: 3px;
+    background: #E4EBF0;
+}
+QListView#nList{
+    margin: 0px;
+    background: #FAFAFA;
+}
+QLineEdit#tagListEdit {
+    border: none;
+    margin: 1px;
+    margin-right: 3px;
+}
+
 /* ToolBar part */
 QMainWindow QToolBar {
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
@@ -5,7 +20,7 @@ QMainWindow QToolBar {
         stop:1 rgb(226,233,238));
 }
 QMainWindow QToolBar {
-    border-bottom: 1px solid #979a9b;
+    border-bottom: 1px solid #979A9B;
 }
 
 /* Editor part */
@@ -22,7 +37,7 @@ QWidget#editor #tagEditor:focus, #titleEditor:focus, #textEditor:focus {
 /* NListItem part */
 QFrame#NListItem {
     padding: 0px 3px 0px 3px;
-    border-bottom: 1px solid #979a9b;
+    border-bottom: 1px solid #979A9B;
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
         stop:0 #EEF2DE,
         stop:1 #E3EBC7);
@@ -30,10 +45,15 @@ QFrame#NListItem {
 QFrame#NListItem * {
     color: #3F474E;
 }
-QFrame#NListItem[selected="true"] {
+QFrame#NListItem[selected="true"][active="true"] {
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
         stop:0 #DAECEE,
         stop:1 #C6E1E4);
+}
+QFrame#NListItem[selected="true"][active="false"] {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 #E7E7E7,
+        stop:1 #D9D9D9);
 }
 QFrame#NListItem #NListItemText {
     margin: 2px 3px 2px 5px;
@@ -41,4 +61,21 @@ QFrame#NListItem #NListItemText {
 QFrame#NListItem QToolButton {  /* icons */
     margin: 0px;
     border: none;
+}
+
+/* TListItem part */
+QFrame#TListItem {
+    padding: 6px 8px 6px 8px;
+    background: transparent;
+}
+QFrame#TListItem * {
+    color: #363D43;
+}
+QFrame#TListItem[selected="true"] {
+    border-right: 3px solid #7092BE;
+    border-top: 1px solid #979A9B;
+    border-bottom: 1px solid #979A9B;
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 white,
+        stop:1 transparent);
 }
