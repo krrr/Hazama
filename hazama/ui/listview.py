@@ -345,7 +345,6 @@ class TListDelegateColorful(QItemDelegate):
 class TagList(QListWidget):
     currentTagChanged = Signal(str)  # str is tag-name or ''
     tagNameModified = Signal(str)  # arg: newTagName
-    _afterEditEnded = False
 
     def __init__(self, *args, **kwargs):
         super(TagList, self).__init__(*args, **kwargs)
@@ -371,25 +370,13 @@ class TagList(QListWidget):
             menu.exec_(event.globalPos())
             menu.deleteLater()
 
-    def closeEditor(self, editor, hint):
-        # if we clicked some other tags to end editing, that tag will be seleced,
-        # which is annoying. here use a flag to stop it in mouse event.
-        if self.hasFocus():
-            # focus have moved from *Editor* to TagList, selection will change soon
-            self._afterEditEnded = True
-        super(TagList, self).closeEditor(editor, hint)
-
     def commitData(self, editor):
         newName = editor.text()
         if editor.isModified() and newName and ' ' not in newName:
-            try:
-                nikki.changetagname(editor.oldText, newName)
-            except Exception:
-                logging.warning('failed to change tag name')
-                return
+            # editor.oldText is set in delegate
+            nikki.changetagname(editor.oldText, newName)
             logging.info('tag [%s] changed to [%s]', editor.oldText, newName)
             super(TagList, self).commitData(editor)
-            # editor.oldText is set in delegate
             self.tagNameModified.emit(newName)
 
     def load(self):
@@ -443,13 +430,10 @@ class TagList(QListWidget):
 
     def mouseReleaseEvent(self, event):
         if self.trackList is not None and len(self.trackList) <= 4:  # haven't moved
-            if not self._afterEditEnded:
-                pEvent = QMouseEvent(QEvent.MouseButtonPress, event.pos(),
-                                     event.globalPos(), Qt.LeftButton,
-                                     Qt.LeftButton, Qt.NoModifier)
-                QListWidget.mousePressEvent(self, pEvent)
-            else:  # cancel selection change
-                self._afterEditEnded = False
+            pEvent = QMouseEvent(QEvent.MouseButtonPress, event.pos(),
+                                 event.globalPos(), Qt.LeftButton,
+                                 Qt.LeftButton, Qt.NoModifier)
+            QListWidget.mousePressEvent(self, pEvent)
         self.trackList = None
 
 

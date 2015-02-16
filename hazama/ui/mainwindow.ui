@@ -51,6 +51,9 @@
          <height>0</height>
         </size>
        </property>
+       <property name="focusPolicy">
+        <enum>Qt::TabFocus</enum>
+       </property>
       </widget>
       <widget class="NikkiList" name="nList">
        <property name="sizePolicy">
