@@ -205,41 +205,6 @@ class NTextEdit(QTextEdit, TextFormatter):
         self.insertHtml(source.html() or source.text())
 
 
-class SearchBox(QLineEditWithMenuIcon):
-    """A real-time search box"""
-    def __init__(self, parent=None):
-        super(SearchBox, self).__init__(parent)
-        self.setMinimumHeight(23)  # looks fine when toolbar icon is 24x24
-        self.setTextMargins(QMargins(2, 0, 20, 0))
-        self.button = QToolButton(self)
-        self.button.setFixedSize(18, 18)
-        self.button.setCursor(Qt.ArrowCursor)
-        self.button.clicked.connect(self.clear)
-        clearSc = QShortcut(QKeySequence(Qt.Key_Escape), self)
-        clearSc.activated.connect(self.clear)
-        self.textChanged.connect(self.update)
-        self.retranslate()
-        self.isTextBefore = True
-        self.update('')
-
-    def resizeEvent(self, event):
-        w, h = event.size().toTuple()
-        pos_y = (h - 18) / 2
-        self.button.move(w - 18 - pos_y, pos_y)
-
-    def update(self, text):
-        """Update button icon"""
-        if self.isTextBefore == bool(text): return
-        ico_name = 'search_clr' if text else 'search'
-        self.button.setStyleSheet('QToolButton {border: none;'
-                                  'background: url(:/images/%s.png);'
-                                  'background-position: center}' % ico_name)
-        self.isTextBefore = bool(text)
-
-    def retranslate(self):
-        self.setPlaceholderText(self.tr('Search'))
-
-
 class NElideLabel(QLabel):
     elideMode = Qt.ElideRight
 

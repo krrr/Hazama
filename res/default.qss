@@ -1,4 +1,19 @@
+/* ToolBar part */
+QMainWindow QToolBar {
+    background: #f2f1e7;
+    border-bottom: 1px solid #b53d00;
+    padding: 2px;
+    spacing: 0px
+}
+
 QLabel#countLabel {color: #909090;}
+
+QLineEdit#searchBox QToolButton {
+    border: 0px;
+}
+QLineEdit#searchBox QToolButton:pressed {
+    padding: 0px;  /* disable press shifting */
+}
 
 QWidget#editor {background-color: #e8f5ff;}
 
@@ -19,14 +34,7 @@ QLineEdit#tagListEdit {
 
 QMainWindow QSplitter::handle {background: #b53d00;}
 
-QMainWindow QToolBar {
-    background: #f2f1e7;
-    border-bottom: 1px solid #b53d00;
-    padding: 2px;
-    spacing: 0px
-}
-
-/* HeatMap page */
+/* HeatMap part */
 QWidget#heatMap {background: #e8f6ff;}
 
 QFrame#heatMapBar {

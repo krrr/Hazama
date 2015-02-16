@@ -3,7 +3,7 @@ from PySide.QtCore import *
 import logging
 from itertools import chain
 from ui import font, setTranslationLocale
-from ui.customwidgets import SearchBox
+from ui.customwidgets import QLineEditWithMenuIcon
 from ui.configdialog import ConfigDialog
 from ui.mainwindow_ui import Ui_mainWindow
 from ui.heatmap import HeatMap, cellColors
@@ -169,3 +169,37 @@ class MainWindow(QMainWindow, Ui_mainWindow):
                     or self.nList.modelProxy.filterPattern(1))
         c = self.nList.modelProxy.rowCount() if filtered else self.nList.originModel.rowCount()
         self.countLabel.setText(self.tr('%i diaries') % c)
+
+
+class SearchBox(QLineEditWithMenuIcon):
+    """The real-time search box in toolbar"""
+    def __init__(self, parent=None):
+        super(SearchBox, self).__init__(parent, objectName='searchBox')
+        self.setMinimumHeight(23)  # looks fine when toolbar icon is 24x24
+        self.setTextMargins(QMargins(2, 0, 20, 0))
+        self.button = QToolButton(self, objectName='searchBoxBtn')
+        self.button.setFocusPolicy(Qt.NoFocus)
+        self.button.setFixedSize(18, 18)
+        self.button.setCursor(Qt.ArrowCursor)
+        self.button.clicked.connect(self.clear)
+        clearSc = QShortcut(QKeySequence(Qt.Key_Escape), self)
+        clearSc.activated.connect(self.clear)
+        self.textChanged.connect(self._updateIco)
+        self.retranslate()
+        self.isTextBefore = True
+        self._updateIco('')  # initiallize the icon
+
+    def resizeEvent(self, event):
+        w, h = event.size().toTuple()
+        pos_y = (h - 18) / 2
+        self.button.move(w - 18 - pos_y, pos_y)
+
+    def _updateIco(self, text):
+        """Update button icon"""
+        if self.isTextBefore == bool(text): return
+        ico_name = 'search_clr' if text else 'search'
+        self.button.setIcon(QIcon(':/images/%s.png' % ico_name))
+        self.isTextBefore = bool(text)
+
+    def retranslate(self):
+        self.setPlaceholderText(self.tr('Search'))
