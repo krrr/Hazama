@@ -205,6 +205,15 @@ class NTextEdit(QTextEdit, TextFormatter):
         self.insertHtml(source.html() or source.text())
 
 
+class NLineEditMouse(QLineEditWithMenuIcon):
+    """QLineEdit that ignore mouse back/forward button, with menu icon."""
+    def mousePressEvent(self, event):
+        if event.button() in (Qt.XButton1, Qt.XButton2):
+            event.ignore()
+        else:
+            super(NLineEditMouse, self).mousePressEvent(event)
+
+
 class NElideLabel(QLabel):
     elideMode = Qt.ElideRight
 

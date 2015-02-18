@@ -53,6 +53,17 @@ class Editor(QWidget, Ui_editor):
         self.hide()  # use deleteLater to free, not destroy slot or DeleteOnClose attribute
         self.closed.emit(self.id, False)
 
+    def mousePressEvent(self, event):
+        """Handle mouse back/forward button"""
+        if event.button() == Qt.XButton1:  # back
+            self.preSc.activated.emit()
+            event.accept()
+        elif event.button() == Qt.XButton2:  # forward
+            self.nextSc.activated.emit()
+            event.accept()
+        else:
+            super(Editor, self).mousePressEvent(event)
+
     @Slot()
     def on_tagEditor_textEdited(self):
         # tagEditor.isModified() will be reset by completer. So this instead.
