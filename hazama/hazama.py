@@ -19,7 +19,10 @@
 import logging
 import sys
 import os
+from os import path
 import time
+import db
+import config
 
 
 __version__ = '0.21'
@@ -27,20 +30,27 @@ __version__ = '0.21'
 
 if __name__ == '__main__':
     start_time = time.clock()
+    # change CWD to application's path
+    # user will not care about CWD because this is GUI application?
     try:
-        program_path = os.path.dirname(os.path.realpath(__file__))
+        app_path = path.dirname(path.realpath(__file__))
     except NameError:  # frozen
-        program_path = os.path.dirname(os.path.realpath(sys.argv[0]))
-    os.chdir(program_path)
-    logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.DEBUG)
+        app_path = path.dirname(sys.argv[0])
+    os.chdir(app_path)
+    config.setSettings()
+    # setup logging
+    logging.basicConfig(format='%(levelname)s: %(message)s',
+                        level=logging.DEBUG if config.settings['Main'].get('debug')
+                        else logging.INFO)
     logging.info('Hazama Version %s', __version__)
-    from config import settings
-    import ui
+    config.setNikki()
+
+    from ui import app  # initialize UI
     from ui.mainwindow import MainWindow
-    mainwindow = MainWindow()
-    mainwindow.show()
+    w = MainWindow()
+    w.show()
     logging.debug('startup take %.2f sec', time.clock()-start_time)
-    import db
-    if settings['Main'].getint('backup', 1):
+
+    if config.settings['Main'].getint('backup', 1):
         db.check_backup()
-    sys.exit(ui.app.exec_())
+    sys.exit(app.exec_())
