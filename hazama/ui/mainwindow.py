@@ -7,7 +7,7 @@ from ui.customwidgets import QLineEditWithMenuIcon
 from ui.configdialog import ConfigDialog
 from ui.mainwindow_ui import Ui_mainWindow
 from ui.heatmap import HeatMap, cellColors
-from config import settings, nikki
+from config import settings, nikki, saveSettings
 
 
 class MainWindow(QMainWindow, Ui_mainWindow):
@@ -80,7 +80,7 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         settings['Main']['taglistvisible'] = str(tListVisible .real)
         if tListVisible:
             settings['Main']['taglistwidth'] = str(self.splitter.sizes()[0])
-        settings.save()
+        saveSettings()
         event.accept()
         qApp.quit()
 

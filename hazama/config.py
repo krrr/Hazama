@@ -7,23 +7,20 @@ import db
 settings = nikki = None
 
 
-class ConfigParserSave(ConfigParser):
-    """Add save method for convenience"""
-    @staticmethod
-    def save():
-        with open('config.ini', 'w', encoding='utf-8') as f:
-            settings.write(f)
-
-
 def setSettings():
     global settings
-    settings = ConfigParserSave()
+    settings = ConfigParser()
     try:
         # utf-8 with BOM will kill ConfigParser
-        with open('config.ini', 'r+', encoding='utf-8-sig') as _f:
-            settings.read_file(_f)
+        with open('config.ini', encoding='utf-8-sig') as f:
+            settings.read_file(f)
     except FileNotFoundError:
         settings['Main'] = settings['Editor'] = settings['Font'] = {}
+
+
+def saveSettings():
+    with open('config.ini', 'w', encoding='utf-8') as f:
+        settings.write(f)
 
 
 def setNikki():
