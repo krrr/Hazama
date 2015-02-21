@@ -25,8 +25,8 @@ class Editor(QWidget, Ui_editor):
             settings['Editor'].getboolean('autoIndent', True))
         self.titleEditor.setFont(font.title)
         # setup datetime display
-        self.dtLabel.setFont(font.date)
-        sz = min(font.date_m.ascent(), 16)
+        self.dtLabel.setFont(font.datetime)
+        sz = min(font.datetime_m.ascent(), 16)
         self.dtBtn.setIconSize(QSize(sz, sz))
         # set up tagEditor
         self.tagEditor.setTextMargins(QMargins(2, 0, 2, 0))

@@ -105,17 +105,17 @@ class Fonts:
     """Manage all fonts used in application"""
     def __init__(self):
         self.title = QFont()
-        self.date = QFont()
+        self.datetime = QFont()
         self.text = QFont()
         self.default = app.font()
         self.default_m = QFontMetrics(self.default)
-        self.title_m = self.date_m = self.date_m = None
+        self.title_m = self.datetime_m = None
 
     def load(self):
         self.title.fromString(settings['Font'].get('title'))
         self.title_m = QFontMetrics(self.title)
-        self.date.fromString(settings['Font'].get('datetime'))
-        self.date_m = QFontMetrics(self.date)
+        self.datetime.fromString(settings['Font'].get('datetime'))
+        self.datetime_m = QFontMetrics(self.datetime)
         self.text.fromString(settings['Font'].get('text'))
         if settings['Font'].get('default'):
             self.default.fromString(settings['Font'].get('default'))

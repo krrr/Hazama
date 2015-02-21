@@ -134,7 +134,7 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         try:
             self.heatMap.activateWindow()
         except (AttributeError, RuntimeError):
-            self.heatMap = HeatMap(self, objectName='heatMap', font=font.date)
+            self.heatMap = HeatMap(self, objectName='heatMap', font=font.datetime)
             self.heatMap.closeSc = QShortcut(QKeySequence(Qt.Key_Escape), self.heatMap,
                                              activated=self.heatMap.close)
             self.heatMap.setColorFunc(colorFunc)

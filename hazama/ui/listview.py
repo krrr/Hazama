@@ -19,13 +19,13 @@ class NListDelegate(QStyledItemDelegate):
     def __init__(self, parent):
         super(NListDelegate, self).__init__(parent)
         self.title_h = max(QFontInfo(font.title).pixelSize(),
-                           QFontInfo(font.date).pixelSize()) + 4  # dt and title font area
+                           QFontInfo(font.datetime).pixelSize()) + 4  # dt and title font area
         self.titleArea_h = self.title_h + 4
         self.text_h = (QFontMetrics(font.text).lineSpacing() *
                        settings['Main'].getint('previewLines', 4))
         self.tagPath_h = QFontInfo(qApp.font()).pixelSize() + 4
         self.tag_h = self.tagPath_h + 4
-        self.dt_w = font.date_m.width(datetimeTrans('2000-01-01 00:00')) + 40
+        self.dt_w = font.datetime_m.width(datetimeTrans('2000-01-01 00:00')) + 40
         self.all_h = None  # updated in sizeHint before each item being painting
         # doc is used to draw text(diary's body)
         self.doc = NTextDocument()
@@ -61,7 +61,7 @@ class NListDelegate(QStyledItemDelegate):
         painter.setPen(self.c_gray)
         painter.drawLine(x+10, y+self.titleArea_h, x+w-10, y+self.titleArea_h)
         painter.setPen(self.c_text)
-        painter.setFont(font.date)
+        painter.setFont(font.datetime)
         painter.drawText(x+14, y+self.titleArea_h-self.title_h, self.dt_w, self.title_h,
                          Qt.AlignVCenter, datetimeTrans(dt))
         if title:
@@ -127,7 +127,7 @@ class NListDelegateColorful(QItemDelegate):
             self.title.setAlignment(Qt.AlignVCenter | Qt.AlignRight)
             self.title.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
             self.datetime = QLabel(self)
-            self.datetime.setFont(font.date)
+            self.datetime.setFont(font.datetime)
             self.datetime.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Preferred)
 
             self.text = NDocumentLabel(self, objectName='NListItemText')
@@ -138,7 +138,7 @@ class NListDelegateColorful(QItemDelegate):
 
             # use QToolButton to display icons
             self.datetimeIco = QToolButton(self, objectName='NListItemDtIco')
-            minSz = max(font.date_m.ascent(), 12)
+            minSz = max(font.datetime_m.ascent(), 12)
             self.datetimeIco.setIconSize(QSize(minSz, minSz))
             self.datetimeIco.setIcon(QIcon(':/list/calendar-32.png'))
 
@@ -253,11 +253,11 @@ class TListDelegate(QStyledItemDelegate):
                            QColor(80, 80, 80))
             tag = font.default_m.elidedText(
                 tag, Qt.ElideRight,
-                w-12 if count is None else w-font.date_m.width(count)-12)
+                w-12 if count is None else w-font.datetime_m.width(count)-12)
             painter.drawText(textArea, Qt.AlignVCenter | Qt.AlignLeft, tag)
             # draw tag count
             if count is not None:
-                painter.setFont(font.date)
+                painter.setFont(font.datetime)
                 painter.drawText(textArea, Qt.AlignVCenter | Qt.AlignRight, count)
 
     def createEditor(self, parent, option, index):
