@@ -22,10 +22,10 @@ class ConfigDialog(QDialog, Ui_configDialog):
         self.setupUi(self)
         self.openOutBtn.hide()  # can't set initial state in creator
         # load settings
-        self.aindCheck.setChecked(settings['Editor'].getint('autoindent', 1))
-        self.tListCountCheck.setChecked(settings['Main'].getint('taglistcount', 1))
-        self.tfocusCheck.setChecked(settings['Editor'].getint('titlefocus', 0))
-        self.bkCheck.setChecked(settings['Main'].getint('backup', 1))
+        self.aindCheck.setChecked(settings['Editor'].getboolean('autoIndent', True))
+        self.tListCountCheck.setChecked(settings['Main'].getboolean('tagListCount', True))
+        self.tfocusCheck.setChecked(settings['Editor'].getboolean('titleFocus', False))
+        self.bkCheck.setChecked(settings['Main'].getboolean('backup', True))
         # load settings(language ComboBox)
         for l in sorted(languagesR):
             self.langCombo.addItem(l)
@@ -34,7 +34,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
         self.langCombo.setCurrentIndex(langIndex)
         self.rstCombo.model().item(0).setSelectable(False)
         self.rstCombo.addItems(db.list_backups())
-        self.preLinesBox.setValue(settings['Main'].getint('previewlines', 4))
+        self.preLinesBox.setValue(settings['Main'].getint('previewLines', 4))
         # load settings(fonts)
         self.defFontGBox.setChecked(bool(settings['Font'].get('default')))
         self.dtFontBtn.configName = 'datetime'
@@ -49,11 +49,11 @@ class ConfigDialog(QDialog, Ui_configDialog):
             self.setFontButton(i, getattr(font, i.configName, font.date))
 
     def accept(self):
-        settings['Editor']['autoindent'] = str(self.aindCheck.isChecked().real)
-        settings['Main']['taglistcount'] = str(self.tListCountCheck.isChecked().real)
-        settings['Editor']['titlefocus'] = str(self.tfocusCheck.isChecked().real)
-        settings['Main']['backup'] = str(self.bkCheck.isChecked().real)
-        settings['Main']['previewlines'] = str(self.preLinesBox.value())
+        settings['Editor']['autoIndent'] = str(self.aindCheck.isChecked())
+        settings['Main']['tagListCount'] = str(self.tListCountCheck.isChecked())
+        settings['Editor']['titleFocus'] = str(self.tfocusCheck.isChecked())
+        settings['Main']['backup'] = str(self.bkCheck.isChecked())
+        settings['Main']['previewLines'] = str(self.preLinesBox.value())
         for i in self.buttons:
             settings['Font'][i.configName] = i.font().toString()
         if not self.defFontGBox.isChecked() and settings['Font']['default']:

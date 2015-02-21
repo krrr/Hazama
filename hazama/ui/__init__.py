@@ -50,8 +50,8 @@ def setTranslationLocale():
     global locale, timeFmt, dateFmt, datetimeFmt
     locale = sysLocale if lang == sysLocale.name() else QLocale(lang)
     QLocale.setDefault(locale)
-    timeFmt = settings['Main'].get('timeformat')
-    dateFmt = settings['Main'].get('dateformat', locale.dateFormat())
+    timeFmt = settings['Main'].get('timeFormat')
+    dateFmt = settings['Main'].get('dateFormat', locale.dateFormat())
     datetimeFmt = (dateFmt + ' ' + timeFmt) if timeFmt else dateFmt
 
 

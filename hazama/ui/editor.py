@@ -17,11 +17,12 @@ class Editor(QWidget, Ui_editor):
         super(Editor, self).__init__(parent)
         self.setupUi(self)
         self.datetime = self.id = None
-        geo = settings['Editor'].get('windowgeo')
+        geo = settings['Editor'].get('windowGeo')
         self.restoreGeometry(QByteArray.fromHex(geo))
         # setup textEditor and titleEditor, set window title
         self.textEditor.setFont(font.text)
-        self.textEditor.setAutoIndent(settings['Editor'].getint('autoindent', 1))
+        self.textEditor.setAutoIndent(
+            settings['Editor'].getboolean('autoIndent', True))
         self.titleEditor.setFont(font.title)
         # setup datetime display
         self.dtLabel.setFont(font.date)
@@ -41,7 +42,7 @@ class Editor(QWidget, Ui_editor):
         self.nextSc = QShortcut(QKeySequence('Ctrl+Tab'), self)
 
     def closeEvent(self, event):
-        settings['Editor']['windowgeo'] = str(self.saveGeometry().toHex())
+        settings['Editor']['windowGeo'] = str(self.saveGeometry().toHex())
         needSave = (self.textEditor.document().isModified() or
                     self.titleEditor.isModified() or self.timeModified or
                     self.tagModified)
@@ -49,7 +50,7 @@ class Editor(QWidget, Ui_editor):
         event.accept()
 
     def closeNoSave(self):
-        settings['Editor']['windowgeo'] = str(self.saveGeometry().toHex())
+        settings['Editor']['windowGeo'] = str(self.saveGeometry().toHex())
         self.hide()  # use deleteLater to free, not destroy slot or DeleteOnClose attribute
         self.closed.emit(self.id, False)
 
@@ -91,7 +92,7 @@ class Editor(QWidget, Ui_editor):
         self.setWindowTitle("%s - Hazama" % title)
         self.dtLabel.setText('' if self.datetime is None
                              else datetimeTrans(self.datetime))
-        if settings['Editor'].getint('titlefocus', 0):
+        if settings['Editor'].getboolean('titleFocus'):
             self.titleEditor.setCursorPosition(0)
         else:
             self.textEditor.setFocus()

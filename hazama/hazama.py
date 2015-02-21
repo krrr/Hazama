@@ -39,9 +39,9 @@ if __name__ == '__main__':
     os.chdir(app_path)
     config.setSettings()
     # setup logging
-    logging.basicConfig(format='%(levelname)s: %(message)s',
-                        level=logging.DEBUG if config.settings['Main'].get('debug')
-                        else logging.INFO)
+    logging.basicConfig(
+        format='%(levelname)s: %(message)s', level=logging.DEBUG if
+        config.settings['Main'].getboolean('debug') else logging.INFO)
     logging.info('Hazama Version %s', __version__)
     config.setNikki()
 
@@ -51,6 +51,6 @@ if __name__ == '__main__':
     w.show()
     logging.debug('startup take %.2f sec', time.clock()-start_time)
 
-    if config.settings['Main'].getint('backup', 1):
+    if config.settings['Main'].getboolean('backup', True):
         db.check_backup()
     sys.exit(app.exec_())

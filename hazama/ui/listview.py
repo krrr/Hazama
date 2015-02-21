@@ -22,7 +22,7 @@ class NListDelegate(QStyledItemDelegate):
                            QFontInfo(font.date).pixelSize()) + 4  # dt and title font area
         self.titleArea_h = self.title_h + 4
         self.text_h = (QFontMetrics(font.text).lineSpacing() *
-                       settings['Main'].getint('previewlines', 4))
+                       settings['Main'].getint('previewLines', 4))
         self.tagPath_h = QFontInfo(qApp.font()).pixelSize() + 4
         self.tag_h = self.tagPath_h + 4
         self.dt_w = font.date_m.width(datetimeTrans('2000-01-01 00:00')) + 40
@@ -131,7 +131,7 @@ class NListDelegateColorful(QItemDelegate):
             self.datetime.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Preferred)
 
             self.text = NDocumentLabel(self, objectName='NListItemText')
-            self.text.setLines(settings['Main'].getint('previewlines', 4))
+            self.text.setLines(settings['Main'].getint('previewLines', 4))
             self.text.setFont(font.text)
 
             self.tag = NElideLabel(self)
@@ -307,7 +307,7 @@ class TListDelegateColorful(QItemDelegate):
         super(TListDelegateColorful, self).__init__(parent)
         self._itemW = self.ItemWidget()
         self._itemW.setFixedHeight(self._itemW.sizeHint().height())
-        self._countEnabled = settings['Main'].getint('taglistcount', 0)
+        self._countEnabled = settings['Main'].getboolean('tagListCount', True)
         if not self._countEnabled: self._itemW.count.hide()
 
     def paint(self, painter, option, index):
@@ -384,7 +384,7 @@ class TagList(QListWidget):
         QListWidgetItem(self.tr('All'), self)
         self.setCurrentRow(0)
         itemFlag = Qt.ItemIsEditable | Qt.ItemIsSelectable | Qt.ItemIsEnabled
-        if settings['Main'].getint('taglistcount', 1):
+        if settings['Main'].getboolean('tagListCount', True):
             for name, count in nikki.gettags(getcount=True):
                 item = QListWidgetItem(name, self)
                 item.setFlags(itemFlag)
@@ -617,9 +617,9 @@ class NikkiList(QListView):
         self.setSpacing(self.spacing())
 
     def sort(self):
-        sortBy = settings['Main'].get('listsortby', 'datetime')
+        sortBy = settings['Main'].get('listSortBy', 'datetime')
         sortByCol = {'datetime': 1, 'title': 3, 'length': 6}.get(sortBy, 1)
-        reverse = settings['Main'].getint('listreverse', 1)
+        reverse = settings['Main'].getboolean('listReverse', True)
         self.modelProxy.sort(sortByCol,
                              Qt.DescendingOrder if reverse else Qt.AscendingOrder)
 

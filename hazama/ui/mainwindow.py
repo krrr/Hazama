@@ -15,10 +15,10 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         super(MainWindow, self).__init__()
         self.setupUi(self)
         self.cfgDialog = self.heatMap = None  # create on on_cfgAct_triggered
-        geo = settings['Main'].get('windowgeo')
+        geo = settings['Main'].get('windowGeo')
         self.restoreGeometry(QByteArray.fromHex(geo))
         # setup TagList width
-        tListW = settings['Main'].getint('taglistwidth', 0)
+        tListW = settings['Main'].getint('tagListWidth', 0)
         if not self.isMaximized():
             self.splitter.setSizes([tListW, self.width()-tListW])
         # setup sort menu
@@ -37,7 +37,7 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         self.searchBox = SearchBox(self.toolBar)
         self.searchBox.textChanged.connect(self.nList.setFilterBySearchString)
         self.toolBar.addWidget(self.searchBox)
-        if settings['Main'].getint('taglistvisible', 0):
+        if settings['Main'].getboolean('tagListVisible'):
             self.tListAct.trigger()
         else:
             self.tList.hide()
@@ -69,17 +69,20 @@ class MainWindow(QMainWindow, Ui_mainWindow):
             menu.addAction(i)
             i.triggered[bool].connect(self.sortOrderChanged)
         # restore from settings
-        order = settings['Main'].get('listsortby', 'datetime')
+        order = settings['Main'].get('listSortBy', 'datetime')
         locals()[order].setChecked(True)
-        (desc if settings['Main'].getint('listreverse', 1) else asc).setChecked(True)
+        if settings['Main'].getboolean('listReverse', True):
+            desc.setChecked(True)
+        else:
+            asc.setChecked(True)
         self.sorAct.setMenu(menu)
 
     def closeEvent(self, event):
-        settings['Main']['windowgeo'] = str(self.saveGeometry().toHex())
+        settings['Main']['windowGeo'] = str(self.saveGeometry().toHex())
         tListVisible = self.tList.isVisible()
-        settings['Main']['taglistvisible'] = str(tListVisible .real)
+        settings['Main']['tagListVisible'] = str(tListVisible)
         if tListVisible:
-            settings['Main']['taglistwidth'] = str(self.splitter.sizes()[0])
+            settings['Main']['tagListWidth'] = str(self.splitter.sizes()[0])
         saveSettings()
         event.accept()
         qApp.quit()
@@ -145,9 +148,9 @@ class MainWindow(QMainWindow, Ui_mainWindow):
     def sortOrderChanged(self, checked):
         name = self.sender().name
         if name in ['asc', 'desc']:
-            settings['Main']['listreverse'] = str((name == 'desc').real)
+            settings['Main']['listReverse'] = str(name == 'desc')
         elif checked:
-            settings['Main']['listsortby'] = name
+            settings['Main']['listSortBy'] = name
         self.nList.sort()
 
     def toggleTagList(self, checked):
@@ -157,7 +160,7 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         else:
             self.nList.setFilterByTag('')
             self.tList.clear()
-            settings['Main']['taglistwidth'] = str(self.splitter.sizes()[0])
+            settings['Main']['tagListWidth'] = str(self.splitter.sizes()[0])
 
     def showEvent(self, event):
         self.nList.setFocus()
