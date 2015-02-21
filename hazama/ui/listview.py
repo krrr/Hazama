@@ -483,9 +483,8 @@ class NikkiList(QListView):
         selectionCount = len(self.selectedIndexes())
         self.editAct.setDisabled(selectionCount != 1)
         self.delAct.setDisabled(selectionCount == 0)
-        self.randAct.setDisabled(selectionCount == 0)
+        self.randAct.setDisabled(self.modelProxy.rowCount() == 0)
         menu.exec_(event.globalPos())
-        menu.deleteLater()
 
     def selectRandomly(self):
         randRow = random.randrange(0, self.modelProxy.rowCount())
