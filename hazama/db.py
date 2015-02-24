@@ -8,7 +8,8 @@ import logging
 
 
 # template used to format txt file
-default_tpl = '''********{title}********
+default_tpl = '''
+********{title}********
 [Date: {datetime}   Tags: {tags}]\n
 {text}\n\n\n\n'''
 
@@ -18,6 +19,9 @@ SELECT Tags.name, (SELECT COUNT(*) FROM Nikki_Tags
 FROM Tags'''
 
 sql_nikki_formats = 'SELECT start,length,type FROM TextFormat WHERE nikkiid=?'
+
+
+class DatabaseLockedError(Exception): pass
 
 
 class Nikki:
@@ -77,10 +81,20 @@ class Nikki:
 
     def connect(self, db_path):
         self.path = db_path
-        self.conn = sqlite3.connect(db_path)
-        self.conn.execute('PRAGMA foreign_keys = ON')
+        self.conn = sqlite3.connect(db_path, timeout=1)
         self.commit, self.exe, self.close = (
             self.conn.commit, self.conn.execute, self.conn.close)
+
+        self.exe('PRAGMA foreign_keys = ON')
+        # prevent other instance from visiting one database
+        self.exe('PRAGMA locking_mode = EXCLUSIVE')
+        try:
+            self.exe('BEGIN EXCLUSIVE')  # obtain lock by dummy transaction
+        except sqlite3.OperationalError as e:
+            if str(e).startswith('database is locked'):
+                raise DatabaseLockedError
+            else:
+                raise
 
     def sorted(self, order, reverse=True):
         assert order in ['datetime', 'title', 'length']

@@ -32,3 +32,7 @@ def setNikki():
         import ui
         ui.showDbError(str(e))
         sys.exit(-1)
+    except db.DatabaseLockedError:
+        import ui
+        ui.showDbLockedError()
+        sys.exit(-1)
