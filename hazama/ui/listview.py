@@ -507,8 +507,8 @@ class NikkiList(QListView):
             editor.textEditor.setRichText(text, formats)
             self.editors[id] = editor
             editor.closed.connect(self.closeEditor)
-            editor.preSc.activated.connect(self.editorPrevious)
-            editor.nextSc.activated.connect(self.editorNext)
+            editor.preSc.activated.connect(lambda: self._editorMove(-1))
+            editor.nextSc.activated.connect(lambda: self._editorMove(1))
             editor.show()
             return id
 
@@ -547,11 +547,9 @@ class NikkiList(QListView):
             self.modelProxy.setSourceModel(self.originModel)
             self.setCurrentIndex(self.modelProxy.mapFromSource(
                 self.originModel.index(row, 0)))
-        if isNew:
-            self.countChanged.emit()
-        if editor.tagModified:
-            self.tagsChanged.emit()
-        editor.deleteLater()
+
+            if isNew: self.countChanged.emit()
+            if editor.tagModified: self.tagsChanged.emit()
         del self.editors[id]
 
     @staticmethod
@@ -623,13 +621,7 @@ class NikkiList(QListView):
         self.modelProxy.sort(sortByCol,
                              Qt.DescendingOrder if reverse else Qt.AscendingOrder)
 
-    def editorNext(self):
-        self.editorMove(1)
-
-    def editorPrevious(self):
-        self.editorMove(-1)
-
-    def editorMove(self, step):
+    def _editorMove(self, step):
         if len(self.editors) > 1: return
         id = list(self.editors.keys())[0]
         assert id != -1
