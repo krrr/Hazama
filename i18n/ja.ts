@@ -69,7 +69,7 @@
 Please check database path(have permission?). If it&apos;s corrupt, you may have to recover this file by hand or restore from backups.</source>
         <translation>SQLite3: %s.
 
-データベースのパスを確認してください（権限ある？）。損壊した場合は、手動で修復またはバックアップから復元。</translation>
+データベースのパスを確認してください（権限がある？）。損壊した場合は、手動で修復またはバックアップから復元してください。</translation>
     </message>
     <message>
         <location filename="../hazama/ui/__init__.py" line="76"/>
@@ -354,12 +354,12 @@ Please check database path(have permission?). If it&apos;s corrupt, you may have
     <message>
         <location filename="../hazama/ui/configdialog_ui.py" line="284"/>
         <source>Show counts in TagList</source>
-        <translation>タグ一覧にタグカウントを表示する</translation>
+        <translation>タグ一覧にカウントを表示する</translation>
     </message>
     <message>
         <location filename="../hazama/ui/configdialog_ui.py" line="300"/>
         <source>Open output file</source>
-        <translation>結果を開く</translation>
+        <translation>作成したファイルを開く</translation>
     </message>
     <message>
         <location filename="../hazama/ui/configdialog_ui.py" line="287"/>
