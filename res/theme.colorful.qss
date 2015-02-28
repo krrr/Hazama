@@ -1,7 +1,7 @@
 QMainWindow QSplitter::handle {background: #979A9B;}
 QListView#tList {
     padding-top: 3px;
-    background: #E4EBF0;
+    background: #E7EFF5;
 }
 QListView#nList{
     margin: 0px;
@@ -20,12 +20,13 @@ QLineEdit#searchBox {
 /* ToolBar part */
 QMainWindow QToolBar {
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-        stop:0 rgb(236,241,244),
-        stop:1 rgb(226,233,238));
+        stop:0 #EBF2F7,
+        stop:1 #E2EAF0);
 }
 QMainWindow QToolBar {
     border-bottom: 1px solid #979A9B;
 }
+QLabel#countLabel {color: #616D78;}
 
 /* Editor part */
 QWidget#editor {
@@ -40,7 +41,7 @@ QWidget#editor #tagEditor:focus, #titleEditor:focus, #textEditor:focus {
 
 /* NListItem part */
 QFrame#NListItem {
-    padding: 0px 3px 0px 3px;
+    padding: 2px 3px 2px 3px;
     border-bottom: 1px solid #979A9B;
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
         stop:0 #EEF2DE,
@@ -51,12 +52,12 @@ QFrame#NListItem * {
 }
 QFrame#NListItem[selected="true"][active="true"] {
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-        stop:0 #DAECEE,
-        stop:1 #C6E1E4);
+        stop:0 #DDF1F1,
+        stop:1 #C5E2E3);
 }
 QFrame#NListItem[selected="true"][active="false"] {
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-        stop:0 #E7E7E7,
+        stop:0 #EBEBEB,
         stop:1 #D9D9D9);
 }
 QFrame#NListItem #NListItemText {
