@@ -26,17 +26,23 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         self.toolBar.widgetForAction(self.sorAct).setPopupMode(QToolButton.InstantPopup)
         # Qt Designer doesn't allow us to add widget in toolbar
         # setup count label
-        self.countLabel = QLabel(self.toolBar)
-        self.countLabel.setObjectName('countLabel')
-        self.countLabel.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self.countLabel.setAlignment(Qt.AlignVCenter | Qt.AlignRight)
-        self.countLabel.setIndent(6)
+        countLabel = self.countLabel = QLabel(self.toolBar)
+        countLabel.setObjectName('countLabel')
+        p = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Maximum)
+        p.setHorizontalStretch(8)
+        countLabel.setSizePolicy(p)
+        countLabel.setAlignment(Qt.AlignVCenter | Qt.AlignRight)
+        countLabel.setIndent(6)
         self.updateCountLabel()
-        self.toolBar.addWidget(self.countLabel)
+        self.toolBar.addWidget(countLabel)
         # setup search box
-        self.searchBox = SearchBox(self.toolBar)
-        self.searchBox.textChanged.connect(self.nList.setFilterBySearchString)
-        self.toolBar.addWidget(self.searchBox)
+        searchBox = self.searchBox = SearchBox(self.toolBar)
+        p = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
+        p.setHorizontalStretch(5)
+        searchBox.setSizePolicy(p)
+        searchBox.setMinimumWidth(searchBox.sizeHint().height() * 8)
+        searchBox.textChanged.connect(self.nList.setFilterBySearchString)
+        self.toolBar.addWidget(searchBox)
         if settings['Main'].getboolean('tagListVisible'):
             self.tListAct.trigger()
         else:
