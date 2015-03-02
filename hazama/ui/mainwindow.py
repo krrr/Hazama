@@ -6,7 +6,7 @@ from ui import font, setTranslationLocale
 from ui.customwidgets import QLineEditWithMenuIcon
 from ui.configdialog import ConfigDialog
 from ui.mainwindow_ui import Ui_mainWindow
-from ui.heatmap import HeatMap, cellColors
+from ui.heatmap import HeatMap
 from config import settings, nikki, saveSettings
 
 
@@ -118,18 +118,18 @@ class MainWindow(QMainWindow, Ui_mainWindow):
                  }.get(QLocale().language(), 1)
         logging.debug('HeatMap got length ratio %s' % ratio)
 
-        def colorFunc(y, m, d):
-            """Iter through model once and cache result. Return QColor used to draw cell bg."""
+        def colorFunc(y, m, d, cellColors):
             data = colorFunc.cached.get((y, m, d), 0)
             if data == 0:
-                return QColor(*cellColors[0])
+                return cellColors[0]
             elif data < 200 * ratio:
-                return QColor(*cellColors[1])
+                return cellColors[1]
             elif data < 550 * ratio:
-                return QColor(*cellColors[2])
+                return cellColors[2]
             else:
-                return QColor(*cellColors[3])
+                return cellColors[3]
 
+        # iter through model once and cache result.
         colorFunc.cached = {}
         model = self.nList.originModel
         for i in range(model.rowCount()):

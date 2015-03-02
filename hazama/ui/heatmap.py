@@ -2,9 +2,9 @@ from PySide.QtGui import *
 from PySide.QtCore import *
 from itertools import chain
 
-# the default colors that represent heat of data
-cellColors = ((255, 255, 255), (255, 243, 208),
-              (255, 221, 117), (255, 202, 40))
+# the default colors that represent heat of data, from cold to hot
+defCellColors = (QColor(255, 255, 255), QColor(255, 243, 208),
+                 QColor(255, 221, 117), QColor(255, 202, 40))
 
 
 class HeatMap(QWidget):
@@ -33,17 +33,16 @@ class HeatMap(QWidget):
         nextBtn = QToolButton(self, icon=QIcon(':/heatmap/arrow-right.png'),
                               clicked=self.yearNext, iconSize=size)
         # setup color sample
-        self.colorView = ColorSampleView(self, cellLen=11)
+        self.sample = ColorSampleView(self, cellLen=11)
         # always bigger than sizeHint even policy is Maximum, so painful. use fixed
-        self.colorView.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        self.colorView.setFixedSize(preBtn.sizeHint().width()*2 + barLayout.spacing(), 12)
-        self.colorView.setupMap()
+        self.sample.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.sample.setFixedSize(preBtn.sizeHint().width()*2 + barLayout.spacing(), 12)
         barLayout.addWidget(preBtn, Qt.AlignVCenter)
         barLayout.addWidget(nextBtn, Qt.AlignVCenter)
         barLayout.addSpacerItem(QSpacerItem(30, 1, QSizePolicy.Expanding, QSizePolicy.Fixed))
         barLayout.addWidget(self.yearBtn)
         barLayout.addSpacerItem(QSpacerItem(30, 1, QSizePolicy.Expanding, QSizePolicy.Fixed))
-        barLayout.addWidget(self.colorView)
+        barLayout.addWidget(self.sample)
         layout.addWidget(self.bar)
         layout.addWidget(self.view)
         # setup shortcuts
@@ -66,6 +65,9 @@ class HeatMap(QWidget):
             menu.addAction(QAction(str(y), group, triggered=self.yearMenuAct))
 
     def setColorFunc(self, f):
+        """Set function that determine each cell's background color.
+        This function will be called with args: year, month, day, cellColors.
+        cellColors is something like defCellColors."""
         self.view.cellColorFunc = f
 
     def _moveYear(self, offset):
@@ -95,6 +97,9 @@ class HeatMap(QWidget):
     def showEvent(self, event):
         # must call setupMap after style polished
         self.view.setupMap()
+        cellColors = tuple(getattr(self.view, 'cellColor%d' % i) for i in range(4))
+        self.sample.cellColors = cellColors
+        self.sample.setupMap()
         event.accept()
 
 
@@ -110,12 +115,15 @@ class HeatMapView(QGraphicsView):
         super(HeatMapView, self).__init__(*args, **kwargs)
         self.yearVal = QDate.currentDate().year()
         self.cellBorderColorVal = Qt.lightGray
+        for idx, c in enumerate(defCellColors):
+            setattr(self, '_cellColor%d' % idx, c)
+
         self.scene = QGraphicsScene(self)
         f = self.font()
         f.setPixelSize(self.nameFontPx)
         self.nameH = QFontMetrics(f).height()
         self.setFont(f)
-        # for convenience
+        # short names, for convenience
         self._cd = cellDis = self.cellLen + self.cellSpacing
         self._mdx = monthDisX = cellDis * 6 + self.cellLen + self.monthSpacingX
         self._mdy = monthDisY = cellDis * 4 + self.cellLen + self.monthSpacingY
@@ -126,6 +134,7 @@ class HeatMapView(QGraphicsView):
     def setupMap(self):
         locale, date, font, nameH = QLocale(), QDate(), self.font(), self.nameH
         cellDis, monthDisX, monthDisY = self._cd, self._mdx, self._mdy
+        cellColors = tuple(getattr(self, 'cellColor%d' % i) for i in range(4))
         for m in range(12):
             date.setDate(self.year, m+1, 1)
             # cells. 7 days per row, index of row: (d//7)
@@ -136,7 +145,7 @@ class HeatMapView(QGraphicsView):
                 date.setDate(self.year, m+1, d)
                 if date <= QDate.currentDate():
                     item.setPen(QPen(self.cellBorderColor))
-                    item.setBrush(self.cellColorFunc(self.year, m+1, d))
+                    item.setBrush(self.cellColorFunc(self.year, m+1, d, cellColors))
                 else:
                     p = QPen(Qt.gray)
                     p.setStyle(Qt.DotLine)
@@ -168,13 +177,33 @@ class HeatMapView(QGraphicsView):
         self.scene.clear()
         self.setupMap()
 
+    def getCellColor0(self): return self._cellColor0
+
+    def setCellColor0(self, c): self._cellColor0 = c
+
+    def getCellColor1(self): return self._cellColor1
+
+    def setCellColor1(self, c): self._cellColor1 = c
+
+    def getCellColor2(self): return self._cellColor2
+
+    def setCellColor2(self, c): self._cellColor2 = c
+
+    def getCellColor3(self): return self._cellColor3
+
+    def setCellColor3(self, c): self._cellColor3 = c
+
     year = property(getYear, setYear)
     cellBorderColor = Property(QColor, getCellBorderColor, setCellBorderColor)
+    cellColor0 = Property(QColor, getCellColor0, setCellColor0)
+    cellColor1 = Property(QColor, getCellColor1, setCellColor1)
+    cellColor2 = Property(QColor, getCellColor2, setCellColor2)
+    cellColor3 = Property(QColor, getCellColor3, setCellColor3)
 
 
 class ColorSampleView(QGraphicsView):
     cellLen = 9
-    cellColors = cellColors
+    cellColors = defCellColors
 
     def __init__(self, parent=None, cellLen=None):
         super(ColorSampleView, self).__init__(parent, objectName='heatMapSample',
@@ -188,10 +217,10 @@ class ColorSampleView(QGraphicsView):
         self.setScene(self.scene)
 
     def setupMap(self):
-        for index, color in enumerate(self.cellColors):
+        for index, c in enumerate(self.cellColors):
             item = QGraphicsRectItem(self.cellLen*index, 0, self.cellLen, self.cellLen)
             item.setPen(QPen(Qt.darkGray))
-            item.setBrush(QColor(*color))
+            item.setBrush(c)
             self.scene.addItem(item)
 
 
