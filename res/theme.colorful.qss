@@ -1,4 +1,4 @@
-QMainWindow QSplitter::handle {background: #979A9B;}
+QMainWindow QSplitter::handle {background: #979A9B}
 QListView#tList {
     padding-top: 3px;
     background: #E7EFF5;
@@ -23,10 +23,8 @@ QMainWindow QToolBar {
         stop:0 #EBF2F7,
         stop:1 #E2EAF0);
 }
-QMainWindow QToolBar {
-    border-bottom: 1px solid #979A9B;
-}
-QLabel#countLabel {color: #616D78;}
+QMainWindow QToolBar {border-bottom: 1px solid #979A9B}
+QLabel#countLabel {color: #616D78}
 
 /* Editor part */
 QWidget#editor {
@@ -83,4 +81,35 @@ QFrame#TListItem[selected="true"] {
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
         stop:0 white,
         stop:1 transparent);
+}
+
+/* HeatMap part */
+QWidget#heatMap {
+    background: #FAFAFA;
+}
+
+QFrame#heatMapBar {
+    border-bottom: 1px solid #979A9B;
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 #EBF2F7,
+        stop:1 #E2EAF0);
+}
+
+QPushButton#heatMapBtn {color: #616D78}
+QPushButton#heatMapBtn:hover {color: #818F9C}
+
+QWidget#heatMap QToolButton {
+    border: 1px solid gray;
+    border-radius: 3px;
+}
+QWidget#heatMap QToolButton:hover {background: rgba(255, 255, 255, 120)}
+QWidget#heatMap QToolButton:pressed {background: rgba(255, 255, 255, 180)}
+
+QGraphicsView#heatMapView {
+    qproperty-cellBorderColor: #979A9B;
+    qproperty-cellColor0: white;
+    qproperty-cellColor1: #CCdff6;
+    qproperty-cellColor2: #7092be;
+    qproperty-cellColor3: #3c4e65;
+    color: #3F474E;
 }
