@@ -624,6 +624,7 @@ class NikkiList(QListView):
     def _editorMove(self, step):
         if len(self.editors) > 1: return
         id = list(self.editors.keys())[0]
+        if self.editors[id].needSave(): return
         assert id != -1
         index = self.originModel.findItems(str(id))[0].index()
         rowInProxy = self.modelProxy.mapFromSource(index).row()

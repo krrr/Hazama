@@ -41,12 +41,15 @@ class Editor(QWidget, Ui_editor):
         self.preSc = QShortcut(QKeySequence('Ctrl+Shift+Tab'), self)
         self.nextSc = QShortcut(QKeySequence('Ctrl+Tab'), self)
 
+    def needSave(self):
+        return (self.textEditor.document().isModified() or
+                self.titleEditor.isModified() or self.timeModified or
+                self.tagModified)
+
     def closeEvent(self, event):
+        """Normal close will save diary. For cancel operation, call closeNoSave."""
         settings['Editor']['windowGeo'] = str(self.saveGeometry().toHex())
-        needSave = (self.textEditor.document().isModified() or
-                    self.titleEditor.isModified() or self.timeModified or
-                    self.tagModified)
-        self.closed.emit(self.id, needSave)
+        self.closed.emit(self.id, self.needSave())
         event.accept()
 
     def closeNoSave(self):
