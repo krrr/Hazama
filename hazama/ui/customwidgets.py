@@ -64,18 +64,14 @@ class NTextEdit(QTextEdit, TextFormatter):
     def __init__(self, *args, **kwargs):
         super(NTextEdit, self).__init__(*args, **kwargs)
         self._doc = None
-        # setup colors
-        prt = self.palette()
-        prt.setColor(prt.Highlight, QColor(180, 180, 180))
-        prt.setColor(prt.HighlightedText, QColor(0, 0, 0))
-        self.setPalette(prt)
         # remove highlight color's alpha to avoid alpha loss in copy&paste.
         # NTextDocument should use this color too.
-        hl, bg = self.HlColor, prt.base().color()
+        hl, bg = self.HlColor, self.palette().base().color()
         fac = hl.alpha() / 255
         self.HlColor = QColor(round(hl.red()*fac + bg.red()*(1-fac)),
                               round(hl.green()*fac + bg.green()*(1-fac)),
                               round(hl.blue()*fac + bg.blue()*(1-fac)))
+
         self.autoIndent = False
         self.setTabChangesFocus(True)
         # setup format menu

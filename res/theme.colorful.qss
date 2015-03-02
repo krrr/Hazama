@@ -27,6 +27,10 @@ QMainWindow QToolBar {border-bottom: 1px solid #979A9B}
 QLabel#countLabel {color: #616D78}
 
 /* Editor part */
+QWidget#editor #textEditor {  /* use system selection-color */
+    selection-color: none;
+    selection-background-color: none;
+}
 QWidget#editor {
     background-color: #E3EBC7;
 }

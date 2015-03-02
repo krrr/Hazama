@@ -5,17 +5,18 @@ QMainWindow QToolBar {
     padding: 2px;
     spacing: 0px
 }
+QLabel#countLabel {color: #909090}
 
-QLabel#countLabel {color: #909090;}
-
-QLineEdit#searchBox QToolButton {
-    border: 0px;
-}
+QLineEdit#searchBox QToolButton {border: 0px}
 QLineEdit#searchBox QToolButton:pressed {
     padding: 0px;  /* disable press shifting */
 }
 
-QWidget#editor {background-color: #e8f5ff;}
+QWidget#editor {background-color: #e8f5ff}
+QWidget#editor #textEditor {
+    selection-color: black;
+    selection-background-color: #BEBEBE;
+}
 
 QListView#nList {
     background-color: #f2f1e7;
@@ -27,7 +28,6 @@ QListWidget#tList {
     background-color: #eab68a;
     border: 0px;
 }
-
 QLineEdit#tagListEdit {
     border: none;
 }
