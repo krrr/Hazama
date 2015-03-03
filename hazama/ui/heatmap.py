@@ -97,8 +97,8 @@ class HeatMap(QWidget):
     def showEvent(self, event):
         # must call setupMap after style polished
         self.view.setupMap()
-        cellColors = tuple(getattr(self.view, 'cellColor%d' % i) for i in range(4))
-        self.sample.cellColors = cellColors
+        cs = tuple(getattr(self.view, 'cellColor%d' % i) for i in range(4))
+        self.sample.setColors(cs)
         self.sample.setupMap()
         event.accept()
 
@@ -202,30 +202,33 @@ class HeatMapView(QGraphicsView):
 
 
 class ColorSampleView(QGraphicsView):
-    cellLen = 9
-    cellColors = defCellColors
-
     def __init__(self, parent=None, cellLen=None):
         super(ColorSampleView, self).__init__(parent, objectName='heatMapSample',
                                               alignment=Qt.AlignRight)
-        if cellLen:
-            self.cellLen = cellLen
+        self._colors = defCellColors
+        self.cellLen = cellLen if cellLen else 9
+
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.scene = QGraphicsScene(self)
-        self.scene.setSceneRect(0, 0, self.cellLen*len(self.cellColors), self.cellLen)
+        self.scene.setSceneRect(0, 0, self.cellLen*len(self._colors), self.cellLen)
         self.setScene(self.scene)
 
     def setupMap(self):
-        for index, c in enumerate(self.cellColors):
+        for index, c in enumerate(self._colors):
             item = QGraphicsRectItem(self.cellLen*index, 0, self.cellLen, self.cellLen)
             item.setPen(QPen(Qt.darkGray))
             item.setBrush(c)
             self.scene.addItem(item)
 
+    def setColors(self, colors):
+        """Set colors to display, arg colors is a list of QColor"""
+        self._colors = colors
+
 
 if __name__ == '__main__':
     app = QApplication([])
     v = HeatMap()
+    v.resize(500, 600)
     v.show()
     app.exec_()
