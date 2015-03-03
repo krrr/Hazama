@@ -1,7 +1,7 @@
 from PySide.QtGui import *
 from PySide.QtCore import *
 from ui.configdialog_ui import Ui_configDialog
-from ui import font
+from ui import font, setStyleSheet
 from config import settings
 import db
 import logging
@@ -9,6 +9,7 @@ import logging
 
 languages = {'en': 'English', 'zh_CN': '简体中文', 'ja_JP': '日本語'}
 languagesR = {b: a for a, b in languages.items()}
+themes = ['1px-rect', 'colorful']
 
 
 class ConfigDialog(QDialog, Ui_configDialog):
@@ -26,14 +27,18 @@ class ConfigDialog(QDialog, Ui_configDialog):
         self.tListCountCheck.setChecked(settings['Main'].getboolean('tagListCount', True))
         self.tfocusCheck.setChecked(settings['Editor'].getboolean('titleFocus', False))
         self.bkCheck.setChecked(settings['Main'].getboolean('backup', True))
-        # load settings(language ComboBox)
+        # language ComboBox
         for l in sorted(languagesR):
             self.langCombo.addItem(l)
         lang = settings['Main'].get('lang', 'en')
         langIndex = self.langCombo.findText(languages.get(lang, 'English'))
         self.langCombo.setCurrentIndex(langIndex)
+
         self.rstCombo.model().item(0).setSelectable(False)
         self.rstCombo.addItems(db.list_backups())
+        self.themeCombo.addItems(themes)
+        self.themeCombo.setCurrentIndex(
+            themes.index(settings['Main'].get('theme', '1px-rect')))
         self.preLinesBox.setValue(settings['Main'].getint('previewLines', 4))
         # setup font buttons & load settings(fonts)
         self.defFontGBox.setChecked(bool(settings['Font'].get('default')))
@@ -58,10 +63,17 @@ class ConfigDialog(QDialog, Ui_configDialog):
         if not self.defFontGBox.isChecked() and settings['Font']['default']:
             del settings['Font']['default']
         font.load()
+
         lang = languagesR[self.langCombo.currentText()]
         if settings['Main'].get('lang', 'en') != lang:
             settings['Main']['lang'] = lang
             self.langChanged.emit()
+
+        theme = self.themeCombo.currentText()
+        if settings['Main'].get('theme', '1px-rect') != theme:
+            settings['Main']['theme'] = theme
+            setStyleSheet()
+
         logging.info('Settings saved')
         self.accepted.emit()
         self.close()
