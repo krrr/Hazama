@@ -1,5 +1,5 @@
 from PySide.QtGui import QApplication, QIcon, QFont, QFontMetrics, QMessageBox
-from PySide.QtCore import QLocale, QTranslator, QLibraryInfo, QDateTime, QFile, QIODevice
+from PySide.QtCore import QLocale, QTranslator, QLibraryInfo, QDateTime, QFile
 from config import settings
 from ui import rc
 import sys
@@ -133,8 +133,8 @@ class Fonts:
             app.setFont(self.default)
 
 
-# setup application icon
 app = QApplication(sys.argv)
+# setup application icon
 appIcon = QIcon(':/appicon16.png')
 appIcon.addFile(':/appicon32.png')
 appIcon.addFile(':/appicon48.png')
