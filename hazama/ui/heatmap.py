@@ -207,6 +207,7 @@ class ColorSampleView(QGraphicsView):
                                               alignment=Qt.AlignRight)
         self._colors = defCellColors
         self.cellLen = cellLen if cellLen else 9
+        self._descriptions = ('',) * 4
 
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -217,6 +218,7 @@ class ColorSampleView(QGraphicsView):
     def setupMap(self):
         for index, c in enumerate(self._colors):
             item = QGraphicsRectItem(self.cellLen*index, 0, self.cellLen, self.cellLen)
+            item.setToolTip(self._descriptions[index])
             item.setPen(QPen(Qt.darkGray))
             item.setBrush(c)
             self.scene.addItem(item)
@@ -224,6 +226,11 @@ class ColorSampleView(QGraphicsView):
     def setColors(self, colors):
         """Set colors to display, arg colors is a list of QColor"""
         self._colors = colors
+
+    def setDescriptions(self, seq):
+        if len(seq) != len(self._colors):
+            raise Exception("The amount of description doesn't match color's")
+        self._descriptions = tuple(seq)
 
 
 if __name__ == '__main__':

@@ -118,6 +118,8 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         ratio = {QLocale.Chinese: 1, QLocale.English: 5, QLocale.Japanese: 1.2,
                  }.get(QLocale().language(), 1)
         logging.debug('HeatMap got length ratio %s' % ratio)
+        descriptions = ('0', '< %d' % 200 * ratio, '< %d' % 550 * ratio,
+                        '>= %d' % 550 * ratio)
 
         def colorFunc(y, m, d, cellColors):
             data = colorFunc.cached.get((y, m, d), 0)
@@ -145,6 +147,7 @@ class MainWindow(QMainWindow, Ui_mainWindow):
             self.heatMap.closeSc = QShortcut(QKeySequence(Qt.Key_Escape), self.heatMap,
                                              activated=self.heatMap.close)
             self.heatMap.setColorFunc(colorFunc)
+            self.heatMap.sample.setDescriptions(descriptions)
             self.heatMap.setAttribute(Qt.WA_DeleteOnClose)
             self.heatMap.resize(self.size())
             self.heatMap.move(self.pos())
