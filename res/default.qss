@@ -17,6 +17,7 @@ QWidget#editor #textEditor {
     selection-color: black;
     selection-background-color: #BEBEBE;
 }
+QWidget#editor #dtLabel {color: #505050}
 
 QListView#nList {
     background-color: #f2f1e7;

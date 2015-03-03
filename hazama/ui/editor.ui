@@ -86,9 +86,6 @@
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
-       <property name="styleSheet">
-        <string notr="true">color: rgb(80, 80, 80);</string>
-       </property>
        <property name="text">
         <string/>
        </property>
