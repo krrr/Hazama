@@ -109,7 +109,8 @@ class MainWindow(QMainWindow, Ui_mainWindow):
             self.cfgDialog = ConfigDialog(self)
             self.cfgDialog.langChanged.connect(self.retranslate)
             self.cfgDialog.bkRestored.connect(self.nList.reload)
-            self.cfgDialog.accepted.connect(self.nList.resetDelegate)
+            self.cfgDialog.accepted.connect(self.nList.setDelegateOfTheme)
+            self.cfgDialog.accepted.connect(self.tList.setDelegateOfTheme)
             self.cfgDialog.show()
 
     @Slot()

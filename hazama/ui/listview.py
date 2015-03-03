@@ -16,7 +16,7 @@ from config import settings, nikki
 class NListDelegate(QStyledItemDelegate):
     """ItemDelegate of old theme 'one-pixel-rect' for NList, Using 'traditional'
     painting method compared to colorful theme."""
-    def __init__(self, parent):
+    def __init__(self, parent=None):
         super(NListDelegate, self).__init__(parent)
         self.title_h = max(QFontInfo(font.title).pixelSize(),
                            QFontInfo(font.datetime).pixelSize()) + 4  # dt and title font area
@@ -349,16 +349,20 @@ class TagList(QListWidget):
     def __init__(self, *args, **kwargs):
         super(TagList, self).__init__(*args, **kwargs)
         self.trackList = None  # update in mousePressEvent
-        # setup delegate
-        theme = settings['Main'].get('theme')
-        d = {'colorful': TListDelegateColorful}.get(theme, TListDelegate)
-        self.setItemDelegate(d())  # don't pass parent
+        self.setDelegateOfTheme()
 
         self.setEditTriggers(QAbstractItemView.EditKeyPressed)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollMode(QAbstractItemView.ScrollPerPixel)
         self.setUniformItemSizes(True)
         self.currentItemChanged.connect(self.emitCurrentTagChanged)
+
+    def setDelegateOfTheme(self):
+        theme = settings['Main'].get('theme')
+        d = {'colorful': TListDelegateColorful}.get(theme, TListDelegate)
+        self.setItemDelegate(d())  # do not pass parent under PySide...
+        # force items to be laid again
+        self.setSpacing(self.spacing())
 
     def contextMenuEvent(self, event):
         # ignore "All" item. cursor must over the item
@@ -444,7 +448,7 @@ class NikkiList(QListView):
 
     def __init__(self, parent=None):
         super(NikkiList, self).__init__(parent)
-        self._setDelegate()
+        self.setDelegateOfTheme()
         # disable default editor. Editor is implemented in the View
         self.setEditTriggers(QAbstractItemView.NoEditTriggers)
         # setup models
@@ -564,13 +568,12 @@ class NikkiList(QListView):
             model.setData(model.index(0, 5), i['formats'])
             model.setData(model.index(0, 6), len(i['text']))
 
-    def _setDelegate(self):
+    def setDelegateOfTheme(self):
         theme = settings['Main'].get('theme')
-        if theme == 'colorful':
-            d = NListDelegateColorful(self)
-        else:
-            d = NListDelegate(self)
-        self.setItemDelegate(d)
+        d = {'colorful': NListDelegateColorful}.get(theme, NListDelegate)
+        self.setItemDelegate(d())
+        # force items to be laid again
+        self.setSpacing(self.spacing())
 
     def reload(self):
         self.modelProxy.setSourceModel(None)
@@ -607,12 +610,6 @@ class NikkiList(QListView):
         selected = (None if export_all else
                     (restore_dict(i) for i in self.selectedIndexes()))
         nikki.exporttxt(path, selected)
-
-    @Slot()
-    def resetDelegate(self):
-        self._setDelegate()
-        # force items to be laid again
-        self.setSpacing(self.spacing())
 
     def sort(self):
         sortBy = settings['Main'].get('listSortBy', 'datetime')
