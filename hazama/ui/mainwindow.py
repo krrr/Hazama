@@ -50,7 +50,6 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         # setup shortcuts
         searchSc = QShortcut(QKeySequence.Find, self)
         searchSc.activated.connect(self.searchBox.setFocus)
-        self.addAction(self.mapAct)
 
     def createSortMenu(self):
         """Add sort order menu to sorAct."""

@@ -105,6 +105,7 @@
    <addaction name="delAct"/>
    <addaction name="tListAct"/>
    <addaction name="sorAct"/>
+   <addaction name="mapAct"/>
    <addaction name="cfgAct"/>
   </widget>
   <action name="tListAct">
@@ -174,11 +175,15 @@
    </property>
   </action>
   <action name="mapAct">
+   <property name="icon">
+    <iconset resource="../../res/res.qrc">
+     <normaloff>:/images/heatmap.png</normaloff>:/images/heatmap.png</iconset>
+   </property>
    <property name="text">
-    <string>HeatMap</string>
+    <string>Heat Map</string>
    </property>
    <property name="shortcut">
-    <string notr="true">Ctrl+M</string>
+    <string>Ctrl+M</string>
    </property>
   </action>
  </widget>

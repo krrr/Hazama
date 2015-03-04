@@ -25,6 +25,9 @@
     <file>sort.png</file>
   </qresource>
   <qresource prefix="/images">
+    <file>heatmap.png</file>
+  </qresource>
+  <qresource prefix="/images">
     <file>config.png</file>
   </qresource>
 
