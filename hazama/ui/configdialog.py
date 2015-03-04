@@ -3,6 +3,7 @@ from PySide.QtCore import *
 from ui.configdialog_ui import Ui_configDialog
 from ui import font, setStyleSheet
 from config import settings
+from hazama import __version__ as ver
 import db
 import logging
 
@@ -21,6 +22,8 @@ class ConfigDialog(QDialog, Ui_configDialog):
         super(ConfigDialog, self).__init__(parent, Qt.WindowTitleHint)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setupUi(self)
+        self.infoBrowser.setHtml(self.infoBrowser.toHtml().replace('{version}', ver))
+        self.infoBrowser.document().setDocumentMargin(0)
         self.openOutBtn.hide()  # can't set initial state in creator
         # load settings
         self.aindCheck.setChecked(settings['Editor'].getboolean('autoIndent', True))

@@ -183,7 +183,7 @@
     <string>Heat Map</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+M</string>
+    <string notr="true">Ctrl+M</string>
    </property>
   </action>
  </widget>
