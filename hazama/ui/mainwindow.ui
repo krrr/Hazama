@@ -16,6 +16,9 @@
     <height>450</height>
    </size>
   </property>
+  <property name="contextMenuPolicy">
+   <enum>Qt::NoContextMenu</enum>
+  </property>
   <property name="windowTitle">
    <string>Hazama</string>
   </property>
@@ -81,7 +84,7 @@
   </widget>
   <widget class="QToolBar" name="toolBar">
    <property name="contextMenuPolicy">
-    <enum>Qt::PreventContextMenu</enum>
+    <enum>Qt::NoContextMenu</enum>
    </property>
    <property name="movable">
     <bool>false</bool>
