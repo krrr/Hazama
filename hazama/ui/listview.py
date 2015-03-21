@@ -392,10 +392,12 @@ class TagList(QListWidget):
             for name, count in nikki.gettags(getcount=True):
                 item = QListWidgetItem(name, self)
                 item.setFlags(itemFlag)
+                item.setData(Qt.ToolTipRole, name)
                 item.setData(Qt.UserRole, count)
         else:
             for name in nikki.gettags(getcount=False):
                 item = QListWidgetItem(name, self)
+                item.setData(Qt.ToolTipRole, name)
                 item.setFlags(itemFlag)
 
     def reload(self):
