@@ -351,9 +351,6 @@ class TagList(QListWidget):
         self.trackList = None  # update in mousePressEvent
         self.setDelegateOfTheme()
 
-        self.setEditTriggers(QAbstractItemView.EditKeyPressed)
-        self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.setVerticalScrollMode(QAbstractItemView.ScrollPerPixel)
         self.setUniformItemSizes(True)
         self.currentItemChanged.connect(self.emitCurrentTagChanged)
 
