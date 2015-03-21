@@ -6,6 +6,8 @@ Features:
  - Rich text support
  - Tagging
  - Export to plain text
+ - Theming
+ - Diary graph (Heat map)
 
 [Screenshots](https://github.com/krrr/Hazama/wiki/Screenshots)
 
@@ -14,7 +16,7 @@ Features:
 
 Installation
 ----
-**Downloads:** [Releases page](https://github.com/krrr/Hazama/releases)
+ [**Downloads**](https://github.com/krrr/Hazama/releases)
 
 **Run from source:**
 ```sh
