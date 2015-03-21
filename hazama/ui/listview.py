@@ -353,6 +353,11 @@ class TagList(QListWidget):
 
         self.setUniformItemSizes(True)
         self.currentItemChanged.connect(self.emitCurrentTagChanged)
+        nextFunc = lambda: self.setCurrentRow(
+            0 if self.currentRow() == self.count() - 1 else self.currentRow() + 1)
+        preFunc = lambda: self.setCurrentRow((self.currentRow() or self.count()) - 1)
+        self.nextSc = QShortcut(QKeySequence('Ctrl+Tab'), self, activated=nextFunc)
+        self.preSc = QShortcut(QKeySequence('Ctrl+Shift+Tab'), self, activated=preFunc)
 
     def setDelegateOfTheme(self):
         theme = settings['Main'].get('theme')
