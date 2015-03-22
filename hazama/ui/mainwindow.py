@@ -114,11 +114,13 @@ class MainWindow(QMainWindow, Ui_mainWindow):
 
     @Slot()
     def on_mapAct_triggered(self):
-        ratio = {QLocale.Chinese: 1, QLocale.English: 5, QLocale.Japanese: 1.2,
-                 }.get(QLocale().language(), 1)
+        # ratios are from http://www.sonasphere.com/blog/?p=1319
+        ratio = {QLocale.Chinese: 1, QLocale.English: 4, QLocale.Japanese: 1.5,
+                 }.get(QLocale().language(), 1.6)
         logging.debug('HeatMap got length ratio %s' % ratio)
-        descriptions = ('0', '< %d' % (200 * ratio), '< %d' % (550 * ratio),
-                        '>= %d' % (550 * ratio))
+        ds = ['0', '< %d' % (200 * ratio), '< %d' % (550 * ratio),
+              '>= %d' % (550 * ratio)]
+        descriptions = [i + ' ' + qApp.translate('HeatMap', '(characters)') for i in ds]
 
         def colorFunc(y, m, d, cellColors):
             data = colorFunc.cached.get((y, m, d), 0)

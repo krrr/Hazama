@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS><TS version="1.1" language="ja_JP">
+<!DOCTYPE TS>
+<TS version="2.0" language="ja_JP">
 <context>
     <name>ConfigDialog</name>
     <message>
@@ -87,9 +88,17 @@ Please check database path(have permission?). If it&apos;s corrupt, you may have
     </message>
 </context>
 <context>
+    <name>HeatMap</name>
+    <message>
+        <location filename="../hazama/ui/mainwindow.py" line="122"/>
+        <source>(characters)</source>
+        <translation>（文字）</translation>
+    </message>
+</context>
+<context>
     <name>MainWindow</name>
     <message>
-        <location filename="../hazama/ui/mainwindow.py" line="183"/>
+        <location filename="../hazama/ui/mainwindow.py" line="184"/>
         <source>%i diaries</source>
         <translation>%i件の日記</translation>
     </message>
@@ -165,27 +174,27 @@ Please check database path(have permission?). If it&apos;s corrupt, you may have
 <context>
     <name>NikkiList</name>
     <message>
-        <location filename="../hazama/ui/listview.py" line="465"/>
+        <location filename="../hazama/ui/listview.py" line="469"/>
         <source>Edit</source>
         <translation>編集</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/listview.py" line="468"/>
+        <location filename="../hazama/ui/listview.py" line="472"/>
         <source>Delete</source>
         <translation>削除</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/listview.py" line="472"/>
+        <location filename="../hazama/ui/listview.py" line="476"/>
         <source>Random</source>
         <translation>ランダム</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/listview.py" line="587"/>
+        <location filename="../hazama/ui/listview.py" line="591"/>
         <source>Delete selected diaries</source>
         <translation>選択した日記の削除</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/listview.py" line="589"/>
+        <location filename="../hazama/ui/listview.py" line="593"/>
         <source>Selected diaries will be deleted permanently!</source>
         <translation>選択した日記は完全に削除されます！</translation>
     </message>
@@ -203,7 +212,7 @@ Please check database path(have permission?). If it&apos;s corrupt, you may have
 <context>
     <name>SearchBox</name>
     <message>
-        <location filename="../hazama/ui/mainwindow.py" line="217"/>
+        <location filename="../hazama/ui/mainwindow.py" line="218"/>
         <source>Search</source>
         <translation>検索</translation>
     </message>
@@ -211,12 +220,12 @@ Please check database path(have permission?). If it&apos;s corrupt, you may have
 <context>
     <name>TagList</name>
     <message>
-        <location filename="../hazama/ui/listview.py" line="388"/>
+        <location filename="../hazama/ui/listview.py" line="390"/>
         <source>All</source>
         <translation>全て</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/listview.py" line="372"/>
+        <location filename="../hazama/ui/listview.py" line="374"/>
         <source>Rename</source>
         <translation>名前の変更</translation>
     </message>
@@ -413,32 +422,32 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>mainWindow</name>
     <message>
-        <location filename="../hazama/ui/mainwindow_ui.py" line="112"/>
+        <location filename="../hazama/ui/mainwindow_ui.py" line="117"/>
         <source>Hazama</source>
         <translation>ハザマ</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/mainwindow_ui.py" line="113"/>
+        <location filename="../hazama/ui/mainwindow_ui.py" line="118"/>
         <source>Tag List</source>
         <translation>タグ一覧</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/mainwindow_ui.py" line="114"/>
+        <location filename="../hazama/ui/mainwindow_ui.py" line="119"/>
         <source>New</source>
         <translation>新しい日記</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/mainwindow_ui.py" line="115"/>
+        <location filename="../hazama/ui/mainwindow_ui.py" line="120"/>
         <source>Delete</source>
         <translation>削除</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/mainwindow_ui.py" line="116"/>
+        <location filename="../hazama/ui/mainwindow_ui.py" line="121"/>
         <source>Sort By</source>
         <translation>並べ替え</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/mainwindow_ui.py" line="117"/>
+        <location filename="../hazama/ui/mainwindow_ui.py" line="122"/>
         <source>Settings</source>
         <translation>設定</translation>
     </message>
@@ -448,7 +457,7 @@ p, li { white-space: pre-wrap; }
         <translation type="obsolete">ヒートマップ</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/mainwindow_ui.py" line="118"/>
+        <location filename="../hazama/ui/mainwindow_ui.py" line="123"/>
         <source>Heat Map</source>
         <translation>ヒートマップ</translation>
     </message>
