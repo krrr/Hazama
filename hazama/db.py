@@ -15,10 +15,26 @@ default_tpl = '''
 
 sql_tag_with_count = '''
 SELECT Tags.name, (SELECT COUNT(*) FROM Nikki_Tags
-                   WHERE Nikki_Tags.tagid=Tags.id) AS count
-FROM Tags'''
+                   WHERE Nikki_Tags.tagid=Tags.id) AS count FROM Tags'''
 
 sql_nikki_formats = 'SELECT start,length,type FROM TextFormat WHERE nikkiid=?'
+
+schema = '''
+CREATE TABLE IF NOT EXISTS Tags
+    (id INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE);
+CREATE TABLE IF NOT EXISTS Nikki
+    (id INTEGER PRIMARY KEY, datetime TEXT NOT NULL,
+     text TEXT NOT NULL, title TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS Nikki_Tags
+    (nikkiid INTEGER NOT NULL REFERENCES Nikki(id) ON DELETE CASCADE,
+     tagid INTEGER NOT NULL, PRIMARY KEY(nikkiid, tagid));
+CREATE TABLE IF NOT EXISTS TextFormat
+    (nikkiid INTEGER NOT NULL REFERENCES Nikki(id) ON DELETE CASCADE,
+     start INTEGER NOT NULL, length INTEGER NOT NULL, type INTEGER NOT NULL);
+CREATE TRIGGER IF NOT EXISTS autodeltag AFTER DELETE ON Nikki_Tags
+    BEGIN DELETE FROM Tags WHERE (SELECT COUNT(*) FROM Nikki_Tags WHERE
+    Nikki_Tags.tagid=Tags.id)==0; END;
+'''
 
 
 class DatabaseLockedError(Exception): pass
@@ -77,23 +93,7 @@ class Nikki:
         self._conn = self._exe = None
 
     def _check_schema(self):
-        self._exe('CREATE TABLE IF NOT EXISTS Tags'
-                  '(id INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE)')
-        self._exe('CREATE TABLE IF NOT EXISTS Nikki'
-                  '(id INTEGER PRIMARY KEY, datetime TEXT NOT NULL, '
-                  'text TEXT NOT NULL, title TEXT NOT NULL)')
-        self._exe('CREATE TABLE IF NOT EXISTS Nikki_Tags'
-                  '(nikkiid INTEGER NOT NULL REFERENCES Nikki(id) '
-                  'ON DELETE CASCADE, tagid INTEGER NOT NULL,'
-                  'PRIMARY KEY(nikkiid, tagid))')
-        self._exe('CREATE TABLE IF NOT EXISTS TextFormat'
-                  '(nikkiid INTEGER NOT NULL REFERENCES Nikki(id) '
-                  'ON DELETE CASCADE, start INTEGER NOT NULL, '
-                  'length INTEGER NOT NULL, type INTEGER NOT NULL)')
-        self._exe('CREATE TRIGGER IF NOT EXISTS autodeltag AFTER '
-                  'DELETE ON Nikki_Tags BEGIN   DELETE FROM Tags '
-                  'WHERE (SELECT COUNT(*) FROM Nikki_Tags WHERE '
-                  'Nikki_Tags.tagid=Tags.id)==0;  END')
+        self._conn.executescript(schema)
 
     def sorted(self, order, reverse=True):
         assert order in ['datetime', 'title', 'length']
