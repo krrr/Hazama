@@ -79,21 +79,18 @@ class update_ts(Command):
         spawn(['pyside-lupdate', path.join('i18n', 'lupdateguide')])
 
 
-cmdclass = {'build_qt': build_qt, 'update_ts': update_ts}
-
 if sys.platform == 'win32':
-    import PySide
-    pyside_dir = path.dirname(PySide.__file__)
-    os.environ['PATH'] += ';' + pyside_dir
-
-if sys.platform == 'win32' and 'build' in sys.argv:
     from cx_Freeze import setup, Executable
+    import PySide
+
+    pyside_dir = path.dirname(PySide.__file__)
+    os.environ['PATH'] += ';' + pyside_dir  # for executing qt tools
 
     # prepare translation files
-    ts = [i for i in glob('hazama/lang/*.qm')]
-    qt_ts = [path.join(pyside_dir, 'translations', 'qt_%s')
-             % path.basename(i) for i in ts]
-    all_ts = [(i, '../lang/%s' % path.basename(i)) for i in ts + qt_ts]
+    ts = list(glob('hazama/lang/*.qm'))  # application's translations
+    ts += [path.join(pyside_dir, 'translations', 'qt_%s')
+           % path.basename(i) for i in ts]  # corresponding Qt translations
+    all_ts = [(i, '../lang/%s' % path.basename(i)) for i in ts]
     main = Executable('hazama/hazama.py',
                       base='Win32GUI',
                       icon='res/appicon/appicon.ico',
@@ -105,8 +102,7 @@ if sys.platform == 'win32' and 'build' in sys.argv:
             'include_files': all_ts,
             'includes': ['PySide.QtCore', 'PySide.QtGui'],
             'excludes': ['tkinter', 'PySide.QtNetwork', 'distutils'],
-            'build_exe': 'build/lib',
-            'path': sys.path + ['hazama/'],
+            'build_exe': 'build/lib',  # dir for exe and dependent files
             'init_script': path.join(os.getcwd(), 'utils', 'cx_freeze_init.py')}},
         executables=[main])
 else:
@@ -120,5 +116,5 @@ setup(name='Hazama',
       version=__version__,
       description='A simple cross-platform diary program',
       requires=['PySide'],
-      cmdclass=cmdclass,
+      cmdclass={'build_qt': build_qt, 'update_ts': update_ts},
       **extra_opts)
