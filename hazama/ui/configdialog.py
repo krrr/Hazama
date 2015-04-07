@@ -55,6 +55,11 @@ class ConfigDialog(QDialog, Ui_configDialog):
             i.clicked.connect(self.handleFontBtn)
             self._setFontButton(i, getattr(font, i.configName))
 
+    def showEvent(self, event):
+        # set minimum height of infoBrowser according to its contents
+        doc = self.infoBrowser.document()
+        self.infoBrowser.setMinimumHeight(int(doc.size().height()))
+
     def accept(self):
         settings['Editor']['autoIndent'] = str(self.aindCheck.isChecked())
         settings['Main']['tagListCount'] = str(self.tListCountCheck.isChecked())
