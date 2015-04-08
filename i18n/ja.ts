@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS><TS version="1.1" language="ja_JP">
+<!DOCTYPE TS>
+<TS version="2.0" language="ja_JP">
 <context>
     <name>ConfigDialog</name>
     <message>
@@ -443,7 +444,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../hazama/ui/mainwindow_ui.py" line="117"/>
         <source>Hazama</source>
-        <translation>ハザマ</translation>
+        <translation>Hazama</translation>
     </message>
     <message>
         <location filename="../hazama/ui/mainwindow_ui.py" line="118"/>
