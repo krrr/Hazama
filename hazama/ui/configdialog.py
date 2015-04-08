@@ -1,9 +1,9 @@
 from PySide.QtGui import *
 from PySide.QtCore import *
 from ui.configdialog_ui import Ui_configDialog
-from ui import font, setStyleSheet
+from ui import font, setStyleSheet, readRcTextFile
 from config import settings
-from hazama import __version__ as ver
+from hazama import __version__
 import db
 import logging
 
@@ -22,7 +22,10 @@ class ConfigDialog(QDialog, Ui_configDialog):
         super(ConfigDialog, self).__init__(parent, Qt.WindowTitleHint)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setupUi(self)
-        self.infoBrowser.setHtml(self.infoBrowser.toHtml().replace('{version}', ver))
+        info = readRcTextFile(':/noicon/about.html').format(
+            ver=__version__, author=self.tr('author'),
+            checkupdate=self.tr('check-update'))
+        self.infoBrowser.setHtml(info)
         self.infoBrowser.document().setDocumentMargin(0)
         self.openOutBtn.hide()  # can't set initial state in creator
         # load settings

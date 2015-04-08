@@ -84,4 +84,9 @@
   <qresource prefix="/cfg">
     <file>check.png</file>
   </qresource>
+
+
+  <qresource prefix="/noicon">
+    <file>about.html</file>
+  </qresource>
 </RCC>
