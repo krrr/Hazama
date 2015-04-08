@@ -35,18 +35,12 @@ class build_qt(Command):
         for i in glob(path.join('hazama', 'ui', '*.ui')):
             spawn(['pyside-uic', '-o', i.split('.')[0]+'_ui.py', '-x', i])
         # fix importing error in generated files
+        # resource will be imported in ui.__init__
         for i in glob(path.join('hazama', 'ui', '*_ui.py')):
             with open(i, 'r', encoding='utf-8') as f:
-                new = []
-                for l in f:
-                    # resource will be imported in ui.__init__
-                    if l.startswith('import res_rc'): continue
-                    if l.startswith('from') and not l.startswith('from PySide'):
-                        l = l.replace('from ', 'from ui.')
-                    new.append(l)
-                new = ''.join(new)
-            with open(i, 'w', encoding='utf-8', newline='\n') as f:
-                f.write(new)
+                text = [l for l in f if not l.startswith('import res_rc')]
+            with open(i, 'w', encoding='utf-8') as f:
+                f.write(''.join(text))
 
     @staticmethod
     def compile_rc():

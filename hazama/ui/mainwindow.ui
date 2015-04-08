@@ -206,7 +206,7 @@
   <customwidget>
    <class>NikkiList</class>
    <extends>QListView</extends>
-   <header>listview</header>
+   <header>ui.listview</header>
    <slots>
     <signal>countChanged()</signal>
     <signal>tagsChanged()</signal>
@@ -220,7 +220,7 @@
   <customwidget>
    <class>TagList</class>
    <extends>QListWidget</extends>
-   <header>listview</header>
+   <header>ui.listview</header>
    <slots>
     <signal>currentTagChanged(QString)</signal>
     <signal>tagNameModified(QString)</signal>
@@ -230,7 +230,7 @@
   <customwidget>
    <class>NSplitter</class>
    <extends>QSplitter</extends>
-   <header>customobjects</header>
+   <header>ui.customobjects</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

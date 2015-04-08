@@ -118,12 +118,12 @@
   <customwidget>
    <class>NTextEdit</class>
    <extends>QTextEdit</extends>
-   <header>customwidgets</header>
+   <header>ui/customwidgets</header>
   </customwidget>
   <customwidget>
    <class>NLineEditMouse</class>
    <extends>QLineEdit</extends>
-   <header>customwidgets</header>
+   <header>ui/customwidgets</header>
   </customwidget>
  </customwidgets>
  <resources>
