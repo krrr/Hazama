@@ -149,7 +149,7 @@
           </sizepolicy>
          </property>
          <property name="title">
-          <string>Information</string>
+          <string>About Hazama</string>
          </property>
          <property name="flat">
           <bool>true</bool>
@@ -175,7 +175,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QTextBrowser" name="infoBrowser">
+           <widget class="QTextBrowser" name="aboutBrowser">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Ignored">
               <horstretch>0</horstretch>

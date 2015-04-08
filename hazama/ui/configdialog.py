@@ -22,11 +22,11 @@ class ConfigDialog(QDialog, Ui_configDialog):
         super(ConfigDialog, self).__init__(parent, Qt.WindowTitleHint)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setupUi(self)
-        info = readRcTextFile(':/noicon/about.html').format(
+        about = readRcTextFile(':/noicon/about.html').format(
             ver=__version__, author=self.tr('author'),
             checkupdate=self.tr('check-update'))
-        self.infoBrowser.setHtml(info)
-        self.infoBrowser.document().setDocumentMargin(0)
+        self.aboutBrowser.setHtml(about)
+        self.aboutBrowser.document().setDocumentMargin(0)
         self.openOutBtn.hide()  # can't set initial state in creator
         # load settings
         self.aindCheck.setChecked(settings['Editor'].getboolean('autoIndent', True))
@@ -59,9 +59,9 @@ class ConfigDialog(QDialog, Ui_configDialog):
             self._setFontButton(i, getattr(font, i.configName))
 
     def showEvent(self, event):
-        # set minimum height of infoBrowser according to its contents
-        doc = self.infoBrowser.document()
-        self.infoBrowser.setMinimumHeight(int(doc.size().height()))
+        # set minimum height of aboutBrowser according to its contents
+        doc = self.aboutBrowser.document()
+        self.aboutBrowser.setMinimumHeight(int(doc.size().height()))
 
     def accept(self):
         settings['Editor']['autoIndent'] = str(self.aindCheck.isChecked())
