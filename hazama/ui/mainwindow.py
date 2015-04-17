@@ -33,8 +33,8 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         countLabel.setSizePolicy(p)
         countLabel.setAlignment(Qt.AlignVCenter | Qt.AlignRight)
         countLabel.setIndent(6)
-        self.updateCountLabel()
         self.toolBar.addWidget(countLabel)
+
         # setup search box
         searchBox = self.searchBox = SearchBox(self.toolBar)
         p = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
@@ -50,6 +50,9 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         # setup shortcuts
         searchSc = QShortcut(QKeySequence.Find, self)
         searchSc.activated.connect(self.searchBox.setFocus)
+
+        # delay list loading until main event loop start
+        QTimer.singleShot(0, self.nList, SLOT('load()'))
 
     def createSortMenu(self):
         """Add sort order menu to sorAct."""
@@ -183,6 +186,9 @@ class MainWindow(QMainWindow, Ui_mainWindow):
                     or self.nList.modelProxy.filterPattern(1))
         c = self.nList.modelProxy.rowCount() if filtered else self.nList.originModel.rowCount()
         self.countLabel.setText(self.tr('%i diaries') % c)
+
+    def updateCountLabelOnLoad(self):
+        self.countLabel.setText(self.tr('loading...'))
 
 
 class SearchBox(QLineEditWithMenuIcon):

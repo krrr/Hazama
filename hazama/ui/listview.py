@@ -1,6 +1,4 @@
-"""Main List and TagList
-
-FUTURE: when more than 1000 diaries in database, startup time expands quickly
+"""Main List and TagList, and their delegates.
 """
 from PySide.QtGui import *
 from PySide.QtCore import *
@@ -10,6 +8,7 @@ from ui import font, datetimeTrans, currentDatetime
 from ui.editor import Editor
 from ui.customobjects import NTextDocument, MultiSortFilterProxyModel
 from ui.customwidgets import NElideLabel, NDocumentLabel
+from ui.listmodel import NikkiModel
 from config import settings, nikki
 
 
@@ -447,6 +446,7 @@ class TagList(QListWidget):
 
 class NikkiList(QListView):
     """Main List that display preview of diaries"""
+    startLoading = Signal()
     countChanged = Signal()
     tagsChanged = Signal()
 
@@ -456,8 +456,7 @@ class NikkiList(QListView):
         # disable default editor. Editor is implemented in the View
         self.setEditTriggers(QAbstractItemView.NoEditTriggers)
         # setup models
-        self.originModel = QStandardItemModel(0, 7, self)
-        self._fillModel(self.originModel)
+        self.originModel = NikkiModel(self)
         self.modelProxy = MultiSortFilterProxyModel(self)
         self.modelProxy.setSourceModel(self.originModel)
         self.modelProxy.setDynamicSortFilter(True)
@@ -533,44 +532,26 @@ class NikkiList(QListView):
     def closeEditor(self, id, needSave):
         """Write editor's data to model and database, and destroy editor"""
         editor = self.editors[id]
-        isNew = id == -1
         if needSave:
             dt = currentDatetime() if editor.datetime is None else editor.datetime
             text, formats = editor.textEditor.getRichText()
             title = editor.titleEditor.text()
-            tags = editor.tagEditor.text()
-            realId = nikki.save(id=id, datetime=dt, text=text,
-                                formats=formats, title=title, new=isNew,
-                                tags=tags if editor.tagModified else None)
-            # write to model
-            self.modelProxy.setSourceModel(None)
-            if isNew:
-                self.originModel.insertRow(0)
-                row = 0
-            else:
-                row = self.originModel.findItems(str(realId))[0].row()
-            cols = (realId, dt, text, title, tags, formats, len(text))
-            for c, d in zip(range(7), cols):
-                self.originModel.setData(self.originModel.index(row, c), d)
-            self.modelProxy.setSourceModel(self.originModel)
+            tags = editor.tagEditor.text() if editor.tagModified else None
+            row = self.originModel.updateNikki(dict(
+                id=id, datetime=dt, text=text, formats=formats, title=title, tags=tags))
+
+            self.clearSelection()
             self.setCurrentIndex(self.modelProxy.mapFromSource(
                 self.originModel.index(row, 0)))
 
-            if isNew: self.countChanged.emit()
+            if id == -1: self.countChanged.emit()  # new diary
             if editor.tagModified: self.tagsChanged.emit()
         del self.editors[id]
 
-    @staticmethod
-    def _fillModel(model):
-        for i in nikki:
-            model.insertRow(0)
-            model.setData(model.index(0, 0), i['id'])
-            model.setData(model.index(0, 1), i['datetime'])
-            model.setData(model.index(0, 2), i['text'])
-            model.setData(model.index(0, 3), i['title'])
-            model.setData(model.index(0, 4), i['tags'])
-            model.setData(model.index(0, 5), i['formats'])
-            model.setData(model.index(0, 6), len(i['text']))
+    def load(self):
+        self.startLoading.emit()
+        self.originModel.loadFromDb()
+        self.countChanged.emit()
 
     def setDelegateOfTheme(self):
         theme = settings['Main'].get('theme')
@@ -580,11 +561,8 @@ class NikkiList(QListView):
         self.setSpacing(self.spacing())
 
     def reload(self):
-        self.modelProxy.setSourceModel(None)
-        self.originModel.deleteLater()
-        self.originModel = QStandardItemModel(0, 7, self)
-        self._fillModel(self.originModel)
-        self.modelProxy.setSourceModel(self.originModel)
+        self.originModel.clear()
+        self.load()
 
     def delNikki(self):
         if len(self.selectedIndexes()) == 0: return
@@ -627,7 +605,7 @@ class NikkiList(QListView):
         id = list(self.editors.keys())[0]
         if self.editors[id].needSave(): return
         assert id != -1
-        index = self.originModel.findItems(str(id))[0].index()
+        index = self.originModel.index(self.originModel.getRowById(id), 0)
         rowInProxy = self.modelProxy.mapFromSource(index).row()
         if ((step == -1 and rowInProxy == 0) or
            (step == 1 and rowInProxy == self.modelProxy.rowCount() - 1)):
@@ -656,9 +634,7 @@ class NikkiList(QListView):
         model, modelP = self.originModel, self.modelProxy
         needRefresh = [modelP.mapToSource(modelP.index(i, 0))
                        for i in range(modelP.rowCount())]
-        modelP.setSourceModel(None)
         for i in needRefresh:
             diary = nikki[i.data()]
             model.setData(i.sibling(i.row(), 4), diary['tags'])
         self.setFilterByTag(newTagName)
-        modelP.setSourceModel(model)

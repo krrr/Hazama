@@ -210,6 +210,7 @@
    <slots>
     <signal>countChanged()</signal>
     <signal>tagsChanged()</signal>
+    <signal>startLoading()</signal>
     <slot>delNikki()</slot>
     <slot>startEditorNew()</slot>
     <slot>setFilterByTag(QString)</slot>
@@ -350,9 +351,26 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>nList</sender>
+   <signal>startLoading()</signal>
+   <receiver>mainWindow</receiver>
+   <slot>updateCountLabelOnLoad()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>305</x>
+     <y>241</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>254</x>
+     <y>224</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>toggleTagList()</slot>
   <slot>updateCountLabel()</slot>
+  <slot>updateCountLabelOnLoad()</slot>
  </slots>
 </ui>

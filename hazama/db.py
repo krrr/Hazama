@@ -58,7 +58,10 @@ class Nikki:
         logging.info(str(self))
 
     def __str__(self):
-        return '%s diaries in database' % self.count()
+        return '%s diaries in database' % len(self)
+
+    def __len__(self):
+        return self._exe('SELECT COUNT(id) FROM Nikki').fetchone()[0]
 
     def __iter__(self):
         iter_all = self._exe('SELECT * FROM Nikki')
@@ -127,7 +130,7 @@ class Nikki:
             formats = i.find('formats')
             formats = [(f.get('start'), f.get('length'), f.get('type'))
                        for f in formats] if formats else None
-            self.save(new=True, id=None, datetime=i.get('datetime'),
+            self.save(id=-1, datetime=i.get('datetime'),
                       title=i.get('title'), tags=i.get('tags').split(),
                       text=i.text, formats=formats, batch=True)
         self._commit()
@@ -176,9 +179,6 @@ class Nikki:
         logging.info('diary deleted (ID: %s)' % id)
         self._commit()
 
-    def count(self):
-        return self._exe('SELECT COUNT(id) FROM Nikki').fetchone()[0]
-
     def gettags(self, getcount=False):
         """Get all tags from database,return a generator.If getcount is True,
         return two-tuples (name, count) generator"""
@@ -197,13 +197,15 @@ class Nikki:
         self._exe('UPDATE Tags SET name=? WHERE name=?', (name, oldname))
         self._commit()
 
-    def save(self, new, id, datetime, title, tags, text, formats, batch=False):
+    def save(self, id, datetime, title, tags, text, formats, batch=False):
         """
         arguments:
+        id - if id is -1, then add a new diary. Else update matched diary
         tags - string contains tags separated by space. if tags is None,
                skip saving tags.
         batch - commit will be skipped if True
         """
+        new = id == -1
         id = self.getnewid() if new else id
         values = ((None, datetime, text, title) if new else
                   (datetime, text, title, id))

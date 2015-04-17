@@ -122,8 +122,8 @@ class ConfigDialog(QDialog, Ui_configDialog):
             QMessageBox.Yes | QMessageBox.No)
         if ret == QMessageBox.Yes:
             db.restore_backup(filename)
-            self.bkRestored.emit()
             self.close()
+            self.bkRestored.emit()
         else:
             self.rstCombo.setCurrentIndex(0)
 
