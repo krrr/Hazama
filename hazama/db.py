@@ -283,7 +283,7 @@ def check_backup():
         # it's new day, make new backup
         nikki = Nikki.getinstance()
         shutil.copyfile(db_path, os.path.join('backup',
-                                              today+'_%d.db' % nikki.count()))
+                                              today+'_%d.db' % len(nikki)))
         logging.info('everyday backup successful')
         # delete old backups
         week_before = (date.today() - timedelta(weeks=1)).strftime(fmt)
