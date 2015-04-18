@@ -89,9 +89,11 @@ class NikkiModel(QAbstractTableModel):
         if nikkiDict['id'] == -1:  # new diary
             row = self.rowCount()
             self.insertRow(row)
+            # tags may be None while tags is empty or not changed
+            if oneRow[4] is None: oneRow[4] = ''
         else:
             row = self.getRowById(nikkiDict['id'])
+            if oneRow[4] is None: oneRow[4] = self._lst[row][4]
         self._lst[row] = oneRow
         self.dataChanged.emit(self.index(row, 0), self.index(row, 6))
         return row
-

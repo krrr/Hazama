@@ -536,6 +536,7 @@ class NikkiList(QListView):
             dt = currentDatetime() if editor.datetime is None else editor.datetime
             text, formats = editor.textEditor.getRichText()
             title = editor.titleEditor.text()
+            # None tags let database skip heavy tag update operation
             tags = editor.tagEditor.text() if editor.tagModified else None
             row = self.originModel.updateNikki(dict(
                 id=id, datetime=dt, text=text, formats=formats, title=title, tags=tags))
