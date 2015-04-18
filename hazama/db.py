@@ -129,7 +129,7 @@ class Nikki:
             formats = [(f.get('start'), f.get('length'), f.get('type'))
                        for f in formats] if formats else None
             self.save(id=-1, datetime=i.get('datetime'),
-                      title=i.get('title'), tags=i.get('tags').split(),
+                      title=i.get('title'), tags=i.get('tags'),
                       text=i.text, formats=formats, batch=True)
         self._commit()
         logging.info('importing(XML) succeeded')
@@ -140,15 +140,14 @@ class Nikki:
         root = ET.Element('nikkichou')
         for row in self.sorted('datetime'):
             nikki = ET.SubElement(root, 'nikki')
-            for attr in ['title', 'datetime']:
-                nikki.set(attr, row[attr])
-            nikki.set('tags', ' '.join(row['tags']) if row['tags'] else '')
             nikki.text = row['text']
+            for attr in ['title', 'datetime', 'tags']:
+                nikki.set(attr, row[attr])
             # save format if current nikki has
             if row['formats']:
                 formats = ET.SubElement(nikki, 'formats')
                 for f in row['formats']:
-                    fmt = ET.SubElement(formats, 'format')
+                    fmt = ET.SubElement(formats, 'fmt')
                     for index, item in enumerate(['start', 'length', 'type']):
                         fmt.set(item, str(f[index]))
         tree = ET.ElementTree(root)
