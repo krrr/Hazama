@@ -41,13 +41,13 @@ class DatabaseLockedError(Exception): pass
 
 
 class Nikki:
-    """This class hold a SQLite3 database,handling save/read/import/export.
+    """This class handles save/read/import/export on SQLite3 database.
 
-    Each Table's function:
-    Nikki: All diary saved here.(every one has all data except format/tag info).
-    Nikki_Tags: Connecting tags to diary.
-    Tags: All tags' body saved here.
-    TextFormat: Connecting format info to diary.Format info itself also saved here.
+    Each table's function:
+    Nikki: diary without format/tag fields.
+    Nikki_Tags: mapping diary to tags
+    Tags: tags
+    TextFormat: rich text formats and their owner
     """
 
     def __init__(self, db_path=None):
@@ -55,10 +55,9 @@ class Nikki:
         self._commit = self._exe = None  # shortcut, update after connect
         self.setinstance(self)
         if db_path: self.connect(db_path)
-        logging.info(str(self))
 
     def __str__(self):
-        return '%s diaries in database' % len(self)
+        return 'Diary Book (%s) with %s diaries' % (self._path, len(self))
 
     def __len__(self):
         return self._exe('SELECT COUNT(id) FROM Nikki').fetchone()[0]
@@ -95,8 +94,7 @@ class Nikki:
         self._conn.close()
         self._conn = self._exe = None
 
-    def _check_schema(self):
-        self._conn.executescript(schema)
+    def _check_schema(self): self._conn.executescript(schema)
 
     def sorted(self, order, reverse=True):
         assert order in ['datetime', 'title', 'length']
@@ -134,7 +132,7 @@ class Nikki:
                       title=i.get('title'), tags=i.get('tags').split(),
                       text=i.text, formats=formats, batch=True)
         self._commit()
-        logging.info('importing(XML) successful')
+        logging.info('importing(XML) succeeded')
 
     def exportxml(self, path):
         """Export to XML file"""
@@ -155,7 +153,7 @@ class Nikki:
                         fmt.set(item, str(f[index]))
         tree = ET.ElementTree(root)
         tree.write(path, encoding='utf-8')
-        logging.info('exporting(XML) successful')
+        logging.info('exporting(XML) succeeded')
 
     def exporttxt(self, path, selected=None):
         """Export to TXT file using template(string format).
@@ -172,7 +170,7 @@ class Nikki:
                   else selected):
             file.write(tpl.format(**n))
         file.close()
-        logging.info('exporting successful(using %s template)', tpl_type)
+        logging.info('exporting succeeded (template: %s)', tpl_type)
 
     def delete(self, id):
         self._exe('DELETE FROM Nikki WHERE id = ?', (id,))
@@ -180,7 +178,7 @@ class Nikki:
         self._commit()
 
     def gettags(self, getcount=False):
-        """Get all tags from database,return a generator.If getcount is True,
+        """generate all tags from database. If getcount is True,
         return two-tuples (name, count) generator"""
         if getcount:  # get with counts, used in TagList
             return ((r[0], r[1]) for r in self._exe(sql_tag_with_count))
@@ -193,7 +191,6 @@ class Nikki:
                          (name,)).fetchone()[0]
 
     def changetagname(self, oldname, name):
-        """Change tag's name only,leave associated diaries unchanged"""
         self._exe('UPDATE Tags SET name=? WHERE name=?', (name, oldname))
         self._commit()
 
@@ -240,16 +237,15 @@ class Nikki:
         max_id = self._exe('SELECT max(id) FROM Nikki').fetchone()[0]
         return max_id + 1 if max_id else 1
 
-    def getpath(self):
-        return self._path
+    def getpath(self): return self._path
 
     @classmethod
     def setinstance(cls, instance):
+        assert getattr(cls, 'instance', None) is None
         cls.instance = instance
 
     @classmethod
-    def getinstance(cls):
-        return cls.instance
+    def getinstance(cls): return cls.instance
 
 
 def list_backups():
@@ -271,7 +267,7 @@ def restore_backup(bk_name):
 
 
 def check_backup():
-    """Check backups and do if necessary.Delete old backups."""
+    """Check backups and delete old backups, do backup if necessary."""
     fmt = '%Y-%m-%d'
 
     db_path = Nikki.getinstance().getpath()
@@ -284,7 +280,7 @@ def check_backup():
         nikki = Nikki.getinstance()
         shutil.copyfile(db_path, os.path.join('backup',
                                               today+'_%d.db' % len(nikki)))
-        logging.info('everyday backup successful')
+        logging.info('everyday backup succeeded')
         # delete old backups
         week_before = (date.today() - timedelta(weeks=1)).strftime(fmt)
         for i in backups:

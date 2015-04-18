@@ -42,14 +42,14 @@ if __name__ == '__main__':
     logging.basicConfig(
         format='%(levelname)s: %(message)s', level=logging.DEBUG if
         config.settings['Main'].getboolean('debug') else logging.INFO)
-    logging.info('Hazama Version %s', __version__)
+    logging.info('Hazama v%s', __version__)
     config.setNikki()
 
     from ui import app  # initialize UI
     from ui.mainwindow import MainWindow
     w = MainWindow()
     w.show()
-    logging.debug('startup take %.2f sec', time.clock()-start_time)
+    logging.debug('startup took %.2f sec', time.clock()-start_time)
 
     if config.settings['Main'].getboolean('backup', True):
         db.check_backup()

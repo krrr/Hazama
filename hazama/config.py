@@ -28,6 +28,7 @@ def setNikki():
     db_path = settings['Main'].get('dbpath', 'nikkichou.db')
     try:
         nikki = db.Nikki(db_path)
+        logging.info(str(nikki))
     except db.DatabaseError as e:
         import ui
         ui.showDbError(str(e))
