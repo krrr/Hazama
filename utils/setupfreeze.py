@@ -1,12 +1,16 @@
 """Only used to generate freeze binary because of limitation of cx_Freeze."""
+import sys
 import os
 from os import path
 from glob import glob
 import PySide
 from cx_Freeze import setup, Executable
+
+sys.path[0] = os.getcwd()  # this script will called by ../setup.py
 from hazama import __version__, __author__, __desc__
 
 pyside_dir = path.dirname(PySide.__file__)
+
 
 # prepare translation files
 ts = list(glob('hazama/lang/*.qm'))  # application's translations
