@@ -2,14 +2,13 @@ Hazama
 ======
 Hazama is a GUI application for keeping diary, simple and highly customizable. It's developed in Python3 with PySide.
 
-[Project Site](http://krrr.github.io/hazama) \ [Documents](https://github.com/krrr/Hazama/wiki)
+[Project Site](http://krrr.github.io/hazama) | [Documents](https://github.com/krrr/Hazama/wiki)
 
 Build & Install
 ---
-Run from source:
 ```sh
 ./setup.py build
-./main.py
+./main.py  # run without install
 ```
 Install:
 ```sh
