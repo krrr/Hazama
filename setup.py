@@ -90,7 +90,7 @@ class BuildExe(Command):
     def finalize_options(self): pass
 
     def run(self):
-        spawn(['python', 'setupfreeze.py', 'build_exe'])
+        spawn(['python', pjoin('utils', 'setupfreeze.py'), 'build_exe'])
         # rename exe file (it can't be hazama at first)
         main_path = pjoin('build', 'hazama.exe')
         if os.path.isfile(main_path): os.remove(main_path)
@@ -106,7 +106,6 @@ if sys.platform == 'win32':
     pyside_dir = os.path.dirname(PySide.__file__)
     os.environ['PATH'] += ';' + pyside_dir
 
-common_attr = dict()
 
 # FIXME: PySide installed by archlinux AUR will not recognized by setuptools, so requires not added.
 setup(name='Hazama', author=__author__, version=__version__,
@@ -117,5 +116,4 @@ setup(name='Hazama', author=__author__, version=__version__,
       cmdclass={'build': CustomBuild, 'build_qt': BuildQt,
                 'update_ts': UpdateTranslations, 'build_exe': BuildExe},
       zip_safe=False,
-      entry_points={'gui_scripts': ['hazama = hazama.mainentry:main']},
-      **common_attr)
+      entry_points={'gui_scripts': ['hazama = hazama.mainentry:main']})
