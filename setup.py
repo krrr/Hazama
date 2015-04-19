@@ -1,16 +1,24 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 import sys
 import os
-from os import path
+from os.path import join as pjoin
 from glob import glob
+from setuptools import setup
 from distutils.core import Command
 from distutils.errors import DistutilsExecError
 from distutils.spawn import find_executable, spawn
-sys.path.append(path.realpath('hazama/'))
-from hazama import __version__
+from distutils.command.build import build
+from hazama import __version__, __author__, __desc__
 
 
-class build_qt(Command):
+class CustomBuild(build):
+    """Let build == build_qt"""
+    def get_sub_commands(self):
+        # ignore build_py
+        return ['build_qt']
+
+
+class BuildQt(Command):
     description = 'build Qt files(.ts .ui .rc)'
     user_options = [('ts', 't', 'compile ts files only'),
                     ('ui', 'u', 'compile ui files only'),
@@ -32,11 +40,11 @@ class build_qt(Command):
 
     @staticmethod
     def compile_ui():
-        for i in glob(path.join('hazama', 'ui', '*.ui')):
+        for i in glob(pjoin('hazama', 'ui', '*.ui')):
             spawn(['pyside-uic', '-o', i.split('.')[0]+'_ui.py', '-x', i])
         # fix importing error in generated files
         # resource will be imported in ui.__init__
-        for i in glob(path.join('hazama', 'ui', '*_ui.py')):
+        for i in glob(pjoin('hazama', 'ui', '*_ui.py')):
             with open(i, 'r', encoding='utf-8') as f:
                 text = [l for l in f if not l.startswith('import res_rc')]
             with open(i, 'w', encoding='utf-8') as f:
@@ -44,24 +52,24 @@ class build_qt(Command):
 
     @staticmethod
     def compile_rc():
-        spawn(['pyside-rcc', '-py3', path.join('res', 'res.qrc'), '-o',
-               path.join('hazama', 'ui', 'rc.py')])
+        spawn(['pyside-rcc', '-py3', pjoin('res', 'res.qrc'), '-o',
+               pjoin('hazama', 'ui', 'rc.py')])
 
     @staticmethod
     def compile_ts():
-        lang_dir = path.join('hazama', 'lang')
-        if not path.isdir(lang_dir): os.mkdir(lang_dir)
+        lang_dir = pjoin('hazama', 'lang')
+        if not os.path.isdir(lang_dir): os.mkdir(lang_dir)
 
         lres = find_executable('lrelease') or find_executable('lrelease-qt4')
         if lres is None:
             raise DistutilsExecError('lrelease not found')
 
-        for i in glob(path.join('i18n', '*.ts')):
-            qm_filename = path.basename(i).split('.')[0] + '.qm'
-            spawn([lres, i, '-qm', path.join(lang_dir, qm_filename)])
+        for i in glob(pjoin('i18n', '*.ts')):
+            qm_filename = os.path.basename(i).split('.')[0] + '.qm'
+            spawn([lres, i, '-qm', pjoin(lang_dir, qm_filename)])
 
 
-class update_ts(Command):
+class UpdateTranslations(Command):
     description = 'Update translation files'
     user_options = []
 
@@ -70,45 +78,44 @@ class update_ts(Command):
     def finalize_options(self): pass
 
     def run(self):
-        spawn(['pyside-lupdate', path.join('i18n', 'lupdateguide')])
+        spawn(['pyside-lupdate', pjoin('i18n', 'lupdateguide')])
+
+
+class BuildExe(Command):
+    description = 'Call cx_Freeze to build EXE'
+    user_options = []
+
+    def initialize_options(self): pass
+
+    def finalize_options(self): pass
+
+    def run(self):
+        spawn(['python', 'setupfreeze.py', 'build_exe'])
+        # rename exe file (it can't be hazama at first)
+        main_path = pjoin('build', 'hazama.exe')
+        if os.path.isfile(main_path): os.remove(main_path)
+        os.rename(pjoin('build', 'main.exe'), main_path)
+        # remove duplicate python DLL
+        dll_path = glob(pjoin('build', 'python*.dll'))[0]
+        os.remove(pjoin('build', 'lib', os.path.basename(dll_path)))
 
 
 if sys.platform == 'win32':
-    from cx_Freeze import setup, Executable
+    # fix env variables for pyside tools
     import PySide
+    pyside_dir = os.path.dirname(PySide.__file__)
+    os.environ['PATH'] += ';' + pyside_dir
 
-    pyside_dir = path.dirname(PySide.__file__)
-    os.environ['PATH'] += ';' + pyside_dir  # for executing qt tools
+common_attr = dict()
 
-    # prepare translation files
-    ts = list(glob('hazama/lang/*.qm'))  # application's translations
-    ts += [path.join(pyside_dir, 'translations', 'qt_%s')
-           % path.basename(i) for i in ts]  # corresponding Qt translations
-    all_ts = [(i, '../lang/%s' % path.basename(i)) for i in ts]
-    main = Executable('hazama/hazama.py',
-                      base='Win32GUI',
-                      icon='res/appicon/appicon.ico',
-                      appendScriptToLibrary=False,
-                      appendScriptToExe=True,
-                      targetDir='build')
-    extra_opts = dict(
-        options={'build_exe': {
-            'include_files': all_ts,
-            'includes': ['PySide.QtCore', 'PySide.QtGui'],
-            'excludes': ['tkinter', 'PySide.QtNetwork', 'distutils'],
-            'build_exe': 'build/lib',  # dir for exe and dependent files
-            'init_script': path.join(os.getcwd(), 'utils', 'cx_freeze_init.py')}},
-        executables=[main])
-else:
-    from distutils.core import setup
-    extra_opts = {}
-
-
-setup(name='Hazama',
-      author='krrr',
+# FIXME: PySide installed by archlinux AUR will not recognized by setuptools, so requires not added.
+setup(name='Hazama', author=__author__, version=__version__,
+      description=__desc__,
       url='https://github.com/krrr/Hazama',
-      version=__version__,
-      description='A simple cross-platform diary program',
-      requires=['PySide'],
-      cmdclass={'build_qt': build_qt, 'update_ts': update_ts},
-      **extra_opts)
+      packages=['hazama', 'hazama.ui'],
+      package_data={'hazama': ['lang/*.qm']},
+      cmdclass={'build': CustomBuild, 'build_qt': BuildQt,
+                'update_ts': UpdateTranslations, 'build_exe': BuildExe},
+      zip_safe=False,
+      entry_points={'gui_scripts': ['hazama = hazama.mainentry:main']},
+      **common_attr)
