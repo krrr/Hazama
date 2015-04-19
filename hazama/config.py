@@ -2,7 +2,6 @@
 from configparser import ConfigParser
 import sys
 import os
-import logging
 from hazama import db
 
 settings = nikki = None
@@ -29,7 +28,14 @@ def changeCWD():
         os.chdir(p)
 
 
-def setSettings():
+
+def saveSettings():
+    with open('config.ini', 'w', encoding='utf-8') as f:
+        settings.write(f)
+
+
+def init():
+    """Load config.ini under CWD, initialize settings and nikki."""
     global settings
     settings = ConfigParser()
     try:
@@ -37,20 +43,13 @@ def setSettings():
         with open('config.ini', encoding='utf-8-sig') as f:
             settings.read_file(f)
     except FileNotFoundError:
-        settings['Main'] = settings['Editor'] = settings['Font'] = {}
+        for i in ['Main', 'Editor', 'Font']:
+            settings[i] = {}
 
-
-def saveSettings():
-    with open('config.ini', 'w', encoding='utf-8') as f:
-        settings.write(f)
-
-
-def setNikki():
     global nikki
     db_path = settings['Main'].get('dbpath', 'nikkichou.db')
     try:
         nikki = db.Nikki(db_path)
-        logging.info(str(nikki))
     except db.DatabaseError as e:
         from hazama import ui
         ui.showDbError(str(e))

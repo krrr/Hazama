@@ -6,13 +6,13 @@ from hazama import __version__, db, config
 def main():
     start_time = time.clock()
     config.changeCWD()
-    config.setSettings()
+    config.init()
     # setup logging
     logging.basicConfig(
         format='%(levelname)s: %(message)s', level=logging.DEBUG if
         config.settings['Main'].getboolean('debug') else logging.INFO)
     logging.info('Hazama v%s', __version__)
-    config.setNikki()
+    logging.info(str(config.nikki))
 
     from hazama.ui import app  # initialize UI
     from hazama.ui.mainwindow import MainWindow
