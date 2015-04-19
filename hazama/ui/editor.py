@@ -1,10 +1,10 @@
 from PySide.QtGui import *
 from PySide.QtCore import *
-from ui.editor_ui import Ui_editor
-from ui.customobjects import TagCompleter
-from ui.customwidgets import DateTimeDialog
-from ui import font, datetimeTrans, currentDatetime, datetimeFmt
-from config import settings, nikki
+from hazama.ui.editor_ui import Ui_editor
+from hazama.ui.customobjects import TagCompleter
+from hazama.ui.customwidgets import DateTimeDialog
+from hazama.ui import font, datetimeTrans, currentDatetime, datetimeFmt
+from hazama.config import settings, nikki
 
 
 class Editor(QWidget, Ui_editor):

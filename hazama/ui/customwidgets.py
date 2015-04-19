@@ -1,7 +1,7 @@
 from PySide.QtCore import *
 from PySide.QtGui import *
-from ui import setStdEditMenuIcons
-from ui.customobjects import TextFormatter, NTextDocument
+from hazama.ui import setStdEditMenuIcons
+from hazama.ui.customobjects import TextFormatter, NTextDocument
 
 
 class QLineEditWithMenuIcon(QLineEdit):

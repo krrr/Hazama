@@ -1,11 +1,10 @@
 from PySide.QtGui import *
 from PySide.QtCore import *
-from ui.configdialog_ui import Ui_configDialog
-from ui import font, setStyleSheet, readRcTextFile
-from config import settings
-from hazama import __version__
-import db
 import logging
+from hazama import __version__, db
+from hazama.ui import font, setStyleSheet, readRcTextFile
+from hazama.ui.configdialog_ui import Ui_configDialog
+from hazama.config import settings
 
 
 languages = {'en': 'English', 'zh_CN': '简体中文', 'ja_JP': '日本語'}

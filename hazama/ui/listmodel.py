@@ -1,6 +1,6 @@
 from PySide.QtCore import *
 from PySide.QtGui import *
-from config import nikki, settings
+from hazama.config import nikki, settings
 
 
 class NikkiModel(QAbstractTableModel):

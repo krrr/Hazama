@@ -4,12 +4,12 @@ from PySide.QtGui import *
 from PySide.QtCore import *
 import logging
 import random
-from ui import font, datetimeTrans, currentDatetime
-from ui.editor import Editor
-from ui.customobjects import NTextDocument, MultiSortFilterProxyModel
-from ui.customwidgets import NElideLabel, NDocumentLabel
-from ui.listmodel import NikkiModel
-from config import settings, nikki
+from hazama.ui import font, datetimeTrans, currentDatetime
+from hazama.ui.editor import Editor
+from hazama.ui.customobjects import NTextDocument, MultiSortFilterProxyModel
+from hazama.ui.customwidgets import NElideLabel, NDocumentLabel
+from hazama.ui.listmodel import NikkiModel
+from hazama.config import settings, nikki
 
 
 class NListDelegate(QStyledItemDelegate):

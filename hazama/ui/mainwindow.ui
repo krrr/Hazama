@@ -206,7 +206,7 @@
   <customwidget>
    <class>NikkiList</class>
    <extends>QListView</extends>
-   <header>ui.listview</header>
+   <header>hazama.ui.listview</header>
    <slots>
     <signal>countChanged()</signal>
     <signal>tagsChanged()</signal>
@@ -221,7 +221,7 @@
   <customwidget>
    <class>TagList</class>
    <extends>QListWidget</extends>
-   <header>ui.listview</header>
+   <header>hazama.ui.listview</header>
    <slots>
     <signal>currentTagChanged(QString)</signal>
     <signal>tagNameModified(QString)</signal>
@@ -231,7 +231,7 @@
   <customwidget>
    <class>NSplitter</class>
    <extends>QSplitter</extends>
-   <header>ui.customobjects</header>
+   <header>hazama.ui.customobjects</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

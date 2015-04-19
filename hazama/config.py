@@ -1,10 +1,32 @@
 """Setup database & settings and share them between modules"""
 from configparser import ConfigParser
 import sys
+import os
 import logging
-import db
+from hazama import db
 
 settings = nikki = None
+
+# set application path (used to load language file)
+if hasattr(sys, 'frozen'):
+    appPath = os.path.dirname(sys.argv[0])
+else:
+    appPath = os.path.dirname(__file__)
+
+
+def changeCWD():
+    # user will not care about CWD because this is GUI application?
+    if '-portable' in sys.argv:
+        os.chdir(appPath)
+    else:
+        if sys.platform == 'win32':
+            p = os.path.join(os.environ['APPDATA'], 'Hazama')
+        else:
+            cfg_path = os.path.join(os.environ['HOME'], '.config')
+            if not os.path.isdir(cfg_path): os.mkdir(cfg_path)
+            p = os.path.join(cfg_path, 'Hazama')
+        if not os.path.isdir(p): os.mkdir(p)
+        os.chdir(p)
 
 
 def setSettings():

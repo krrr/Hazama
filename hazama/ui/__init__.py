@@ -1,11 +1,11 @@
 from PySide.QtGui import QApplication, QIcon, QFont, QFontMetrics, QMessageBox
 from PySide.QtCore import QLocale, QTranslator, QLibraryInfo, QDateTime, QFile
-from config import settings
-from ui import rc
 import sys
 import os
 import time
 import logging
+from hazama.config import settings, appPath
+import hazama.ui.rc
 
 
 locale = None
@@ -35,15 +35,16 @@ def readRcTextFile(path):
 
 def setTranslationLocale():
     lang = settings['Main'].get('lang', 'en')
+    langPath = os.path.join(appPath, 'lang')
     logging.info('set translation(%s)', lang)
     global _trans, _transQt  # avoid being collected
     _trans = QTranslator()
-    _trans.load(lang, 'lang/')
+    _trans.load(lang, langPath)
     _transQt = QTranslator()
     ret = _transQt.load('qt_' + lang,
                         QLibraryInfo.location(QLibraryInfo.TranslationsPath))
     if not ret:  # frozen
-        _transQt.load('qt_'+lang, 'lang/')
+        _transQt.load('qt_'+lang, langPath)
     for i in [_trans, _transQt]: app.installTranslator(i)
     sysLocale = QLocale.system()
     # special case: application language is different from system's

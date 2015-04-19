@@ -118,12 +118,12 @@
   <customwidget>
    <class>NTextEdit</class>
    <extends>QTextEdit</extends>
-   <header>ui/customwidgets</header>
+   <header>hazama.ui.customwidgets</header>
   </customwidget>
   <customwidget>
    <class>NLineEditMouse</class>
    <extends>QLineEdit</extends>
-   <header>ui/customwidgets</header>
+   <header>hazama.ui.customwidgets</header>
   </customwidget>
  </customwidgets>
  <resources>

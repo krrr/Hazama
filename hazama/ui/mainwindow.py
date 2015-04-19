@@ -2,12 +2,12 @@ from PySide.QtGui import *
 from PySide.QtCore import *
 import logging
 from itertools import chain
-from ui import font, setTranslationLocale
-from ui.customwidgets import QLineEditWithMenuIcon
-from ui.configdialog import ConfigDialog
-from ui.mainwindow_ui import Ui_mainWindow
-from ui.heatmap import HeatMap
-from config import settings, nikki, saveSettings
+from hazama.ui import font, setTranslationLocale
+from hazama.ui.customwidgets import QLineEditWithMenuIcon
+from hazama.ui.configdialog import ConfigDialog
+from hazama.ui.mainwindow_ui import Ui_mainWindow
+from hazama.ui.heatmap import HeatMap
+from hazama.config import settings, nikki, saveSettings
 
 
 class MainWindow(QMainWindow, Ui_mainWindow):
