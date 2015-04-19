@@ -52,10 +52,10 @@ def setNikki():
         nikki = db.Nikki(db_path)
         logging.info(str(nikki))
     except db.DatabaseError as e:
-        import ui
+        from hazama import ui
         ui.showDbError(str(e))
         sys.exit(-1)
     except db.DatabaseLockedError:
-        import ui
+        from hazama import ui
         ui.showDbLockedError()
         sys.exit(-1)
