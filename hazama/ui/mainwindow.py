@@ -41,7 +41,7 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         p.setHorizontalStretch(5)
         searchBox.setSizePolicy(p)
         searchBox.setMinimumWidth(searchBox.sizeHint().height() * 8)
-        searchBox.textChanged.connect(self.nList.setFilterBySearchString)
+        searchBox.contentChanged.connect(self.nList.setFilterBySearchString)
         self.toolBar.addWidget(searchBox)
         if settings['Main'].getboolean('tagListVisible'):
             self.tListAct.trigger()
@@ -192,7 +192,11 @@ class MainWindow(QMainWindow, Ui_mainWindow):
 
 
 class SearchBox(QLineEditWithMenuIcon):
-    """The real-time search box in toolbar"""
+    """The real-time search box in toolbar. contentChanged signal will be
+    delayed after textChanged, it prevent lagging when text changing quickly
+    and the amount of data is large."""
+    contentChanged = Signal(str)  # replace textChanged
+
     def __init__(self, parent=None):
         super(SearchBox, self).__init__(parent, objectName='searchBox')
         self.setMinimumHeight(23)  # looks fine when toolbar icon is 24x24
@@ -207,7 +211,20 @@ class SearchBox(QLineEditWithMenuIcon):
         self.textChanged.connect(self._updateIco)
         self.retranslate()
         self.isTextBefore = True
-        self._updateIco('')  # initiallize the icon
+        self._updateIco('')  # initialize the icon
+
+        self._delay = QTimer(self)
+        self._delay.setSingleShot(True)
+        self._delay.setInterval(310)
+        self._delay.timeout.connect(lambda: self.contentChanged.emit(self.text()))
+        self.textChanged.connect(self._updateDelayTimer)
+
+    def _updateDelayTimer(self, s):
+        if s == '':  # fast clear
+            self._delay.stop()
+            self.contentChanged.emit(self.text())
+        else:
+            self._delay.start()  # restart if already started
 
     def resizeEvent(self, event):
         w, h = event.size().toTuple()
