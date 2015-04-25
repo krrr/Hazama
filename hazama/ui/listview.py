@@ -121,11 +121,11 @@ class NListDelegateColorful(QItemDelegate):
                 parent, objectName='NListItem')
             self.heightWithTag = self.heightNoTag = None
 
-            self.title = NElideLabel(self)
+            self.title = NElideLabel(self, objectName='NListItemTitle')
             self.title.setFont(font.title)
             self.title.setAlignment(Qt.AlignVCenter | Qt.AlignRight)
             self.title.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
-            self.datetime = QLabel(self)
+            self.datetime = QLabel(self, objectName='NListItemDt')
             self.datetime.setFont(font.datetime)
             self.datetime.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Preferred)
 
@@ -133,7 +133,7 @@ class NListDelegateColorful(QItemDelegate):
             self.text.setLines(settings['Main'].getint('previewLines', 4))
             self.text.setFont(font.text)
 
-            self.tag = NElideLabel(self)
+            self.tag = NElideLabel(self, objectName='NListItemTag')
 
             # use QToolButton to display icons
             self.datetimeIco = QToolButton(self, objectName='NListItemDtIco')
