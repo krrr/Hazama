@@ -43,7 +43,7 @@ QWidget#editor #tagEditor:focus, #titleEditor:focus, #textEditor:focus {
 
 /* NListItem part */
 QFrame#NListItem {
-    padding: 2px 3px 2px 3px;
+    padding: 4px;
     border-bottom: 1px solid #979A9B;
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
         stop:0 #EEF2DE,
