@@ -1,13 +1,15 @@
-from PySide.QtCore import *
-from PySide.QtGui import *
-
 """Do not pass parent to some object that isn't sub-class of QWidget
 when not necessary.
 
 Detail: Some widget never release its 'functional' child, such as
 ItemDelegate(with parent set to the view) set by QListView.setItemDelegate
 and replaced by other delegate later.
-Call deleteLater manually will solve this partially."""
+Call deleteLater manually will solve this partially.
+
+PyQt4 has the same problem. But it use less memory than PySide. (Tested under
+Windows, 5MB)"""
+from PySide.QtCore import *
+from PySide.QtGui import *
 
 
 class DummyDelegate(QAbstractItemDelegate):
