@@ -4,7 +4,11 @@ import sys
 import os
 from hazama import db
 
-settings = nikki = None
+settings = ConfigParser()
+for i in ['Main', 'Editor', 'Font']:  # useful while doing unittest
+    settings[i] = {}
+
+nikki = db.Nikki()
 
 # set application path (used to load language file)
 if hasattr(sys, 'frozen'):
@@ -28,7 +32,6 @@ def changeCWD():
         os.chdir(p)
 
 
-
 def saveSettings():
     with open('config.ini', 'w', encoding='utf-8') as f:
         settings.write(f)
@@ -36,20 +39,15 @@ def saveSettings():
 
 def init():
     """Load config.ini under CWD, initialize settings and nikki."""
-    global settings
-    settings = ConfigParser()
     try:
         # utf-8 with BOM will kill ConfigParser
         with open('config.ini', encoding='utf-8-sig') as f:
             settings.read_file(f)
     except FileNotFoundError:
-        for i in ['Main', 'Editor', 'Font']:
-            settings[i] = {}
+        pass
 
-    global nikki
-    db_path = settings['Main'].get('dbpath', 'nikkichou.db')
     try:
-        nikki = db.Nikki(db_path)
+        nikki.connect(settings['Main'].get('dbpath', 'nikkichou.db'))
     except db.DatabaseError as e:
         from hazama import ui
         ui.showDbError(str(e))

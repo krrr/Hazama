@@ -1,10 +1,5 @@
 import unittest
-import sys
-import os
-from PySide.QtGui import QTextFormat
-
-sys.path.append(os.path.realpath('../hazama/'))
-from ui.customobjects import NTextDocument
+from hazama.ui.customobjects import NTextDocument
 
 
 class NTextDocumentFormatsTest(unittest.TestCase):
