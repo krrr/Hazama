@@ -17,7 +17,7 @@ ts = list(glob('hazama/lang/*.qm'))  # application's translations
 ts += [path.join(pyside_dir, 'translations', 'qt_%s')
        % path.basename(i) for i in ts]  # corresponding Qt translations
 all_ts = [(i, '../lang/%s' % path.basename(i)) for i in ts]
-main = Executable('main.py',
+main = Executable('hazama.py',
                   base='Win32GUI',
                   icon='res/appicon/appicon.ico',
                   appendScriptToLibrary=False,

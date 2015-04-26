@@ -90,11 +90,12 @@ class BuildExe(Command):
     def finalize_options(self): pass
 
     def run(self):
-        spawn(['python', pjoin('utils', 'setupfreeze.py'), 'build_exe'])
-        # rename exe file (it can't be hazama at first)
-        main_path = pjoin('build', 'hazama.exe')
-        if os.path.isfile(main_path): os.remove(main_path)
-        os.rename(pjoin('build', 'main.exe'), main_path)
+        # remaining let cx_freeze generate hazama.exe
+        os.rename('main.py', 'hazama.py')
+        try:
+            spawn(['python', pjoin('utils', 'setupfreeze.py'), 'build_exe'])
+        finally:
+            os.rename('hazama.py', 'main.py')
         # remove duplicate python DLL
         dll_path = glob(pjoin('build', 'python*.dll'))[0]
         os.remove(pjoin('build', 'lib', os.path.basename(dll_path)))
