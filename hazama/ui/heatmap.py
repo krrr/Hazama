@@ -22,6 +22,7 @@ class HeatMap(QWidget):
         self.yearBtn = QPushButton(str(self.view.year), self,
                                    objectName='heatMapBtn')
         self.yearBtn.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
+        self.yearBtn.setFocusPolicy(Qt.TabFocus)
         self.yearBtn.setFont(self.font())
         self.yearBtn.clicked.connect(self.yearBtnAct)
         self.yearMenu = QMenu(self, objectName='heatMapMenu')
