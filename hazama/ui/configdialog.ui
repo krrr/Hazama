@@ -537,6 +537,13 @@
         </layout>
        </item>
        <item>
+        <widget class="QCheckBox" name="extendBgCheck">
+         <property name="text">
+          <string>Extend background of titlebar to toolbar</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QGroupBox" name="fontGBox">
          <property name="title">
           <string>Fonts</string>

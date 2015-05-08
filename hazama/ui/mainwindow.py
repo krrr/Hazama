@@ -18,8 +18,8 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         geo = settings['Main'].get('windowGeo')
         self.restoreGeometry(QByteArray.fromHex(geo))
         # setup toolbar bg, the second stage is in showEvent
-        if settings['Main'].getboolean('extendTitleBarBg', False):
-            self.toolBar.setProperty('extendTitleBar', True)
+        self.toolBar.setProperty(
+            'extendTitleBar', settings['Main'].getboolean('extendTitleBarBg', False))
 
         # setup TagList width
         tListW = settings['Main'].getint('tagListWidth', 0)
@@ -120,6 +120,13 @@ class MainWindow(QMainWindow, Ui_mainWindow):
             self.cfgDialog.bkRestored.connect(self.nList.reload)
             self.cfgDialog.accepted.connect(self.nList.setDelegateOfTheme)
             self.cfgDialog.accepted.connect(self.tList.setDelegateOfTheme)
+
+            self.cfgDialog.extendBgChanged.connect(self.onExtendTitleBarBgChanged)
+            # trick on connect accepted to show: it will call showEvent to
+            # call DWM API after onExtendTitleBarBgChanged caused StyleSheet
+            # changed and hide the window
+            self.cfgDialog.accepted.connect(self.show)
+
             self.cfgDialog.show()
 
     @Slot()
@@ -165,6 +172,11 @@ class MainWindow(QMainWindow, Ui_mainWindow):
             self.heatMap.setWindowFlags(Qt.Window | Qt.WindowTitleHint)
             self.heatMap.setWindowTitle('HeatMap')
             self.heatMap.show()
+
+    def onExtendTitleBarBgChanged(self):
+        self.toolBar.setProperty(
+            'extendTitleBar', settings['Main'].getboolean('extendTitleBarBg', False))
+        self.hide()
 
     def sortOrderChanged(self, checked):
         name = self.sender().name

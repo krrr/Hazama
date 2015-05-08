@@ -114,9 +114,8 @@ def setStyleSheet():
 
 def winDwmExtendWindowFrame(winId, topMargin):
     """Extend background of title bar to toolbar. Only available on Windows
-    because it depends on DWM."""
-    if sys.platform != 'win32': return
-    # winId is PyCapsule object
+    because it depends on DWM. winId is PyCapsule object, which storing HWND."""
+    if not isDwmUsable(): return
     from ctypes import (c_int, byref, pythonapi, c_void_p, c_char_p, py_object,
                         c_bool, windll, Structure)
 
@@ -127,22 +126,27 @@ def winDwmExtendWindowFrame(winId, topMargin):
     pythonapi.PyCapsule_GetPointer.restype = c_void_p
     pythonapi.PyCapsule_GetPointer.argtypes = [py_object, c_char_p]
 
-    # check if DWM enabled
-    ver = sys.getwindowsversion()
-    # potential bug: windows 8 or later always have DWM enabled,
-    # but API used below depends on manifest file. so check version
-    if ver.major <= 6 and ver.minor <= 1:  # windows is 7 or older
-        b = c_bool()
-        try:
-            ret = windll.dwmapi.DwmIsCompositionEnabled(byref(b))
-        except AttributeError:  # no DWM, windows is older than vista
-            return
-        if not (ret == 0 and b.value): return
-
     winId = pythonapi.PyCapsule_GetPointer(winId, None)
     margin = Margin(0, 0, topMargin, 0)
     windll.dwmapi.DwmExtendFrameIntoClientArea(winId, byref(margin))
 
+    return True
+
+
+def isDwmUsable():
+    if sys.platform != 'win32': return False
+    from ctypes import byref, windll, c_bool
+    # check if DWM enabled
+    ver = sys.getwindowsversion()
+    # potential bug: windows 8 or later always have DWM enabled,
+    # but API used below depends on manifest file. so check version
+    if ver.major <= 6 and ver.minor <= 1:  # Windows is 7 or older
+        b = c_bool()
+        try:
+            ret = windll.dwmapi.DwmIsCompositionEnabled(byref(b))
+        except AttributeError:  # no DWM, Windows is older than vista
+            return False
+        if not (ret == 0 and b.value): return False
     return True
 
 

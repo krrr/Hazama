@@ -2,7 +2,7 @@ from PySide.QtGui import *
 from PySide.QtCore import *
 import logging
 from hazama import __version__, db
-from hazama.ui import font, setStyleSheet, readRcTextFile
+from hazama.ui import font, setStyleSheet, readRcTextFile, isDwmUsable
 from hazama.ui.configdialog_ui import Ui_configDialog
 from hazama.config import settings
 
@@ -16,6 +16,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
     langChanged = Signal()
     bkRestored = Signal()
     accepted = Signal()
+    extendBgChanged = Signal()
 
     def __init__(self, parent=None):
         super(ConfigDialog, self).__init__(parent, Qt.WindowTitleHint)
@@ -32,6 +33,11 @@ class ConfigDialog(QDialog, Ui_configDialog):
         self.tListCountCheck.setChecked(settings['Main'].getboolean('tagListCount', True))
         self.tfocusCheck.setChecked(settings['Editor'].getboolean('titleFocus', False))
         self.bkCheck.setChecked(settings['Main'].getboolean('backup', True))
+        if isDwmUsable():
+            self.extendBgCheck.setChecked(
+                settings['Main'].getboolean('extendTitleBarBg', False))
+        else:
+            self.extendBgCheck.setDisabled(True)
         # language ComboBox
         for l in sorted(languagesR):
             self.langCombo.addItem(l)
@@ -63,6 +69,17 @@ class ConfigDialog(QDialog, Ui_configDialog):
         self.aboutBrowser.setMinimumHeight(int(doc.size().height()))
 
     def accept(self):
+        # special pairs that need trigger signal or call functions
+        langPrev = settings['Main'].get('lang', 'en')
+        lang = languagesR[self.langCombo.currentText()]
+        themePrev = settings['Main'].get('theme', '1px-rect')
+        theme = self.themeCombo.currentText()
+        extendPrev = settings['Main'].getboolean('extendTitleBarBg', False)
+        extend = self.extendBgCheck.isChecked()
+
+        settings['Main']['lang'] = lang
+        settings['Main']['theme'] = theme
+        settings['Main']['extendTitleBarBg'] = str(extend)
         settings['Editor']['autoIndent'] = str(self.aindCheck.isChecked())
         settings['Main']['tagListCount'] = str(self.tListCountCheck.isChecked())
         settings['Editor']['titleFocus'] = str(self.tfocusCheck.isChecked())
@@ -70,19 +87,16 @@ class ConfigDialog(QDialog, Ui_configDialog):
         settings['Main']['previewLines'] = str(self.preLinesBox.value())
         for i in self.buttons:
             settings['Font'][i.configName] = i.font().toString()
+
         if not self.defFontGBox.isChecked() and settings['Font']['default']:
             del settings['Font']['default']
         font.load()
 
-        lang = languagesR[self.langCombo.currentText()]
-        if settings['Main'].get('lang', 'en') != lang:
-            settings['Main']['lang'] = lang
-            self.langChanged.emit()
-
-        theme = self.themeCombo.currentText()
-        if settings['Main'].get('theme', '1px-rect') != theme:
-            settings['Main']['theme'] = theme
-            setStyleSheet()
+        # deal with special pairs
+        if langPrev != lang: self.langChanged.emit()
+        # this change dynamic property, so emit it before setStyleSheet
+        if extendPrev != extend: self.extendBgChanged.emit()
+        if themePrev != theme or extendPrev != extend: setStyleSheet()
 
         logging.info('Settings saved')
         self.accepted.emit()
