@@ -4,7 +4,7 @@ QListView#tList {
     background: #E7EFF5;
 }
 QListView#nList{
-    margin: 0px;
+    padding: 0px;
     background: #FAFAFA;
 }
 QLineEdit#tagListEdit {

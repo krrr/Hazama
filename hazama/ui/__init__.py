@@ -112,6 +112,40 @@ def setStyleSheet():
         app.setStyleSheet(''.join(ss))
 
 
+def winDwmExtendWindowFrame(winId, topMargin):
+    """Extend background of title bar to toolbar. Only available on Windows
+    because it depends on DWM."""
+    if sys.platform != 'win32': return
+    # winId is PyCapsule object
+    from ctypes import (c_int, byref, pythonapi, c_void_p, c_char_p, py_object,
+                        c_bool, windll, Structure)
+
+    # define prototypes & structures
+    class Margin(Structure):
+        _fields_ = [('left', c_int), ('right', c_int),
+                    ('top', c_int), ('bottom', c_int)]
+    pythonapi.PyCapsule_GetPointer.restype = c_void_p
+    pythonapi.PyCapsule_GetPointer.argtypes = [py_object, c_char_p]
+
+    # check if DWM enabled
+    ver = sys.getwindowsversion()
+    # potential bug: windows 8 or later always have DWM enabled,
+    # but API used below depends on manifest file. so check version
+    if ver.major <= 6 and ver.minor <= 1:  # windows is 7 or older
+        b = c_bool()
+        try:
+            ret = windll.dwmapi.DwmIsCompositionEnabled(byref(b))
+        except AttributeError:  # no DWM, windows is older than vista
+            return
+        if not (ret == 0 and b.value): return
+
+    winId = pythonapi.PyCapsule_GetPointer(winId, None)
+    margin = Margin(0, 0, topMargin, 0)
+    windll.dwmapi.DwmExtendFrameIntoClientArea(winId, byref(margin))
+
+    return True
+
+
 class Fonts:
     """Manage all fonts used in application"""
     def __init__(self):

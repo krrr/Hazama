@@ -2,7 +2,7 @@ from PySide.QtGui import *
 from PySide.QtCore import *
 import logging
 from itertools import chain
-from hazama.ui import font, setTranslationLocale
+from hazama.ui import font, setTranslationLocale, winDwmExtendWindowFrame
 from hazama.ui.customwidgets import QLineEditWithMenuIcon
 from hazama.ui.configdialog import ConfigDialog
 from hazama.ui.mainwindow_ui import Ui_mainWindow
@@ -17,6 +17,10 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         self.cfgDialog = self.heatMap = None  # create on on_cfgAct_triggered
         geo = settings['Main'].get('windowGeo')
         self.restoreGeometry(QByteArray.fromHex(geo))
+        # setup toolbar bg, the second stage is in showEvent
+        if settings['Main'].getboolean('extendTitleBarBg', False):
+            self.toolBar.setProperty('extendTitleBar', True)
+
         # setup TagList width
         tListW = settings['Main'].getint('tagListWidth', 0)
         if not self.isMaximized():
@@ -177,6 +181,11 @@ class MainWindow(QMainWindow, Ui_mainWindow):
             settings['Main']['tagListWidth'] = str(self.splitter.sizes()[0])
 
     def showEvent(self, event):
+        # style polished, we can get correct height of toolbar now
+        if (settings['Main'].getboolean('extendTitleBarBg', False)
+           and winDwmExtendWindowFrame(self.winId(), self.toolBar.height())):
+            self.setAttribute(Qt.WA_TranslucentBackground)
+
         self.nList.setFocus()
 
     def updateCountLabel(self):
