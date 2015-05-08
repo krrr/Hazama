@@ -55,6 +55,9 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         searchSc = QShortcut(QKeySequence.Find, self)
         searchSc.activated.connect(self.searchBox.setFocus)
 
+        # let the main window movable by drag toolbar
+        self.toolBar.installEventFilter(self)
+        self._previousPos = None
         # delay list loading until main event loop start
         QTimer.singleShot(0, self.nList, SLOT('load()'))
 
@@ -198,6 +201,18 @@ class MainWindow(QMainWindow, Ui_mainWindow):
 
     def updateCountLabelOnLoad(self):
         self.countLabel.setText(self.tr('loading...'))
+
+    def eventFilter(self, __, event):
+        """let the main window movable by drag toolbar"""
+        if event.type() == QEvent.MouseButtonPress:
+            self._previousPos = event.pos()
+            return True
+        if event.type() == QEvent.MouseMove:
+            diff = event.pos() - self._previousPos
+            self.move(self.pos() + diff)
+            return True
+        else:
+            return False
 
 
 class SearchBox(QLineEditWithMenuIcon):
