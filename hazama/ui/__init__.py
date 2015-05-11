@@ -134,6 +134,7 @@ def winDwmExtendWindowFrame(winId, topMargin):
 
 
 def isDwmUsable():
+    """Check whether winDwmExtendWindowFrame usable."""
     if sys.platform != 'win32': return False
     from ctypes import byref, windll, c_bool
     # check if DWM enabled
@@ -173,13 +174,12 @@ class Fonts:
 
 
 app = QApplication(sys.argv)
-# setup application icon
-appIcon = QIcon(':/appicon16.png')
-appIcon.addFile(':/appicon32.png')
-appIcon.addFile(':/appicon48.png')
-appIcon.addFile(':/appicon64.png')
-app.setWindowIcon(appIcon)
-# setup fonts after qApp created
+
+_appIcon = QIcon()
+for i in [16, 32, 48, 64]:
+    _appIcon.addFile(':/appicon%d.png' % i)
+app.setWindowIcon(_appIcon)
+
 font = Fonts()
 font.load()
 
