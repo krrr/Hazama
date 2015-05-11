@@ -15,8 +15,8 @@ from hazama.config import settings, nikki
 class NListDelegate(QStyledItemDelegate):
     """ItemDelegate of old theme 'one-pixel-rect' for NList, Using 'traditional'
     painting method compared to colorful theme."""
-    def __init__(self, parent=None):
-        super(NListDelegate, self).__init__(parent)
+    def __init__(self, parent):
+        super(NListDelegate, self).__init__()  # don't pass parent because of mem problem
         self.title_h = max(QFontInfo(font.title).pixelSize(),
                            QFontInfo(font.datetime).pixelSize()) + 4  # dt and title font area
         self.titleArea_h = self.title_h + 4
@@ -31,6 +31,7 @@ class NListDelegate(QStyledItemDelegate):
         self.doc.setDefaultFont(font.text)
         self.doc.setUndoRedoEnabled(False)
         self.doc.setDocumentMargin(0)
+        self.doc.documentLayout().setPaintDevice(parent)
         # setup colors
         self.c_text = Qt.black
         self.c_bg = QColor(255, 236, 176)
@@ -557,7 +558,7 @@ class NikkiList(QListView):
     def setDelegateOfTheme(self):
         theme = settings['Main'].get('theme')
         d = {'colorful': NListDelegateColorful}.get(theme, NListDelegate)
-        self.setItemDelegate(d())
+        self.setItemDelegate(d(self))
         # force items to be laid again
         self.setSpacing(self.spacing())
 

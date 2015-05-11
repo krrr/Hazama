@@ -24,6 +24,7 @@ class NDocumentLabel(QFrame):
         self.doc.setDocumentMargin(0)
         self.doc.setUndoRedoEnabled(False)
         self.setLines(lines if lines else 4)
+        self.doc.documentLayout().setPaintDevice(self)  # make difference on high DPI
 
     def setFont(self, f):
         self.doc.setDefaultFont(f)
