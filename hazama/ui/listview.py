@@ -568,12 +568,15 @@ class NikkiList(QListView):
 
     def delNikki(self):
         if len(self.selectedIndexes()) == 0: return
-        ret = QMessageBox.question(self, self.tr('Delete selected diaries'),
-                                   self.tr('Selected diaries will be deleted '
-                                           'permanently!'),
-                                   QMessageBox.Yes | QMessageBox.No)
+        msg = QMessageBox()
+        okBtn = msg.addButton(qApp.translate('Dialog', 'Delete'), QMessageBox.AcceptRole)
+        msg.setIcon(QMessageBox.Question)
+        msg.addButton(qApp.translate('Dialog', 'Cancel'), QMessageBox.RejectRole)
+        msg.setWindowTitle(self.tr('Delete diaries'))
+        msg.setText(self.tr('Selected diaries will be deleted permanently!'))
+        msg.exec_()
 
-        if ret == QMessageBox.Yes:
+        if msg.clickedButton() == okBtn:
             indexes = [self.modelProxy.mapToSource(i)
                        for i in self.selectedIndexes()]
             for i in indexes: nikki.delete(i.data())
