@@ -64,7 +64,7 @@ class BuildQt(Command):
         if lres is None:
             raise DistutilsExecError('lrelease not found')
 
-        for i in glob(pjoin('i18n', '*.ts')):
+        for i in glob(pjoin('translation', '*.ts')):
             qm_filename = os.path.basename(i).split('.')[0] + '.qm'
             spawn([lres, i, '-qm', pjoin(lang_dir, qm_filename)])
 
@@ -78,7 +78,7 @@ class UpdateTranslations(Command):
     def finalize_options(self): pass
 
     def run(self):
-        spawn(['pyside-lupdate', pjoin('i18n', 'lupdateguide')])
+        spawn(['pyside-lupdate', pjoin('translation', 'lupdateguide')])
 
 
 class BuildExe(Command):
