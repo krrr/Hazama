@@ -176,8 +176,8 @@ class Fonts:
 app = QApplication(sys.argv)
 
 _appIcon = QIcon()
-for i in [16, 32, 48, 64]:
-    _appIcon.addFile(':/appicon%d.png' % i)
+for i in [16, 64]:
+    _appIcon.addFile(':/appicon-%d.png' % i)
 app.setWindowIcon(_appIcon)
 
 font = Fonts()

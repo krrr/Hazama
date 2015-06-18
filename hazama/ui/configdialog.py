@@ -22,7 +22,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
         super(ConfigDialog, self).__init__(parent, Qt.WindowTitleHint)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setupUi(self)
-        about = readRcTextFile(':/noicon/about.html').format(
+        about = readRcTextFile(':/about.html').format(
             ver=__version__, author=self.tr('author'),
             checkupdate=self.tr('check-update'))
         self.aboutBrowser.setHtml(about)

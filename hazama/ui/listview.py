@@ -140,12 +140,12 @@ class NListDelegateColorful(QItemDelegate):
             self.datetimeIco = QToolButton(self, objectName='NListItemDtIco')
             minSz = max(font.datetime_m.ascent(), 12)
             self.datetimeIco.setIconSize(QSize(minSz, minSz))
-            self.datetimeIco.setIcon(QIcon(':/list/calendar-32.png'))
+            self.datetimeIco.setIcon(QIcon(':/calendar-32.png'))
 
             self.tagIco = QToolButton(self, objectName='NListItemTagIco')
             minSz = max(font.default_m.ascent(), 12)
             self.tagIco.setIconSize(QSize(minSz, minSz))
-            self.tagIco.setIcon(QIcon(':/list/tag-32.png'))
+            self.tagIco.setIcon(QIcon(':/tag-32.png'))
 
             self._vLayout0 = QVBoxLayout(self)
             self._hLayout0 = QHBoxLayout()

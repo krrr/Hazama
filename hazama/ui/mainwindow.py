@@ -256,7 +256,7 @@ class SearchBox(QLineEditWithMenuIcon):
         """Update button icon"""
         if self.isTextBefore == bool(text): return
         ico_name = 'search_clr' if text else 'search'
-        self.button.setIcon(QIcon(':/images/%s.png' % ico_name))
+        self.button.setIcon(QIcon(':/%s.png' % ico_name))
         self.isTextBefore = bool(text)
 
     def retranslate(self):

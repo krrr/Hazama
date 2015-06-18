@@ -163,14 +163,17 @@
           </property>
           <item>
            <widget class="QLabel" name="appIcoLabel">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
+            <property name="maximumSize">
+             <size>
+              <width>32</width>
+              <height>32</height>
+             </size>
             </property>
             <property name="pixmap">
-             <pixmap resource="../../res/res.qrc">:/appicon32.png</pixmap>
+             <pixmap resource="../../res/res.qrc">:/appicon-64.png</pixmap>
+            </property>
+            <property name="scaledContents">
+             <bool>true</bool>
             </property>
            </widget>
           </item>
@@ -443,7 +446,7 @@
               </property>
               <property name="icon">
                <iconset resource="../../res/res.qrc">
-                <normaloff>:/cfg/check.png</normaloff>:/cfg/check.png</iconset>
+                <normaloff>:/check.png</normaloff>:/check.png</iconset>
               </property>
               <property name="flat">
                <bool>false</bool>

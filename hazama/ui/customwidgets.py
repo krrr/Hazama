@@ -84,19 +84,19 @@ class NTextEdit(QTextEdit, TextFormatter):
 
         self.subMenu = QMenu(self.tr('Format'), self)
         # shortcuts of format actions only used to display shortcut-hint in menu
-        self.hlAct = QAction(QIcon(':/fmt/highlight.png'), self.tr('Highlight'),
+        self.hlAct = QAction(QIcon(':/menu/highlight.png'), self.tr('Highlight'),
                              self, triggered=onHLAct,
                              shortcut=QKeySequence('Ctrl+H'))
-        self.bdAct = QAction(QIcon(':/fmt/bold.png'), self.tr('Bold'),
+        self.bdAct = QAction(QIcon(':/menu/bold.png'), self.tr('Bold'),
                              self, triggered=onBDAct,
                              shortcut=QKeySequence.Bold)
-        self.soAct = QAction(QIcon(':/fmt/strikeout.png'), self.tr('Strike out'),
+        self.soAct = QAction(QIcon(':/menu/strikeout.png'), self.tr('Strike out'),
                              self, triggered=onSOAct,
                              shortcut=QKeySequence('Ctrl+T'))
-        self.ulAct = QAction(QIcon(':/fmt/underline.png'), self.tr('Underline'),
+        self.ulAct = QAction(QIcon(':/menu/underline.png'), self.tr('Underline'),
                              self, triggered=onULAct,
                              shortcut=QKeySequence.Underline)
-        self.itaAct = QAction(QIcon(':/fmt/italic.png'), self.tr('Italic'),
+        self.itaAct = QAction(QIcon(':/menu/italic.png'), self.tr('Italic'),
                               self, triggered=onItaAct,
                               shortcut=QKeySequence.Italic)
         self.clrAct = QAction(self.tr('Clear format'), self,

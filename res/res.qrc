@@ -1,92 +1,40 @@
 <RCC>
-  <qresource prefix="/list">
-    <file>calendar-32.png</file>
-  </qresource>
-  <qresource prefix="/list">
-    <file>tag-32.png</file>
-  </qresource>
-
-  <qresource prefix="/images">
-    <file>tlist.png</file>
-  </qresource>
-  <qresource prefix="/images">
+  <qresource>
+    <file>appicon-64.png</file>
+    <file>appicon-16.png</file>
     <file>search.png</file>
-  </qresource>
-  <qresource prefix="/images">
     <file>search_clr.png</file>
-  </qresource>
-  <qresource prefix="/images">
-    <file>new.png</file>
-  </qresource>
-  <qresource prefix="/images">
-    <file>delete.png</file>
-  </qresource>
-  <qresource prefix="/images">
-    <file>sort.png</file>
-  </qresource>
-  <qresource prefix="/images">
-    <file>heatmap.png</file>
-  </qresource>
-  <qresource prefix="/images">
-    <file>config.png</file>
-  </qresource>
-
-  <qresource prefix="/heatmap">
-    <file>arrow-left.png</file>
-  </qresource>
-  <qresource prefix="/heatmap">
-    <file>arrow-right.png</file>
-  </qresource>
-
-  <qresource prefix="/menu">
-    <file>list_delete.png</file>
-  </qresource>
-  <qresource prefix="/menu">
-    <file>random.png</file>
-  </qresource>
-  
-  <qresource prefix="/fmt">
-    <file>highlight.png</file>
-  </qresource>
-  <qresource prefix="/fmt">
-    <file>strikeout.png</file>
-  </qresource>
-  <qresource prefix="/fmt">
-    <file>underline.png</file>
-  </qresource>
-  <qresource prefix="/fmt">
-    <file>italic.png</file>
-  </qresource>
-  <qresource prefix="/fmt">
-    <file>bold.png</file>
-  </qresource>
-  
-  <qresource prefix="/">
-    <file>appicon16.png</file>
-  </qresource>
-  <qresource prefix="/">
-    <file>appicon32.png</file>
-  </qresource>
-  <qresource prefix="/">
-    <file>appicon48.png</file>
-  </qresource>
-  <qresource prefix="/">
-    <file>default.qss</file>
-  </qresource>
-  <qresource prefix="/">
-    <file>theme.colorful.qss</file>
-  </qresource>
-
-  <qresource prefix="/editor">
     <file>clock.png</file>
-  </qresource>
-
-  <qresource prefix="/cfg">
     <file>check.png</file>
+    <file>calendar-32.png</file>
+    <file>tag-32.png</file>
+
+    <file>default.qss</file>
+    <file>theme.colorful.qss</file>
+    <file>about.html</file>
   </qresource>
 
+  <qresource>
+    <file>toolbar/tlist.png</file>
+    <file>toolbar/new.png</file>
+    <file>toolbar/delete.png</file>
+    <file>toolbar/sort.png</file>
+    <file>toolbar/heatmap.png</file>
+    <file>toolbar/config.png</file>
+  </qresource>
 
-  <qresource prefix="/noicon">
-    <file>about.html</file>
+  <qresource>
+    <file>heatmap/arrow-left.png</file>
+    <file>heatmap/arrow-right.png</file>
+  </qresource>
+
+  <qresource>
+    <file>menu/list_delete.png</file>
+    <file>menu/random.png</file>
+    <file>menu/highlight.png</file>
+    <file>menu/strikeout.png</file>
+    <file>menu/underline.png</file>
+    <file>menu/italic.png</file>
+    <file>menu/bold.png</file>
   </qresource>
 </RCC>

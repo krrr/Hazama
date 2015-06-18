@@ -74,7 +74,7 @@
        </property>
        <property name="icon">
         <iconset resource="../../res/res.qrc">
-         <normaloff>:/editor/clock.png</normaloff>:/editor/clock.png</iconset>
+         <normaloff>:/clock.png</normaloff>:/clock.png</iconset>
        </property>
       </widget>
      </item>
