@@ -19,12 +19,13 @@ class NikkiModel(QAbstractTableModel):
             # let first chunk be smallest to decreasing the time of blank-list
             chunkSz, firstChunkSz = 300, 35
             l = len(nikki)
-            if l < firstChunkSz:
+            if l <= firstChunkSz:
                 return [l]
             else:
-                restChunkSz = l - firstChunkSz
-                return ([firstChunkSz] + [chunkSz] * (restChunkSz // chunkSz) +
-                        [restChunkSz % chunkSz])
+                rest = l - firstChunkSz
+                seq = ([firstChunkSz] + [chunkSz] * (rest // chunkSz) +
+                       [rest % chunkSz])
+                return filter(lambda x: x != 0, seq)
 
         sortBy = settings['Main'].get('listSortBy', 'datetime')
         reverse = settings['Main'].getboolean('listReverse', True)
