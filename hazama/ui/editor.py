@@ -26,7 +26,7 @@ class Editor(QWidget, Ui_editor):
         self.titleEditor.setFont(font.title)
         # setup datetime display
         self.dtLabel.setFont(font.datetime)
-        sz = min(font.datetime_m.ascent(), 16)
+        sz = max(font.datetime_m.ascent(), 12)
         self.dtBtn.setIconSize(QSize(sz, sz))
         # set up tagEditor
         self.tagEditor.setTextMargins(QMargins(2, 0, 2, 0))
