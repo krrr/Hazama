@@ -4,7 +4,9 @@ from hazama.config import nikki, settings
 
 
 class NikkiModel(QAbstractTableModel):
-    """The Model holds diaries. Specially optimized for loading from database."""
+    """The Model holds diaries. Specially optimized for loading from database.
+    Table structure: id | datetime | text | title | tags | formats | len(text)
+    """
     def __init__(self, parent=None):
         super(NikkiModel, self).__init__(parent)
         self._lst = []
@@ -15,7 +17,7 @@ class NikkiModel(QAbstractTableModel):
         is big. It also delay informing views to update, this avoid unnecessary
         layout operation."""
         def makeTimesSeq():
-            """e.g. len(nikki)==10: [10]; len(nikki)==450: [70, 300, 80]"""
+            # e.g. len(nikki)==10: [10]; len(nikki)==450: [70, 300, 80]
             # let first chunk be smallest to decreasing the time of blank-list
             chunkSz, firstChunkSz = 300, 35
             l = len(nikki)
@@ -46,6 +48,11 @@ class NikkiModel(QAbstractTableModel):
         for row, i in enumerate(self._lst):
             if i[0] == id: return row
         return -1
+
+    def getNikkiDictByRow(self, row):
+        r = self._lst[row]
+        return dict(id=r[0], title=r[3], datetime=r[1], text=r[2],
+                    tags=r[4], formats=r[5])
 
     def clear(self): self.removeRows(0, self.rowCount())
 
@@ -84,8 +91,7 @@ class NikkiModel(QAbstractTableModel):
         realId = nikki.save(**nikkiDict)
         # write to model
         oneRow = ([realId] +
-                  list(map(lambda k: nikkiDict[k],
-                           ['datetime', 'text', 'title', 'tags', 'formats'])) +
+                  [nikkiDict[k] for k in ('datetime', 'text', 'title', 'tags', 'formats')] +
                   [len(nikkiDict['text'])])
         if nikkiDict['id'] == -1:  # new diary
             row = self.rowCount()

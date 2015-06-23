@@ -8,31 +8,33 @@ from hazama.config import settings, nikki
 
 
 class Editor(QWidget, Ui_editor):
-    """Widget used to edit diary's body,title,tag,datetime.
-    Signal closed: (id of nikki, needSave),
+    """The widget that used to edit diary's body, title, tag and datetime.
+    Signal closed: (id of nikki, needSave)
     """
     closed = Signal(int, bool)
 
-    def __init__(self, parent=None):
-        super(Editor, self).__init__(parent)
+    def __init__(self, *args, **kwargs):
+        dic = kwargs.pop('nikkiDict')
+        super(Editor, self).__init__(*args, **kwargs)
         self.setupUi(self)
-        self.datetime = self.id = None
+        self.datetime = self.id = self.timeModified = self.tagModified = None
         geo = settings['Editor'].get('windowGeo')
         self.restoreGeometry(QByteArray.fromHex(geo))
+
         # setup textEditor and titleEditor, set window title
         self.textEditor.setFont(font.text)
         self.textEditor.setAutoIndent(
             settings['Editor'].getboolean('autoIndent', True))
         self.titleEditor.setFont(font.title)
-        # setup datetime display
+
         self.dtLabel.setFont(font.datetime)
         sz = max(font.datetime_m.ascent(), 12)
         self.dtBtn.setIconSize(QSize(sz, sz))
-        # set up tagEditor
+
         self.tagEditor.setTextMargins(QMargins(2, 0, 2, 0))
-        completer = TagCompleter(list(nikki.gettags()), self.tagEditor)
-        self.tagEditor.setCompleter(completer)
-        self.timeModified = self.tagModified = False
+        self.tagEditor.setCompleter(
+            TagCompleter(list(nikki.gettags()), self.tagEditor))
+
         # setup shortcuts
         # seems PySide has problem with QKeySequence.StandardKeys
         self.closeSaveSc = QShortcut(QKeySequence.Save, self, self.close)
@@ -40,6 +42,8 @@ class Editor(QWidget, Ui_editor):
         # QKeySequence.PreviousChild(Ctrl+Shift+Backtab) doesn't work
         self.preSc = QShortcut(QKeySequence('Ctrl+Shift+Tab'), self)
         self.nextSc = QShortcut(QKeySequence('Ctrl+Tab'), self)
+
+        self.fromNikkiDict(dic)
 
     def needSave(self):
         return (self.textEditor.document().isModified() or
@@ -54,7 +58,7 @@ class Editor(QWidget, Ui_editor):
 
     def closeNoSave(self):
         settings['Editor']['windowGeo'] = str(self.saveGeometry().toHex())
-        self.hide()  # use deleteLater to free, not destroy slot or DeleteOnClose attribute
+        self.hide()  # avoid closeEvent
         self.closed.emit(self.id, False)
 
     def mousePressEvent(self, event):
@@ -80,21 +84,31 @@ class Editor(QWidget, Ui_editor):
         locale = QLocale()
         dbDatetimeFmt = 'yyyy-MM-dd HH:mm'
         dt = locale.toDateTime(dtStr, dbDatetimeFmt)
-        new_dt = DateTimeDialog.getDateTime(dt, datetimeFmt, self)
-        if new_dt is not None:
-            new_dtStr = new_dt.toString(dbDatetimeFmt)
-            if new_dtStr != self.datetime:
-                self.datetime = new_dtStr
-                self.dtLabel.setText(datetimeTrans(new_dtStr))
+        newDt = DateTimeDialog.getDateTime(dt, datetimeFmt, self)
+        if newDt is not None:
+            newDtStr = newDt.toString(dbDatetimeFmt)
+            if newDtStr != self.datetime:
+                self.datetime = newDtStr
+                self.dtLabel.setText(datetimeTrans(newDtStr))
                 self.timeModified = True
 
+    def fromNikkiDict(self, dic):
+        self.timeModified = self.tagModified = False
+        self.id = dic['id']
+        self.datetime = dic.get('datetime')
+
+        self.dtLabel.setText(datetimeTrans(self.datetime) if self.datetime else '')
+        self.titleEditor.setText(dic.get('title', ''))
+        self.tagEditor.setText(dic.get('tags', ''))
+        self.textEditor.setRichText(dic.get('text', ''), dic.get('formats'))
+        # if title is empty, use datetime instead. if no datetime (new), use "New Diary"
+        hint = (dic.get('title') or
+                (datetimeTrans(self.datetime, forceDateOnly=True)
+                 if 'datetime' in dic else None) or
+                self.tr('New Diary'))
+        self.setWindowTitle("%s - Hazama" % hint)
+
     def showEvent(self, event):
-        title = (self.titleEditor.text() or
-                 (datetimeTrans(self.datetime, forceDateOnly=True) if self.datetime else None) or
-                 self.tr('New Diary'))
-        self.setWindowTitle("%s - Hazama" % title)
-        self.dtLabel.setText('' if self.datetime is None
-                             else datetimeTrans(self.datetime))
         if settings['Editor'].getboolean('titleFocus'):
             self.titleEditor.setCursorPosition(0)
         else:

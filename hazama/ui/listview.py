@@ -498,34 +498,25 @@ class NikkiList(QListView):
         randRow = random.randrange(0, self.modelProxy.rowCount())
         self.setCurrentIndex(self.modelProxy.index(randRow, 0))
 
-    def startEditor(self, index=None):
-        if index is None:  # called by context-menu
-            index = self.currentIndex()
-        row = index.row()
-        id, dt, text, title, tags, formats = (index.sibling(row, i).data()
-                                              for i in range(6))
-        if id in self.editors:
-            self.editors[id].activateWindow()
+    def startEditor(self):
+        dic = self._getNikkiDict(self.currentIndex())
+        _id = dic['id']
+        if _id in self.editors:
+            self.editors[_id].activateWindow()
         else:
-            editor = Editor()
-            editor.datetime = dt
-            editor.id = id
-            editor.tagEditor.setText(tags)
-            editor.titleEditor.setText(title)
-            editor.textEditor.setRichText(text, formats)
-            self.editors[id] = editor
+            editor = Editor(nikkiDict=dic)
+            self.editors[_id] = editor
             editor.closed.connect(self.closeEditor)
             editor.preSc.activated.connect(lambda: self._editorMove(-1))
             editor.nextSc.activated.connect(lambda: self._editorMove(1))
             editor.show()
-            return id
+            return _id
 
     def startEditorNew(self):
         if -1 in self.editors:
             self.editors[-1].activateWindow()
         else:
-            editor = Editor()
-            editor.id = -1
+            editor = Editor(nikkiDict={'id': -1})
             self.editors[-1] = editor
             editor.closed.connect(self.closeEditor)
             editor.show()
@@ -548,6 +539,7 @@ class NikkiList(QListView):
 
             if id == -1: self.countChanged.emit()  # new diary
             if editor.tagModified: self.tagsChanged.emit()
+        editor.deleteLater()
         del self.editors[id]
 
     def load(self):
@@ -586,17 +578,15 @@ class NikkiList(QListView):
             self.tagsChanged.emit()  # tags might changed
 
     def handleExport(self, path, export_all):
-        def restore_dict(index):
-            """restore diary dictionary using data from model"""
-            row = index.row()
-            id, dt, text, title, tags, formats = (
-                index.sibling(row, i).data() for i in range(6))
-            return dict(id=id, title=title, datetime=dt, text=text,
-                        tags=tags, formats=formats)
-
-        selected = (None if export_all else
-                    (restore_dict(i) for i in self.selectedIndexes()))
+        if export_all:
+            selected = None
+        else:
+            selected = [self._getNikkiDict(i) for i in self.selectedIndexes()]
         nikki.exporttxt(path, selected)
+
+    def _getNikkiDict(self, idx):
+        """Get a nikki dict with its index in proxy model."""
+        return self.originModel.getNikkiDictByRow(self.modelProxy.mapToSource(idx).row())
 
     def sort(self):
         sortBy = settings['Main'].get('listSortBy', 'datetime')
@@ -607,22 +597,23 @@ class NikkiList(QListView):
 
     def _editorMove(self, step):
         if len(self.editors) > 1: return
-        id = list(self.editors.keys())[0]
-        if self.editors[id].needSave(): return
-        assert id != -1
-        index = self.originModel.index(self.originModel.getRowById(id), 0)
-        rowInProxy = self.modelProxy.mapFromSource(index).row()
-        if ((step == -1 and rowInProxy == 0) or
-           (step == 1 and rowInProxy == self.modelProxy.rowCount() - 1)):
+        _id = list(self.editors.keys())[0]
+        editor = self.editors[_id]
+        if editor.needSave(): return
+        idx = self.modelProxy.match(
+            self.modelProxy.index(0, 0), 0, _id, flags=Qt.MatchExactly)
+        if len(idx) != 1: return
+        row = idx[0].row()  # the row of the caller (Editor) 's diary in proxy model
+
+        if ((step == -1 and row == 0) or
+           (step == 1 and row == self.modelProxy.rowCount() - 1)):
             return
+        newIdx = self.modelProxy.index(row+step, 0)
         self.clearSelection()
-        self.setCurrentIndex(self.modelProxy.index(rowInProxy+step, 0))
-        geo = self.editors[id].saveGeometry()
-        newId = self.startEditor()
-        # start new before close old to avoid focus changing, but we should
-        # set geometry twice
-        self.editors[id].closeNoSave()
-        self.editors[newId].restoreGeometry(geo)
+        self.setCurrentIndex(newIdx)
+        dic = self._getNikkiDict(newIdx)
+        editor.fromNikkiDict(dic)
+        self.editors[dic['id']] = self.editors.pop(_id)
 
     def setFilterBySearchString(self, s):
         self.modelProxy.setFilterPattern(1, s)

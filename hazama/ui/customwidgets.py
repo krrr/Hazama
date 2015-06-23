@@ -59,12 +59,13 @@ class NDocumentLabel(QFrame):
 
 class NTextEdit(QTextEdit, TextFormatter):
     """The widget used to edit diary contents in Editor window."""
-    # spaces auto-indent will recognize
+    # spaces that auto-indent can recognize
     Spaces = (' ', '\u3000')  # full width space U+3000
 
     def __init__(self, *args, **kwargs):
         super(NTextEdit, self).__init__(*args, **kwargs)
-        self._doc = None
+        self._doc = NTextDocument(self)
+        self.setDocument(self._doc)
         # remove highlight color's alpha to avoid alpha loss in copy&paste.
         # NTextDocument should use this color too.
         hl, bg = self.HlColor, self.palette().base().color()
@@ -115,17 +116,8 @@ class NTextEdit(QTextEdit, TextFormatter):
             Qt.Key_U: self.ulAct, Qt.Key_I: self.itaAct}
 
     def setRichText(self, text, formats):
-        doc = NTextDocument(self)  # pass self to let widget hold us
-        # inherit settings
-        doc.setDefaultFont(self.document().defaultFont())
-        doc.setDefaultStyleSheet(self.document().defaultStyleSheet())
-        doc.setDefaultCursorMoveStyle(self.document().defaultCursorMoveStyle())
-        doc.setDefaultTextOption(self.document().defaultTextOption())
-
-        doc.setHlColor(self.HlColor)
-        doc.setText(text, formats)
-        self.setDocument(doc)
-        self._doc = doc
+        self._doc.setHlColor(self.HlColor)
+        self._doc.setText(text, formats)
 
     def setAutoIndent(self, enabled):
         assert isinstance(enabled, (bool, int))
