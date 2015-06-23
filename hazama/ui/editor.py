@@ -108,6 +108,12 @@ class Editor(QWidget, Ui_editor):
                 self.tr('New Diary'))
         self.setWindowTitle("%s - Hazama" % hint)
 
+    def toNikkiDict(self):
+        text, formats = self.textEditor.getRichText()
+        return dict(id=self.id, datetime=self.datetime or currentDatetime(),
+                    text=text, formats=formats, title=self.titleEditor.text(),
+                    tags=self.tagEditor.text())
+
     def showEvent(self, event):
         if settings['Editor'].getboolean('titleFocus'):
             self.titleEditor.setCursorPosition(0)

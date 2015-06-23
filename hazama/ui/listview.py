@@ -525,13 +525,10 @@ class NikkiList(QListView):
         """Write editor's data to model and database, and destroy editor"""
         editor = self.editors[id]
         if needSave:
-            dt = currentDatetime() if editor.datetime is None else editor.datetime
-            text, formats = editor.textEditor.getRichText()
-            title = editor.titleEditor.text()
-            # None tags let database skip heavy tag update operation
-            tags = editor.tagEditor.text() if editor.tagModified else None
-            row = self.originModel.updateNikki(dict(
-                id=id, datetime=dt, text=text, formats=formats, title=title, tags=tags))
+            dic = editor.toNikkiDict()
+            if not editor.tagModified:  # let database skip heavy tag update operation
+                dic['tags'] = None
+            row = self.originModel.updateNikki(dic)
 
             self.clearSelection()
             self.setCurrentIndex(self.modelProxy.mapFromSource(
