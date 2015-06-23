@@ -528,6 +528,8 @@ class NikkiList(QListView):
             dic = editor.toNikkiDict()
             if not editor.tagModified:  # let database skip heavy tag update operation
                 dic['tags'] = None
+            else:  # remove duplicate tags
+                dic['tags'] = ' '.join(set(dic['tags'].split()))
             row = self.originModel.updateNikki(dic)
 
             self.clearSelection()
