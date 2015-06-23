@@ -138,9 +138,8 @@ class NTextEdit(QTextEdit, TextFormatter):
         menu.deleteLater()
 
     def getRichText(self):
-        # getFormats is static method because self.document() will return
-        # QTextDocument, not NTextDocument
-        return self.toPlainText(), NTextDocument.getFormats(self.document())
+        # self.document() will return QTextDocument, not NTextDocument
+        return self.toPlainText(), self._doc.getFormats()
 
     def _setFmtActs(self):
         """Check formats in current selection and check or uncheck actions"""

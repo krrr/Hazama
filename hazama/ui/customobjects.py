@@ -108,8 +108,7 @@ class NTextDocument(QTextDocument, TextFormatter):
         """Used to set alpha-removed highlight color in NTextEdit"""
         self.HlColor = color
 
-    @staticmethod
-    def getFormats(qTextDoc):
+    def getFormats(self):
         qFmtToFmt = [
             (NTextDocument.Bold, QTextFormat.FontWeight),
             (NTextDocument.HighLight, QTextFormat.BackgroundBrush),
@@ -119,7 +118,7 @@ class NTextDocument(QTextDocument, TextFormatter):
         ]
 
         out = []
-        block = qTextDoc.begin()
+        block = self.begin()
         while block.isValid():
             fragIter = block.begin()
             for i in fragIter:
