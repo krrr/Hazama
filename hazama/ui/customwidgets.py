@@ -60,7 +60,7 @@ class NDocumentLabel(QFrame):
 class NTextEdit(QTextEdit, TextFormatter):
     """The widget used to edit diary contents in Editor window."""
     # spaces that auto-indent can recognize
-    Spaces = (' ', '\u3000')  # full width space U+3000
+    SPACE_KINDS = (' ', '\u3000')  # full width space U+3000
 
     def __init__(self, *args, **kwargs):
         super(NTextEdit, self).__init__(*args, **kwargs)
@@ -175,7 +175,7 @@ class NTextEdit(QTextEdit, TextFormatter):
         elif event.key() == Qt.Key_Return and self.autoIndent:
             # auto-indent support
             para = self.textCursor().block().text()
-            if len(para) > 0 and para[0] in NTextEdit.Spaces:
+            if len(para) > 0 and para[0] in NTextEdit.SPACE_KINDS:
                 space, spaceCount = para[0], 1
                 for c in para[1:]:
                     if c != space: break
