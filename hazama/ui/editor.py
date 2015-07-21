@@ -21,11 +21,11 @@ class Editor(QWidget, Ui_editor):
         geo = settings['Editor'].get('windowGeo')
         self.restoreGeometry(QByteArray.fromHex(geo))
 
-        # setup textEditor and titleEditor, set window title
+        self.titleEditor.setFont(font.title)
+        self.titleEditor.returnPressed.connect(lambda: self.textEditor.setFocus())
         self.textEditor.setFont(font.text)
         self.textEditor.setAutoIndent(
             settings['Editor'].getboolean('autoIndent', True))
-        self.titleEditor.setFont(font.title)
 
         self.dtLabel.setFont(font.datetime)
         sz = max(font.datetime_m.ascent(), 12)
@@ -34,6 +34,8 @@ class Editor(QWidget, Ui_editor):
         self.tagEditor.setTextMargins(QMargins(2, 0, 2, 0))
         self.tagEditor.setCompleter(
             TagCompleter(list(nikki.gettags()), self.tagEditor))
+        saveBtn = self.box.button(QDialogButtonBox.Save)
+        self.tagEditor.returnPressed.connect(lambda: saveBtn.setFocus())
 
         # setup shortcuts
         # seems PySide has problem with QKeySequence.StandardKeys
