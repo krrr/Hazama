@@ -8,14 +8,12 @@ from distutils.core import Command
 from distutils.errors import DistutilsExecError
 from distutils.spawn import find_executable, spawn
 from distutils.command.build import build
-from hazama import __version__, __author__, __desc__
+import hazama
 
 
 class CustomBuild(build):
-    """Let build == build_qt"""
-    def get_sub_commands(self):
-        # ignore build_py
-        return ['build_qt']
+    # Let build == build_qt and ignore build_py (bad?)
+    sub_commands = [('build_qt', lambda self: True)]
 
 
 class BuildQt(Command):
@@ -25,7 +23,7 @@ class BuildQt(Command):
                     ('rc', 'r', 'compile rc files only')]
 
     def initialize_options(self):
-        self.ts, self.ui, self.rc = (0,) * 3
+        self.ts, self.ui, self.rc = 0, 0, 0
 
     def finalize_options(self): pass
 
@@ -102,19 +100,18 @@ class BuildExe(Command):
 
 
 if sys.platform == 'win32':
-    # fix env variables for pyside tools
+    # fix env variables for PySide tools
     import PySide
-    pyside_dir = os.path.dirname(PySide.__file__)
-    os.environ['PATH'] += ';' + pyside_dir
+    os.environ['PATH'] += ';' + os.path.dirname(PySide.__file__)
 
 
 # FIXME: PySide installed by archlinux AUR will not recognized by setuptools, so requires not added.
-setup(name='Hazama', author=__author__, version=__version__,
-      description=__desc__,
-      url='https://github.com/krrr/Hazama',
+setup(name='Hazama', author=hazama.__author__, version=hazama.__version__,
+      description=hazama.__desc__,
+      url='https://krrr.github.io/hazama',
       packages=['hazama', 'hazama.ui'],
       package_data={'hazama': ['lang/*.qm']},
       cmdclass={'build': CustomBuild, 'build_qt': BuildQt,
                 'update_ts': UpdateTranslations, 'build_exe': BuildExe},
       zip_safe=False,
-      entry_points={'gui_scripts': ['hazama = hazama.mainentry:main']})
+      entry_points={'gui_scripts': ['hazama = hazama:main_entry']})
