@@ -83,9 +83,7 @@ class BuildExe(Command):
     description = 'Call cx_Freeze to build EXE'
     user_options = []
 
-    def initialize_options(self): pass
-
-    def finalize_options(self): pass
+    initialize_options = finalize_options = lambda self: None
 
     def run(self):
         # remaining let cx_freeze generate hazama.exe
@@ -97,6 +95,44 @@ class BuildExe(Command):
         # remove duplicate python DLL
         dll_path = glob(pjoin('build', 'python*.dll'))[0]
         os.remove(pjoin('build', 'lib', os.path.basename(dll_path)))
+
+
+class MakePKGBUILD(Command):
+    description = 'Generate PKGBUILD for archlinux'
+    user_options = []
+    template = """
+# Maintainer: krrr <guogaishiwo@gmail.com>
+pkgname=hazama
+pkgver={ver}
+pkgrel=1
+pkgdesc="Diary application"
+arch=('any')
+url="https://krrr.github.io/hazama"
+license=('GPL')
+depends=('python' 'python-pyside')
+makedepends=('python-setuptools' 'python-pyside-tools')
+source=("https://github.com/krrr/Hazama/archive/v$pkgver.tar.gz")
+
+build() {{
+    cd "$srcdir/Hazama-$pkgver"
+    ./setup.py build
+}}
+
+package() {{
+    cd "$srcdir/Hazama-$pkgver"
+    # --skip-build avoid building again when --root specified
+    ./setup.py install --root "$pkgdir/" --skip-build
+}}
+"""
+
+    initialize_options = finalize_options = lambda self: None
+
+    def run(self):
+        with open('PKGBUILD', 'w') as f:
+            f.write(self.template.strip().format(ver=hazama.__version__))
+            f.write('\n')
+
+        os.system('makepkg -g >> PKGBUILD')
 
 
 if sys.platform == 'win32':
@@ -112,6 +148,6 @@ setup(name='Hazama', author=hazama.__author__, version=hazama.__version__,
       packages=['hazama', 'hazama.ui'],
       package_data={'hazama': ['lang/*.qm']},
       cmdclass={'build': CustomBuild, 'build_qt': BuildQt,
-                'update_ts': UpdateTranslations, 'build_exe': BuildExe},
+                'update_ts': UpdateTranslations, 'build_exe': BuildExe, 'pkgbuild': MakePKGBUILD},
       zip_safe=False,
       entry_points={'gui_scripts': ['hazama = hazama:main_entry']})
