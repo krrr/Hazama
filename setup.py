@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import sys
 import os
+import shutil
 from os.path import join as pjoin
 from glob import glob
 from setuptools import setup
@@ -8,12 +9,16 @@ from distutils.core import Command
 from distutils.errors import DistutilsExecError
 from distutils.spawn import find_executable, spawn
 from distutils.command.build import build
+from setuptools.command.install import install
 import hazama
 
 
 class CustomBuild(build):
-    # Let build == build_qt and ignore build_py (bad?)
-    sub_commands = [('build_qt', lambda self: True)]
+    sub_commands = [('build_qt', lambda self: True)] + build.sub_commands
+
+
+class CustomInstall(install):
+    sub_commands = install.sub_commands + [('desktop_entry', lambda self: sys.platform == 'linux')]
 
 
 class BuildQt(Command):
@@ -131,23 +136,72 @@ package() {{
         with open('PKGBUILD', 'w') as f:
             f.write(self.template.strip().format(ver=hazama.__version__))
             f.write('\n')
-
         os.system('makepkg -g >> PKGBUILD')
 
 
-if sys.platform == 'win32':
-    # fix env variables for PySide tools
+class InstallDesktopEntry(Command):
+    description = 'Install .desktop and icon for linux desktop'
+    user_options = []
+    template = """
+[Desktop Entry]
+Version={ver}
+Type=Application
+Name=Hazama
+GenericName=Hazama
+Comment=Writing diary
+Comment[ja]=日記を書く
+Comment[zh_CN]=写日记
+Icon=hazama
+Exec=hazama
+NoDisplay=false
+Categories=Qt;Utility;
+StartupNotify=false
+Terminal=false
+"""
+
+    initialize_options = finalize_options = lambda self: None
+
+    def run(self):
+        # deal with --root option of install when called as sub-command by it
+        if sys.argv[1] == 'install' and '--root' in sys.argv:
+            root = sys.argv[sys.argv.index('--root')+1]
+        else:
+            root = '/'
+        entry_dir = pjoin(root, 'usr/share/applications/')
+        ico_dir = pjoin(root, 'usr/share/pixmaps/')
+        if root != '/':
+            os.makedirs(entry_dir, exist_ok=True)
+            os.makedirs(ico_dir, exist_ok=True)
+
+        with open('Hazama.desktop', 'w') as f:
+            f.write(self.template.strip().format(ver=hazama.__version__))
+            f.write('\n')
+        if not os.path.isdir(entry_dir):
+            print('.desktop file has been generated, but program don\'t know where to put it')
+            return
+        shutil.move('Hazama.desktop', entry_dir)
+
+        if not os.path.isdir(ico_dir):
+            print('program don\'t know where to put application icon')
+            return
+        shutil.copy('res/appicon-64.png', ico_dir + 'hazama.png')
+
+
+if sys.platform == 'win32':  # fix env variables for PySide tools
     import PySide
     os.environ['PATH'] += ';' + os.path.dirname(PySide.__file__)
 
 
 # FIXME: PySide installed by archlinux AUR will not recognized by setuptools, so requires not added.
-setup(name='Hazama', author=hazama.__author__, version=hazama.__version__,
+setup(name='Hazama',
+      author=hazama.__author__,
+      version=hazama.__version__,
       description=hazama.__desc__,
       url='https://krrr.github.io/hazama',
       packages=['hazama', 'hazama.ui'],
       package_data={'hazama': ['lang/*.qm']},
-      cmdclass={'build': CustomBuild, 'build_qt': BuildQt,
-                'update_ts': UpdateTranslations, 'build_exe': BuildExe, 'pkgbuild': MakePKGBUILD},
+      cmdclass={'build': CustomBuild, 'build_qt': BuildQt, 'install': CustomInstall,
+                'update_ts': UpdateTranslations, 'build_exe': BuildExe, 'pkgbuild': MakePKGBUILD,
+                'desktop_entry': InstallDesktopEntry},
       zip_safe=False,
       entry_points={'gui_scripts': ['hazama = hazama:main_entry']})
