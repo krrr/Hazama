@@ -15,7 +15,7 @@ from hazama.config import settings, nikki
 class NListDelegate(QStyledItemDelegate):
     """ItemDelegate of old theme 'one-pixel-rect' for NList, Using 'traditional'
     painting method compared to colorful theme."""
-    def __init__(self, parent):
+    def __init__(self):
         super(NListDelegate, self).__init__()  # don't pass parent because of mem problem
         self.title_h = max(QFontInfo(font.title).pixelSize(),
                            QFontInfo(font.datetime).pixelSize()) + 4  # dt and title font area
@@ -31,7 +31,7 @@ class NListDelegate(QStyledItemDelegate):
         self.doc.setDefaultFont(font.text)
         self.doc.setUndoRedoEnabled(False)
         self.doc.setDocumentMargin(0)
-        self.doc.documentLayout().setPaintDevice(parent)
+        self.doc.documentLayout().setPaintDevice(QWidget())  # refer actual list will cause segfault
         # setup colors
         self.c_text = Qt.black
         self.c_bg = QColor(255, 236, 176)
@@ -191,8 +191,8 @@ class NListDelegateColorful(QItemDelegate):
             if (w, h) != self.size().toTuple():
                 super(NListDelegateColorful.ItemWidget, self).resize(w, h)
 
-    def __init__(self, parent=None):
-        super(NListDelegateColorful, self).__init__(parent)
+    def __init__(self):
+        super(NListDelegateColorful, self).__init__()
         self._testW = self.ItemWidget()
         self._testW.refreshHeightInfo()
 
@@ -453,6 +453,7 @@ class NikkiList(QListView):
 
     def __init__(self, parent=None):
         super(NikkiList, self).__init__(parent)
+        self._delegate = None
         self.setDelegateOfTheme()
         # disable default editor. Editor is implemented in the View
         self.setEditTriggers(QAbstractItemView.NoEditTriggers)
@@ -548,8 +549,8 @@ class NikkiList(QListView):
 
     def setDelegateOfTheme(self):
         theme = settings['Main'].get('theme')
-        d = {'colorful': NListDelegateColorful}.get(theme, NListDelegate)
-        self.setItemDelegate(d(self))
+        self._delegate = {'colorful': NListDelegateColorful}.get(theme, NListDelegate)()
+        self.setItemDelegate(self._delegate)
         # force items to be laid again
         self.setSpacing(self.spacing())
 
