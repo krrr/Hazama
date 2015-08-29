@@ -33,8 +33,12 @@ def changeCWD():
 
 
 def saveSettings():
-    with open('config.ini', 'w', encoding='utf-8') as f:
-        settings.write(f)
+    try:
+        with open('config.ini', 'w', encoding='utf-8') as f:
+            settings.write(f)
+    except OSError as e:
+        from hazama import ui
+        ui.showErrors('cantFile', info=str(e))
 
 
 def init():
@@ -50,9 +54,9 @@ def init():
         nikki.connect(settings['Main'].get('dbpath', 'nikkichou.db'))
     except db.DatabaseError as e:
         from hazama import ui
-        ui.showDbError(str(e))
+        ui.showErrors('dbError', hint=str(e))
         sys.exit(-1)
     except db.DatabaseLockedError:
         from hazama import ui
-        ui.showDbLockedError()
+        ui.showErrors('dbLocked')
         sys.exit(-1)

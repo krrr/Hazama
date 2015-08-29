@@ -9,7 +9,7 @@
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU General Public License for more details.
-__version__ = '0.31.3'
+__version__ = '0.32'
 __desc__ = 'A simple cross-platform diary application'
 __author__ = 'krrr'
 
@@ -36,5 +36,9 @@ def main_entry():
     logging.debug('startup took %.2f sec', time.clock()-start_time)
 
     if config.settings['Main'].getboolean('backup', True):
-        db.check_backup()
+        try:
+            db.backup()
+        except OSError as e:
+            from hazama.ui import showErrors
+            showErrors('cantFile', info=str(e))
     return app.exec_()

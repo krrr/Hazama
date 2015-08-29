@@ -265,23 +265,21 @@ def restore_backup(bk_name):
     nikki.connect(nikki.getpath())
 
 
-def check_backup():
-    """Check backups and delete old backups, do backup if necessary."""
-    fmt = '%Y-%m-%d'
+def backup():
+    """Do daily backup and delete old backups if not did yet."""
 
     db_path = Nikki.getinstance().getpath()
     if not os.path.isdir('backup'): os.mkdir('backup')
     backups = list_backups()
-    today = date.today().strftime(fmt)
     newest = backups[-1] if backups else ''
-    if newest.split('_')[0] != today:
-        # it's new day, make new backup
-        nikki = Nikki.getinstance()
-        shutil.copyfile(db_path, os.path.join('backup',
-                                              today+'_%d.db' % len(nikki)))
-        logging.info('everyday backup succeeded')
-        # delete old backups
-        week_before = (date.today() - timedelta(weeks=1)).strftime(fmt)
-        for i in backups:
-            if not i < week_before: break
-            os.remove(os.path.join('backup', i))
+    if newest.split('_')[0] == str(date.today()): return
+
+    shutil.copyfile(db_path, os.path.join(
+        'backup', str(date.today())+'_%d.db' % len(Nikki.getinstance())))
+    logging.info('everyday backup succeeded')
+
+    # delete old backups
+    week_before = str(date.today() - timedelta(weeks=1))
+    for i in backups:
+        if not i < week_before: break
+        os.remove(os.path.join('backup', i))

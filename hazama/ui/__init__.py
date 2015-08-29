@@ -56,26 +56,23 @@ def setTranslationLocale():
     datetimeFmt = (dateFmt + ' ' + timeFmt) if timeFmt else dateFmt
 
 
-def showDbError(hint=''):
-    """Show information about database error.
-    :param hint: error message to show
-    """
-    QMessageBox.critical(
+def showErrors(type, **extra_args):
+    """Show information about variety of errors."""
+    {'dbError': lambda hint='': QMessageBox.critical(
         None,
         app.translate('Errors', 'Failed to access database'),
         app.translate('Errors', 'SQLite3: %s.\n\nPlease check database path(have permission?). '
                       'If it\'s corrupt, you may have to recover this file by hand or restore '
-                      'from backups.') % hint)
-
-
-def showDbLockedError():
-    """Show information about database locked error. Most likely other instance
-    of this program is accessing the same database.
-    """
-    QMessageBox.warning(
-        None,
-        app.translate('Errors', 'Multiple access error'),
-        app.translate('Errors', 'This diary book is already open.'))
+                      'from backups.') % hint),
+     'dbLocked': lambda: QMessageBox.warning(
+         None,
+         app.translate('Errors', 'Multiple access error'),
+         app.translate('Errors', 'This diary book is already open.')),
+     'cantFile': lambda info: QMessageBox.warning(
+         None,
+         app.translate('Errors', 'Failed to access file'),
+         app.translate('Errors', info))
+     }[type](**extra_args)
 
 
 def setStdEditMenuIcons(menu):
