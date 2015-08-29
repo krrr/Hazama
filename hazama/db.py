@@ -75,7 +75,7 @@ class Nikki:
     def connect(self, db_path):
         self._path = db_path
         if self._conn: self.disconnect()
-        self._conn = sqlite3.connect(db_path, timeout=1)
+        self._conn = sqlite3.connect(db_path, timeout=0)
         self._commit, self._exe = self._conn.commit, self._conn.execute
 
         self._exe('PRAGMA foreign_keys = ON')
