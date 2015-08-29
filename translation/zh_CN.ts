@@ -62,7 +62,7 @@
         <translation type="obsolete">修改创建时间</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/customwidgets.py" line="233"/>
+        <location filename="../hazama/ui/customwidgets.py" line="224"/>
         <source>Edit datetime</source>
         <translation>修改日期时间</translation>
     </message>
@@ -75,12 +75,12 @@
         <translation>恢复</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/listview.py" line="574"/>
+        <location filename="../hazama/ui/listview.py" line="566"/>
         <source>Cancel</source>
         <translation>取消</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/listview.py" line="572"/>
+        <location filename="../hazama/ui/listview.py" line="564"/>
         <source>Delete</source>
         <translation>删除</translation>
     </message>
@@ -88,7 +88,7 @@
 <context>
     <name>Editor</name>
     <message>
-        <location filename="../hazama/ui/editor.py" line="94"/>
+        <location filename="../hazama/ui/editor.py" line="110"/>
         <source>New Diary</source>
         <translation>新的日记</translation>
     </message>
@@ -152,12 +152,12 @@ If database path is correct, should recover this file by hand or restore from ba
         <translation type="obsolete">访问数据库失败</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/__init__.py" line="65"/>
+        <location filename="../hazama/ui/__init__.py" line="63"/>
         <source>Failed to access database</source>
         <translation>访问数据库失败</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/__init__.py" line="68"/>
+        <location filename="../hazama/ui/__init__.py" line="66"/>
         <source>SQLite3: %s.
 
 Please check database path(have permission?). If it&apos;s corrupt, you may have to recover this file by hand or restore from backups.</source>
@@ -166,14 +166,19 @@ Please check database path(have permission?). If it&apos;s corrupt, you may have
 请检查数据库路径（是否有权限？）。如果数据库损坏，可能要手动修复当前文件或者恢复备份。</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/__init__.py" line="77"/>
+        <location filename="../hazama/ui/__init__.py" line="69"/>
         <source>Multiple access error</source>
         <translation>多重访问错误</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/__init__.py" line="78"/>
+        <location filename="../hazama/ui/__init__.py" line="70"/>
         <source>This diary book is already open.</source>
         <translation>这本日记本已经打开。</translation>
+    </message>
+    <message>
+        <location filename="../hazama/ui/__init__.py" line="73"/>
+        <source>Failed to access file</source>
+        <translation>无法访问文件</translation>
     </message>
 </context>
 <context>
@@ -369,37 +374,37 @@ Please check database path(have permission?). If it&apos;s corrupt, you may have
 <context>
     <name>NTextEdit</name>
     <message>
-        <location filename="../hazama/ui/customwidgets.py" line="85"/>
+        <location filename="../hazama/ui/customwidgets.py" line="86"/>
         <source>Format</source>
         <translation>格式</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/customwidgets.py" line="87"/>
+        <location filename="../hazama/ui/customwidgets.py" line="88"/>
         <source>Highlight</source>
         <translation>高亮</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/customwidgets.py" line="93"/>
+        <location filename="../hazama/ui/customwidgets.py" line="94"/>
         <source>Strike out</source>
         <translation>删除线</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/customwidgets.py" line="90"/>
+        <location filename="../hazama/ui/customwidgets.py" line="91"/>
         <source>Bold</source>
         <translation>粗体</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/customwidgets.py" line="96"/>
+        <location filename="../hazama/ui/customwidgets.py" line="97"/>
         <source>Underline</source>
         <translation>下划线</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/customwidgets.py" line="99"/>
+        <location filename="../hazama/ui/customwidgets.py" line="100"/>
         <source>Italic</source>
         <translation>斜体</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/customwidgets.py" line="102"/>
+        <location filename="../hazama/ui/customwidgets.py" line="103"/>
         <source>Clear format</source>
         <translation>清除格式</translation>
     </message>
@@ -407,17 +412,17 @@ Please check database path(have permission?). If it&apos;s corrupt, you may have
 <context>
     <name>NikkiList</name>
     <message>
-        <location filename="../hazama/ui/listview.py" line="469"/>
+        <location filename="../hazama/ui/listview.py" line="470"/>
         <source>Edit</source>
         <translation>编辑</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/listview.py" line="472"/>
+        <location filename="../hazama/ui/listview.py" line="473"/>
         <source>Delete</source>
         <translation>删除</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/listview.py" line="476"/>
+        <location filename="../hazama/ui/listview.py" line="477"/>
         <source>Random</source>
         <translation>随机</translation>
     </message>
@@ -442,7 +447,7 @@ Please check database path(have permission?). If it&apos;s corrupt, you may have
         <translation type="obsolete">纯文本 (*.txt);;富文本 (*.rtf)</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/listview.py" line="576"/>
+        <location filename="../hazama/ui/listview.py" line="568"/>
         <source>Selected diaries will be deleted permanently!</source>
         <translation>选中的日记将被永久删除！</translation>
     </message>
@@ -452,7 +457,7 @@ Please check database path(have permission?). If it&apos;s corrupt, you may have
         <translation type="obsolete">纯文本 (*.txt)</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/listview.py" line="575"/>
+        <location filename="../hazama/ui/listview.py" line="567"/>
         <source>Delete diaries</source>
         <translation>删除日记</translation>
     </message>
@@ -709,22 +714,22 @@ Please check database path(have permission?). If it&apos;s corrupt, you may have
 <context>
     <name>configDialog</name>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="353"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="350"/>
         <source>Settings</source>
         <translation>设置</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="354"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="351"/>
         <source>Language:</source>
         <translation>语言:</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="357"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="354"/>
         <source>Editor</source>
         <translation>编辑器</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="358"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="355"/>
         <source>Auto indent</source>
         <translation>自动缩进</translation>
     </message>
@@ -734,33 +739,33 @@ Please check database path(have permission?). If it&apos;s corrupt, you may have
         <translation type="obsolete">打开时使光标位于标题编辑区域</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="361"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="358"/>
         <source>General</source>
         <translation>常规</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="362"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="359"/>
         <source>Backup</source>
         <translation>备份</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="364"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="361"/>
         <source>Backup every day and keep each one for a week.
 </source>
         <translation>每日备份，每份保留一周。</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="365"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="362"/>
         <source>Enable backup</source>
         <translation>启用备份</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="366"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="363"/>
         <source>Select to restore</source>
         <translation>选择以恢复</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="367"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="364"/>
         <source>Export</source>
         <translation>导出</translation>
     </message>
@@ -771,77 +776,77 @@ Please check database path(have permission?). If it&apos;s corrupt, you may have
         <translation type="obsolete">导出日记到单个纯文本文件或富文本文件。</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="370"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="367"/>
         <source>All diary</source>
         <translation>全部日记</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="371"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="368"/>
         <source>Selected diary</source>
         <translation>选中的日记</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="372"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="369"/>
         <source>Save as...</source>
         <translation>另存为...</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="374"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="371"/>
         <source>Diary</source>
         <translation>日记本</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="376"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="373"/>
         <source>Preview lines:</source>
         <translation>预览行数:</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="378"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="375"/>
         <source>Fonts</source>
         <translation>字体</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="382"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="379"/>
         <source>Datetime:</source>
         <translation>日期时间:</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="381"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="378"/>
         <source>Title:</source>
         <translation>标题:</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="383"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="380"/>
         <source>Text:</source>
         <translation>正文:</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="379"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="376"/>
         <source>Override default font</source>
         <translation>覆盖默认字体</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="384"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="381"/>
         <source>Appearance</source>
         <translation>外观</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="380"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="377"/>
         <source>Default:</source>
         <translation>默认:</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="355"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="352"/>
         <source>Lists</source>
         <translation>列表</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="356"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="353"/>
         <source>Show counts in TagList</source>
         <translation>在标签列表里显示统计数值</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="373"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="370"/>
         <source>Open output file</source>
         <translation>打开导出的文件</translation>
     </message>
@@ -851,18 +856,18 @@ Please check database path(have permission?). If it&apos;s corrupt, you may have
         <translation type="obsolete">初始焦点位于标题区域（否则位于正文区域）</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="369"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="366"/>
         <source>Export diary to single plain text file.
 </source>
         <translation>导出日记到单个纯文本文件。</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="359"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="356"/>
         <source>Focus on title area initially (otherwise on text area)</source>
         <translation>初始焦点位于标题区域（否则位于正文区域）</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="375"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="372"/>
         <source>Theme:</source>
         <translation>主题:</translation>
     </message>
@@ -887,12 +892,12 @@ p, li { white-space: pre-wrap; }
 &lt;p align=&quot;center&quot; style=&quot; margin-top:4px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;a href=&quot;https://github.com/krrr/Hazama/releases&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#00345e;&quot;&gt;检查更新&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; color:#000000;&quot;&gt;  &lt;/span&gt;&lt;a href=&quot;https://github.com/krrr/Hazama&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#00345e;&quot;&gt;repo@GitHub&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; color:#000000;&quot;&gt;  &lt;/span&gt;&lt;a href=&quot;https://github.com/krrr&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#00345e;&quot;&gt;作者&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="360"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="357"/>
         <source>About Hazama</source>
         <translation>关于Hazama</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="377"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="374"/>
         <source>Extend background of titlebar to toolbar</source>
         <translation>将标题栏的背景扩展到工具栏</translation>
     </message>
