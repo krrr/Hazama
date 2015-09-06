@@ -1,4 +1,4 @@
-# clock.png is from Keyamoon-IcoMoon
+# clock.png and formats icon are from Keyamoon-IcoMoon
 # random.png, tlist.png, sort.png, search_clr.png,
 # search.png, new.png, delete.png, config.png, arrow-left.png, arrow-right.png are from SweetiePlus
 # some icons are modified from SweetiePlus.
