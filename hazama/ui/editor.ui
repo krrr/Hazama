@@ -69,8 +69,11 @@
      </property>
      <item>
       <widget class="QToolButton" name="dtBtn">
+       <property name="toolTip">
+        <string>Modify datetime</string>
+       </property>
        <property name="styleSheet">
-        <string notr="true">QToolButton {border: none;}</string>
+        <string notr="true">border: none;</string>
        </property>
        <property name="icon">
         <iconset resource="../../res/res.qrc">
