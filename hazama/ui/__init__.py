@@ -34,7 +34,18 @@ def readRcTextFile(path):
 
 
 def setTranslationLocale():
-    lang = settings['Main'].get('lang', 'en')
+    global locale
+    lang = settings['Main'].get('lang')
+    sysLocale = QLocale.system()
+    if lang and lang == sysLocale.name():
+        locale = sysLocale
+    elif lang and lang != sysLocale.name():
+        # special case: application language is different from system's
+        locale = QLocale(lang)
+        QLocale.setDefault(locale)
+    else:
+        locale = sysLocale
+        lang = settings['Main']['lang'] = locale.name()
     langPath = os.path.join(appPath, 'lang')
     logging.info('set translation(%s)', lang)
     global _trans, _transQt  # avoid being collected
@@ -46,11 +57,8 @@ def setTranslationLocale():
     if not ret:  # frozen
         _transQt.load('qt_'+lang, langPath)
     for i in [_trans, _transQt]: app.installTranslator(i)
-    sysLocale = QLocale.system()
-    # special case: application language is different from system's
-    global locale, timeFmt, dateFmt, datetimeFmt
-    locale = sysLocale if lang == sysLocale.name() else QLocale(lang)
-    QLocale.setDefault(locale)
+
+    global timeFmt, dateFmt, datetimeFmt
     timeFmt = settings['Main'].get('timeFormat')
     dateFmt = settings['Main'].get('dateFormat', locale.dateFormat())
     datetimeFmt = (dateFmt + ' ' + timeFmt) if timeFmt else dateFmt
@@ -173,8 +181,8 @@ class Fonts:
 app = QApplication(sys.argv)
 
 _appIcon = QIcon()
-for i in [16, 64]:
-    _appIcon.addFile(':/appicon-%d.png' % i)
+for _i in [16, 64]:
+    _appIcon.addFile(':/appicon-%d.png' % _i)
 app.setWindowIcon(_appIcon)
 
 font = Fonts()
