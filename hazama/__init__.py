@@ -23,9 +23,8 @@ def main_entry():
     config.changeCWD()
     config.init()
     # setup logging
-    logging.basicConfig(
-        format='%(levelname)s: %(message)s', level=logging.DEBUG if
-        config.settings['Main'].getboolean('debug') else logging.INFO)
+    level = logging.DEBUG if config.settings['Main'].getboolean('debug') else logging.INFO
+    logging.basicConfig(format='%(levelname)s: %(message)s', level=level)
     logging.info('Hazama v%s', __version__)
     logging.info(str(config.nikki))
 
@@ -35,7 +34,7 @@ def main_entry():
     w.show()
     logging.debug('startup took %.2f sec', time.clock()-start_time)
 
-    if config.settings['Main'].getboolean('backup', True):
+    if config.settings['Main'].getboolean('backup'):
         try:
             db.backup()
         except OSError as e:

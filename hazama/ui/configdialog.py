@@ -29,13 +29,13 @@ class ConfigDialog(QDialog, Ui_configDialog):
         self.aboutBrowser.document().setDocumentMargin(0)
         self.openOutBtn.hide()  # can't set initial state in creator
         # load settings
-        self.aindCheck.setChecked(settings['Editor'].getboolean('autoIndent', True))
-        self.tListCountCheck.setChecked(settings['Main'].getboolean('tagListCount', True))
-        self.tfocusCheck.setChecked(settings['Editor'].getboolean('titleFocus', False))
-        self.bkCheck.setChecked(settings['Main'].getboolean('backup', True))
+        self.aindCheck.setChecked(settings['Editor'].getboolean('autoIndent'))
+        self.tListCountCheck.setChecked(settings['Main'].getboolean('tagListCount'))
+        self.tfocusCheck.setChecked(settings['Editor'].getboolean('titleFocus'))
+        self.bkCheck.setChecked(settings['Main'].getboolean('backup'))
         if isDwmUsable():
             self.extendBgCheck.setChecked(
-                settings['Main'].getboolean('extendTitleBarBg', False))
+                settings['Main'].getboolean('extendTitleBarBg'))
         else:
             self.extendBgCheck.setDisabled(True)
         # language ComboBox
@@ -49,10 +49,10 @@ class ConfigDialog(QDialog, Ui_configDialog):
         self.rstCombo.addItems(db.list_backups())
         self.themeCombo.addItems(themes)
         self.themeCombo.setCurrentIndex(
-            themes.index(settings['Main'].get('theme', '1px-rect')))
-        self.preLinesBox.setValue(settings['Main'].getint('previewLines', 4))
+            themes.index(settings['Main']['theme']))
+        self.preLinesBox.setValue(settings['Main'].getint('previewLines'))
         # setup font buttons & load settings(fonts)
-        self.defFontGBox.setChecked(bool(settings['Font'].get('default')))
+        self.defFontGBox.setChecked('default' in settings['Font'])
         self.dtFontBtn.configName = 'datetime'
         self.titleFontBtn.configName = 'title'
         self.textFontBtn.configName = 'text'
@@ -72,9 +72,9 @@ class ConfigDialog(QDialog, Ui_configDialog):
         # special pairs that need trigger signal or call functions
         langPrev = settings['Main'].get('lang', 'en')
         lang = languagesR[self.langCombo.currentText()]
-        themePrev = settings['Main'].get('theme', '1px-rect')
+        themePrev = settings['Main']['theme']
         theme = self.themeCombo.currentText()
-        extendPrev = settings['Main'].getboolean('extendTitleBarBg', False)
+        extendPrev = settings['Main'].getboolean('extendTitleBarBg')
         extend = self.extendBgCheck.isChecked()
 
         settings['Main']['lang'] = lang
@@ -88,7 +88,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
         for i in self.buttons:
             settings['Font'][i.configName] = i.font().toString()
 
-        if not self.defFontGBox.isChecked() and settings['Font']['default']:
+        if not self.defFontGBox.isChecked() and 'default' in settings['Font']:
             del settings['Font']['default']
         font.load()
 

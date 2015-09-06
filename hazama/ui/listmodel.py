@@ -29,8 +29,8 @@ class NikkiModel(QAbstractTableModel):
                        [rest % chunkSz])
                 return filter(lambda x: x != 0, seq)
 
-        sortBy = settings['Main'].get('listSortBy', 'datetime')
-        reverse = settings['Main'].getboolean('listReverse', True)
+        sortBy = settings['Main']['listSortBy']
+        reverse = settings['Main'].getboolean('listReverse')
 
         iterator = nikki.sorted(sortBy, reverse)
         for times in makeTimesSeq():

@@ -5,8 +5,14 @@ import os
 from hazama import db
 
 settings = ConfigParser()
-for i in ['Main', 'Editor', 'Font']:  # useful while doing unittest
-    settings[i] = {}
+# set default values. some values have no defaults, such as windowGeo and tagListWidth
+settings.update({
+    'Main': {'debug': False, 'backup': True, 'dbPath': 'nikkichou.db', 'theme': '1px-rect',
+             'tagListCount': True, 'extendTitleBarBg': False, 'previewLines': 4,
+             'listSortBy': 'datetime', 'listReverse': True, 'tagListVisible': False},
+    'Editor': {'autoIndent': True, 'titleFocus': False},
+    'Font': {}
+})
 
 nikki = db.Nikki()
 
@@ -51,7 +57,7 @@ def init():
         pass
 
     try:
-        nikki.connect(settings['Main'].get('dbpath', 'nikkichou.db'))
+        nikki.connect(settings['Main']['dbPath'])
     except db.DatabaseError as e:
         from hazama import ui
         ui.showErrors('dbError', hint=str(e))

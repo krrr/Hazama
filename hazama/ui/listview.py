@@ -21,7 +21,7 @@ class NListDelegate(QStyledItemDelegate):
                            QFontInfo(font.datetime).pixelSize()) + 4  # dt and title font area
         self.titleArea_h = self.title_h + 4
         self.text_h = (QFontMetrics(font.text).lineSpacing() *
-                       settings['Main'].getint('previewLines', 4))
+                       settings['Main'].getint('previewLines'))
         self.tagPath_h = QFontInfo(qApp.font()).pixelSize() + 4
         self.tag_h = self.tagPath_h + 4
         self.dt_w = font.datetime_m.width(datetimeTrans('2000-01-01 00:00')) + 40
@@ -131,7 +131,7 @@ class NListDelegateColorful(QItemDelegate):
             self.datetime.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Preferred)
 
             self.text = NDocumentLabel(self, objectName='NListItemText')
-            self.text.setLines(settings['Main'].getint('previewLines', 4))
+            self.text.setLines(settings['Main'].getint('previewLines'))
             self.text.setFont(font.text)
 
             self.tag = NElideLabel(self, objectName='NListItemTag')
@@ -307,7 +307,7 @@ class TListDelegateColorful(QItemDelegate):
         super(TListDelegateColorful, self).__init__(parent)
         self._itemW = self.ItemWidget()
         self._itemW.setFixedHeight(self._itemW.sizeHint().height())
-        self._countEnabled = settings['Main'].getboolean('tagListCount', True)
+        self._countEnabled = settings['Main'].getboolean('tagListCount')
         if not self._countEnabled: self._itemW.count.hide()
 
     def paint(self, painter, option, index):
@@ -360,7 +360,7 @@ class TagList(QListWidget):
         self.preSc = QShortcut(QKeySequence('Ctrl+Shift+Tab'), self, activated=preFunc)
 
     def setDelegateOfTheme(self):
-        theme = settings['Main'].get('theme')
+        theme = settings['Main']['theme']
         d = {'colorful': TListDelegateColorful}.get(theme, TListDelegate)
         self.setItemDelegate(d())  # do not pass parent under PySide...
         # force items to be laid again
@@ -390,7 +390,7 @@ class TagList(QListWidget):
         QListWidgetItem(self.tr('All'), self)
         self.setCurrentRow(0)
         itemFlag = Qt.ItemIsEditable | Qt.ItemIsSelectable | Qt.ItemIsEnabled
-        if settings['Main'].getboolean('tagListCount', True):
+        if settings['Main'].getboolean('tagListCount'):
             for name, count in nikki.gettags(getcount=True):
                 item = QListWidgetItem(name, self)
                 item.setFlags(itemFlag)
@@ -469,13 +469,13 @@ class NikkiList(QListView):
         # setup actions
         self.editAct = QAction(self.tr('Edit'), self,
                                triggered=self.startEditor)
-        self.delAct = QAction(QIcon(':/menu/list_delete.png'),
-                              self.tr('Delete'), self,
-                              shortcut=QKeySequence.Delete,
+        ico = QIcon(':/menu/list_delete.png')
+        ico.addFile(':/menu/list_delete-big.png')
+        self.delAct = QAction(ico, self.tr('Delete'), self, shortcut=QKeySequence.Delete,
                               triggered=self.delNikki)
-        self.randAct = QAction(QIcon(':/menu/random.png'),
-                               self.tr('Random'), self,
-                               shortcut=QKeySequence(Qt.Key_F7),
+        ico = QIcon(':/menu/random.png')
+        ico.addFile('random-big.png')
+        self.randAct = QAction(ico, self.tr('Random'), self, shortcut=QKeySequence(Qt.Key_F7),
                                triggered=self.selectRandomly)
         for i in [self.editAct, self.delAct, self.randAct]: self.addAction(i)
         # setup editors
@@ -548,7 +548,7 @@ class NikkiList(QListView):
         self.countChanged.emit()
 
     def setDelegateOfTheme(self):
-        theme = settings['Main'].get('theme')
+        theme = settings['Main']['theme']
         self._delegate = {'colorful': NListDelegateColorful}.get(theme, NListDelegate)()
         self.setItemDelegate(self._delegate)
         # force items to be laid again
@@ -589,9 +589,9 @@ class NikkiList(QListView):
         return self.originModel.getNikkiDictByRow(self.modelProxy.mapToSource(idx).row())
 
     def sort(self):
-        sortBy = settings['Main'].get('listSortBy', 'datetime')
+        sortBy = settings['Main']['listSortBy']
         sortByCol = {'datetime': 1, 'title': 3, 'length': 6}.get(sortBy, 1)
-        reverse = settings['Main'].getboolean('listReverse', True)
+        reverse = settings['Main'].getboolean('listReverse')
         self.modelProxy.sort(sortByCol,
                              Qt.DescendingOrder if reverse else Qt.AscendingOrder)
 

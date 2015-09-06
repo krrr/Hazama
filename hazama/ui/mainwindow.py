@@ -19,7 +19,7 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         self.restoreGeometry(QByteArray.fromHex(geo))
         # setup toolbar bg, the second stage is in showEvent
         self.toolBar.setProperty(
-            'extendTitleBar', settings['Main'].getboolean('extendTitleBarBg', False))
+            'extendTitleBar', settings['Main'].getboolean('extendTitleBarBg'))
 
         # setup TagList width
         tListW = settings['Main'].getint('tagListWidth', 0)
@@ -81,9 +81,9 @@ class MainWindow(QMainWindow, Ui_mainWindow):
             menu.addAction(i)
             i.triggered[bool].connect(self.sortOrderChanged)
         # restore from settings
-        order = settings['Main'].get('listSortBy', 'datetime')
+        order = settings['Main']['listSortBy']
         locals()[order].setChecked(True)
-        if settings['Main'].getboolean('listReverse', True):
+        if settings['Main'].getboolean('listReverse'):
             desc.setChecked(True)
         else:
             asc.setChecked(True)
@@ -172,7 +172,7 @@ class MainWindow(QMainWindow, Ui_mainWindow):
 
     def onExtendTitleBarBgChanged(self):
         self.toolBar.setProperty(
-            'extendTitleBar', settings['Main'].getboolean('extendTitleBarBg', False))
+            'extendTitleBar', settings['Main'].getboolean('extendTitleBarBg'))
         self.hide()
 
     def sortOrderChanged(self, checked):
@@ -194,7 +194,7 @@ class MainWindow(QMainWindow, Ui_mainWindow):
 
     def showEvent(self, event):
         # style polished, we can get correct height of toolbar now
-        if (settings['Main'].getboolean('extendTitleBarBg', False)
+        if (settings['Main'].getboolean('extendTitleBarBg')
            and winDwmExtendWindowFrame(self.winId(), self.toolBar.height())):
             self.setAttribute(Qt.WA_TranslucentBackground)
 

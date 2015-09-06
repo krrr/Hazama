@@ -18,14 +18,13 @@ class Editor(QWidget, Ui_editor):
         super(Editor, self).__init__(*args, **kwargs)
         self.setupUi(self)
         self.datetime = self.id = self.timeModified = self.tagModified = None
-        geo = settings['Editor'].get('windowGeo')
-        self.restoreGeometry(QByteArray.fromHex(geo))
+        self.restoreGeometry(QByteArray.fromHex(settings['Editor'].get('windowGeo')))
 
         self.titleEditor.setFont(font.title)
         self.titleEditor.returnPressed.connect(lambda: self.textEditor.setFocus())
         self.textEditor.setFont(font.text)
         self.textEditor.setAutoIndent(
-            settings['Editor'].getboolean('autoIndent', True))
+            settings['Editor'].getboolean('autoIndent'))
 
         self.dtLabel.setFont(font.datetime)
         sz = max(font.datetime_m.ascent(), 12)

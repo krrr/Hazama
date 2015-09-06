@@ -164,7 +164,7 @@ class Fonts:
         self.datetime.fromString(settings['Font'].get('datetime'))
         self.datetime_m = QFontMetrics(self.datetime)
         self.text.fromString(settings['Font'].get('text'))
-        if settings['Font'].get('default'):
+        if 'default' in settings['Font']:
             self.default.fromString(settings['Font'].get('default'))
             self.default_m = QFontMetrics(self.default)
             app.setFont(self.default)
