@@ -6,21 +6,9 @@ Hazama is a GUI application for keeping diary, simple and highly customizable. I
 
 Build & Install
 ---
-Run without install:
-```sh
-./setup.py build
-./main.py
-```
-Install:
-```sh
-./setup.py build
-./setup.py install
-hazama
-```
-Build EXE:
-```cmd
-setup.py build
-setup.py build_exe
-build\hazama.exe
-```
+First of all, please run `./setup.py build_qt`. then you can:
+* Run directly: `./main.py`
+* Install: `./setup.py install && hazama`
+* Build EXE: `setup.py build_exe && build\hazama.exe`
+
 requirements: Python3, PySide, pyside-tools (build), cx_Freeze (build EXE for Windows)
