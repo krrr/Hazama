@@ -40,7 +40,7 @@ class Editor(QWidget, Ui_editor):
         # seems PySide has problem with QKeySequence.StandardKeys
         self.closeSaveSc = QShortcut(QKeySequence.Save, self, self.close)
         self.closeNoSaveSc = QShortcut(QKeySequence('Ctrl+W'), self, self.closeNoSave)
-        # QKeySequence.PreviousChild(Ctrl+Shift+Backtab) doesn't work
+        # Ctrl+Shift+Backtab doesn't work
         self.preSc = QShortcut(QKeySequence('Ctrl+Shift+Tab'), self)
         self.nextSc = QShortcut(QKeySequence('Ctrl+Tab'), self)
 

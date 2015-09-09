@@ -122,7 +122,7 @@ def winDwmExtendWindowFrame(winId, topMargin):
     because it depends on DWM. winId is PyCapsule object, which storing HWND."""
     if not isDwmUsable(): return
     from ctypes import (c_int, byref, pythonapi, c_void_p, c_char_p, py_object,
-                        c_bool, windll, Structure)
+                        windll, Structure)
 
     # define prototypes & structures
     class Margin(Structure):
@@ -156,6 +156,14 @@ def isDwmUsable():
     return True
 
 
+def getDpiScaleRatio(forceMultipleOf25=True):
+    dpi = app.desktop().logicalDpiX()  # when will x != y happen?
+    ratio = dpi / 96
+    if forceMultipleOf25 and round(ratio % .25, 2) != 0:
+        ratio = round(ratio - ratio % .25, 2)
+    return ratio
+
+
 class Fonts:
     """Manage all fonts used in application"""
     def __init__(self):
@@ -179,6 +187,7 @@ class Fonts:
 
 
 app = QApplication(sys.argv)
+logging.debug('DPI scale ratio %s' % getDpiScaleRatio())
 
 _appIcon = QIcon()
 for _i in [16, 64]:

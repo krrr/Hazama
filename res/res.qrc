@@ -3,7 +3,9 @@
     <file>appicon-64.png</file>
     <file>appicon-16.png</file>
     <file>search.png</file>
-    <file>search_clr.png</file>
+    <file>search-big.png</file>
+    <file>search-clr.png</file>
+    <file>search-clr-big.png</file>
     <file>clock.png</file>
     <file>check.png</file>
     <file>calendar-32.png</file>
@@ -25,7 +27,9 @@
 
   <qresource>
     <file>heatmap/arrow-left.png</file>
+    <file>heatmap/arrow-left-big.png</file>
     <file>heatmap/arrow-right.png</file>
+    <file>heatmap/arrow-right-big.png</file>
   </qresource>
 
   <qresource>

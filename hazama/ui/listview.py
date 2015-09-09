@@ -4,7 +4,7 @@ from PySide.QtGui import *
 from PySide.QtCore import *
 import logging
 import random
-from hazama.ui import font, datetimeTrans, currentDatetime
+from hazama.ui import font, datetimeTrans
 from hazama.ui.editor import Editor
 from hazama.ui.customobjects import NTextDocument, MultiSortFilterProxyModel
 from hazama.ui.customwidgets import NElideLabel, NDocumentLabel
@@ -469,14 +469,10 @@ class NikkiList(QListView):
         # setup actions
         self.editAct = QAction(self.tr('Edit'), self,
                                triggered=self.startEditor)
-        ico = QIcon(':/menu/list_delete.png')
-        ico.addFile(':/menu/list_delete-big.png')
-        self.delAct = QAction(ico, self.tr('Delete'), self, shortcut=QKeySequence.Delete,
-                              triggered=self.delNikki)
-        ico = QIcon(':/menu/random.png')
-        ico.addFile('random-big.png')
-        self.randAct = QAction(ico, self.tr('Random'), self, shortcut=QKeySequence(Qt.Key_F7),
-                               triggered=self.selectRandomly)
+        self.delAct = QAction(QIcon(':/menu/list_delete.png'), self.tr('Delete'), self,
+                              shortcut=QKeySequence.Delete, triggered=self.delNikki)
+        self.randAct = QAction(QIcon(':/menu/random.png'), self.tr('Random'), self,
+                               shortcut=QKeySequence(Qt.Key_F7), triggered=self.selectRandomly)
         for i in [self.editAct, self.delAct, self.randAct]: self.addAction(i)
         # setup editors
         self.editors = {}

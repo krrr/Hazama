@@ -1,13 +1,12 @@
 from PySide.QtGui import *
 from PySide.QtCore import *
 import logging
-from itertools import chain
-from hazama.ui import font, setTranslationLocale, winDwmExtendWindowFrame
+from hazama.ui import font, setTranslationLocale, winDwmExtendWindowFrame, getDpiScaleRatio
 from hazama.ui.customwidgets import QLineEditWithMenuIcon
 from hazama.ui.configdialog import ConfigDialog
 from hazama.ui.mainwindow_ui import Ui_mainWindow
 from hazama.ui.heatmap import HeatMap
-from hazama.config import settings, nikki, saveSettings
+from hazama.config import settings, saveSettings
 
 
 class MainWindow(QMainWindow, Ui_mainWindow):
@@ -20,6 +19,7 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         # setup toolbar bg, the second stage is in showEvent
         self.toolBar.setProperty(
             'extendTitleBar', settings['Main'].getboolean('extendTitleBarBg'))
+        self.toolBar.setIconSize(QSize(24, 24) * getDpiScaleRatio())
 
         # setup TagList width
         tListW = settings['Main'].getint('tagListWidth', 0)
@@ -54,6 +54,16 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         # setup shortcuts
         searchSc = QShortcut(QKeySequence.Find, self)
         searchSc.activated.connect(self.searchBox.setFocus)
+
+        # setup bigger toolbar icons
+        ratio = getDpiScaleRatio()
+        originSz = QSize(24, 24)
+        if ratio > 1.0:
+            for i in [self.cfgAct, self.creAct, self.delAct, self.mapAct,
+                      self.sorAct, self.tListAct]:
+                ico = i.icon()
+                ico.addPixmap(ico.pixmap(originSz).scaled(originSz * ratio))
+                i.setIcon(ico)
 
         # delay list loading until main event loop start
         QTimer.singleShot(0, self.nList, SLOT('load()'))
@@ -220,18 +230,26 @@ class SearchBox(QLineEditWithMenuIcon):
 
     def __init__(self, parent=None):
         super(SearchBox, self).__init__(parent, objectName='searchBox')
-        self.setMinimumHeight(23)  # looks fine when toolbar icon is 24x24
-        self.setTextMargins(QMargins(2, 0, 20, 0))
+
         self.button = QToolButton(self, objectName='searchBoxBtn')
+        sz = QSize(16, 16) * getDpiScaleRatio()
         self.button.setFocusPolicy(Qt.NoFocus)
-        self.button.setFixedSize(18, 18)
+        self.button.setFixedSize(sz)
+        self.button.setIconSize(sz)
         self.button.setCursor(Qt.ArrowCursor)
         self.button.clicked.connect(self.clear)
         clearSc = QShortcut(QKeySequence(Qt.Key_Escape), self)
         clearSc.activated.connect(self.clear)
         self.textChanged.connect(self._updateIco)
         self.retranslate()
-        self.isTextBefore = True
+        self.setMinimumHeight(int(self.button.height() * 1.2))
+        self.setTextMargins(QMargins(2, 0, sz.width(), 0))
+
+        self._isTextBefore = True
+        self._searchIco = QIcon(':/search.png')
+        self._searchIco.addFile(':/search-big.png')
+        self._clrIco = QIcon(':/search-clr.png')
+        self._clrIco.addFile(':/search-clr-big.png')
         self._updateIco('')  # initialize the icon
 
         self._delay = QTimer(self)
@@ -249,15 +267,14 @@ class SearchBox(QLineEditWithMenuIcon):
 
     def resizeEvent(self, event):
         w, h = event.size().toTuple()
-        pos_y = (h - 18) / 2
-        self.button.move(w - 18 - pos_y, pos_y)
+        pos_y = (h - self.button.height()) / 2
+        self.button.move(w - self.button.width() - pos_y, pos_y)
 
     def _updateIco(self, text):
         """Update button icon"""
-        if self.isTextBefore == bool(text): return
-        ico_name = 'search_clr' if text else 'search'
-        self.button.setIcon(QIcon(':/%s.png' % ico_name))
-        self.isTextBefore = bool(text)
+        if self._isTextBefore == bool(text): return
+        self.button.setIcon(self._clrIco if text else self._searchIco)
+        self._isTextBefore = bool(text)
 
     def retranslate(self):
         self.setPlaceholderText(self.tr('Search'))
