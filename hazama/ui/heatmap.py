@@ -40,7 +40,8 @@ class HeatMap(QWidget):
         self.sample = ColorSampleView(self, cellLen=11)
         # always bigger than sizeHint even policy is Maximum, so painful. use fixed
         self.sample.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        self.sample.setFixedSize(preBtn.sizeHint().width()*2 + barLayout.spacing(), 12)
+        self.sample.setFixedSize(preBtn.sizeHint().width()*2 + barLayout.spacing(),
+                                 preBtn.sizeHint().height())
         barLayout.addWidget(preBtn, Qt.AlignVCenter)
         barLayout.addWidget(nextBtn, Qt.AlignVCenter)
         barLayout.addSpacerItem(QSpacerItem(30, 1, QSizePolicy.Expanding, QSizePolicy.Fixed))
@@ -226,6 +227,9 @@ class ColorSampleView(QGraphicsView):
             item.setPen(QPen(Qt.darkGray))
             item.setBrush(c)
             self.scene.addItem(item)
+
+    def resizeEvent(self, event):
+        self.fitInView(self.scene.sceneRect(), Qt.KeepAspectRatio)
 
     def setColors(self, colors):
         """Set colors to display, arg colors is a list of QColor"""
