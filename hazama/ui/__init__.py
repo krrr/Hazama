@@ -10,6 +10,7 @@ import hazama.ui.rc
 
 locale = None
 timeFmt = dateFmt = datetimeFmt = None
+font = None
 
 
 def datetimeTrans(s, forceDateOnly=False):
@@ -56,7 +57,7 @@ def setTranslationLocale():
                         QLibraryInfo.location(QLibraryInfo.TranslationsPath))
     if not ret:  # frozen
         _transQt.load('qt_'+lang, langPath)
-    for i in [_trans, _transQt]: app.installTranslator(i)
+    for i in [_trans, _transQt]: QApplication.instance().installTranslator(i)
 
     global timeFmt, dateFmt, datetimeFmt
     timeFmt = settings['Main'].get('timeFormat')
@@ -66,6 +67,7 @@ def setTranslationLocale():
 
 def showErrors(type, **extra_args):
     """Show information about variety of errors."""
+    app = QApplication.instance()
     {'dbError': lambda hint='': QMessageBox.critical(
         None,
         app.translate('Errors', 'Failed to access database'),
@@ -114,7 +116,7 @@ def setStyleSheet():
             with open('custom.qss', encoding='utf-8') as f:
                 ss.append(f.read())
 
-        app.setStyleSheet(''.join(ss))
+        QApplication.instance().setStyleSheet(''.join(ss))
 
 
 def winDwmExtendWindowFrame(winId, topMargin):
@@ -157,7 +159,7 @@ def isDwmUsable():
 
 
 def getDpiScaleRatio(forceMultipleOf25=True):
-    dpi = app.desktop().logicalDpiX()  # when will x != y happen?
+    dpi = QApplication.instance().desktop().logicalDpiX()  # when will x != y happen?
     ratio = dpi / 96
     if forceMultipleOf25 and round(ratio % .25, 2) != 0:
         ratio = round(ratio - ratio % .25, 2)
@@ -170,7 +172,7 @@ class Fonts:
         self.title = QFont()
         self.datetime = QFont()
         self.text = QFont()
-        self.default = app.font()
+        self.default = QApplication.instance().font()
         self.default_m = QFontMetrics(self.default)
         self.title_m = self.datetime_m = None
 
@@ -183,19 +185,22 @@ class Fonts:
         if 'default' in settings['Font']:
             self.default.fromString(settings['Font'].get('default'))
             self.default_m = QFontMetrics(self.default)
-            app.setFont(self.default)
+            QApplication.instance().setFont(self.default)
 
 
-app = QApplication(sys.argv)
-logging.debug('DPI scale ratio %s' % getDpiScaleRatio())
+def init():
+    app = QApplication(sys.argv)
+    logging.debug('DPI scale ratio %s' % getDpiScaleRatio())
 
-_appIcon = QIcon()
-for _i in [16, 64]:
-    _appIcon.addFile(':/appicon-%d.png' % _i)
-app.setWindowIcon(_appIcon)
+    ico = QIcon()
+    for i in [16, 64]:
+        ico.addFile(':/appicon-%d.png' % i)
+    app.setWindowIcon(ico)
 
-font = Fonts()
-font.load()
+    global font
+    font = Fonts()
+    font.load()
 
-setTranslationLocale()
-setStyleSheet()
+    setTranslationLocale()
+    setStyleSheet()
+    return app

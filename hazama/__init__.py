@@ -28,7 +28,8 @@ def main_entry():
     logging.info('Hazama v%s', __version__)
     logging.info(str(config.nikki))
 
-    from hazama.ui import app  # initialize UI
+    from hazama import ui
+    app = ui.init()
     from hazama.ui.mainwindow import MainWindow
     w = MainWindow()
     w.show()
