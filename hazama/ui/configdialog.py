@@ -2,7 +2,7 @@ from PySide.QtGui import *
 from PySide.QtCore import *
 import logging
 from hazama import __version__, db
-from hazama.ui import font, setStyleSheet, readRcTextFile, isDwmUsable
+from hazama.ui import font, setStyleSheet, readRcTextFile, isDwmUsable, getDpiScaleRatio
 from hazama.ui.configdialog_ui import Ui_configDialog
 from hazama.config import settings
 
@@ -28,6 +28,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
         self.aboutBrowser.setHtml(about)
         self.aboutBrowser.document().setDocumentMargin(0)
         self.openOutBtn.hide()  # can't set initial state in creator
+        self.appIcoLabel.setFixedSize(QSize(32, 32) * getDpiScaleRatio())
         # load settings
         self.aindCheck.setChecked(settings['Editor'].getboolean('autoIndent'))
         self.tListCountCheck.setChecked(settings['Main'].getboolean('tagListCount'))
