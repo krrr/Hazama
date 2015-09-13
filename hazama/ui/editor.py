@@ -3,7 +3,7 @@ from PySide.QtCore import *
 from hazama.ui.editor_ui import Ui_editor
 from hazama.ui.customobjects import TagCompleter
 from hazama.ui.customwidgets import DateTimeDialog
-from hazama.ui import font, datetimeTrans, currentDatetime, datetimeFmt
+from hazama.ui import font, datetimeTrans, currentDatetime, datetimeFmt, fixWidgetSizeOnHiDpi
 from hazama.config import settings, nikki
 
 
@@ -18,7 +18,11 @@ class Editor(QWidget, Ui_editor):
         super(Editor, self).__init__(*args, **kwargs)
         self.setupUi(self)
         self.datetime = self.id = self.timeModified = self.tagModified = None
-        self.restoreGeometry(QByteArray.fromHex(settings['Editor'].get('windowGeo')))
+        geo = settings['Editor'].get('windowGeo')
+        if geo:
+            self.restoreGeometry(QByteArray.fromHex(geo))
+        else:
+            fixWidgetSizeOnHiDpi(self)
 
         self.titleEditor.setFont(font.title)
         self.titleEditor.returnPressed.connect(lambda: self.textEditor.setFocus())

@@ -166,6 +166,14 @@ def getDpiScaleRatio(forceMultipleOf25=True):
     return ratio
 
 
+def fixWidgetSizeOnHiDpi(widget):
+    """Simply resize those hardcoded sizes (at ratio 1.0), and ignore sizes changed by user.
+    Because per-monitor DPI aware is not supported, user's size will be saved
+    directly."""
+    print(widget.size() * getDpiScaleRatio(False))
+    widget.resize(widget.size() * getDpiScaleRatio(False))
+
+
 class Fonts:
     """Manage all fonts used in application"""
     def __init__(self):

@@ -1,7 +1,8 @@
 from PySide.QtGui import *
 from PySide.QtCore import *
 import logging
-from hazama.ui import font, setTranslationLocale, winDwmExtendWindowFrame, getDpiScaleRatio
+from hazama.ui import (font, setTranslationLocale, winDwmExtendWindowFrame, getDpiScaleRatio,
+                       fixWidgetSizeOnHiDpi)
 from hazama.ui.customwidgets import QLineEditWithMenuIcon
 from hazama.ui.configdialog import ConfigDialog
 from hazama.ui.mainwindow_ui import Ui_mainWindow
@@ -15,14 +16,17 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         self.setupUi(self)
         self.cfgDialog = self.heatMap = None  # create on on_cfgAct_triggered
         geo = settings['Main'].get('windowGeo')
-        self.restoreGeometry(QByteArray.fromHex(geo))
+        if geo:
+            self.restoreGeometry(QByteArray.fromHex(geo))
+        else:
+            fixWidgetSizeOnHiDpi(self)
         # setup toolbar bg, the second stage is in showEvent
         self.toolBar.setProperty(
             'extendTitleBar', settings['Main'].getboolean('extendTitleBarBg'))
         self.toolBar.setIconSize(QSize(24, 24) * getDpiScaleRatio())
 
         # setup TagList width
-        tListW = settings['Main'].getint('tagListWidth', 0)
+        tListW = settings['Main'].getint('tagListWidth', int(self.width() * 0.2))
         if not self.isMaximized():
             self.splitter.setSizes([tListW, self.width()-tListW])
         # setup sort menu

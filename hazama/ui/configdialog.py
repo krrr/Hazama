@@ -2,7 +2,8 @@ from PySide.QtGui import *
 from PySide.QtCore import *
 import logging
 from hazama import __version__, db
-from hazama.ui import font, setStyleSheet, readRcTextFile, isDwmUsable, getDpiScaleRatio
+from hazama.ui import (font, setStyleSheet, readRcTextFile, isDwmUsable, getDpiScaleRatio,
+                       fixWidgetSizeOnHiDpi)
 from hazama.ui.configdialog_ui import Ui_configDialog
 from hazama.config import settings
 
@@ -22,6 +23,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
         super(ConfigDialog, self).__init__(parent, Qt.WindowTitleHint)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setupUi(self)
+        fixWidgetSizeOnHiDpi(self)
         about = readRcTextFile(':/about.html').format(
             ver=__version__, author=self.tr('author'),
             checkupdate=self.tr('check-update'))
@@ -149,12 +151,13 @@ class ConfigDialog(QDialog, Ui_configDialog):
         btn = self.sender()
         dlg = QFontDialog(self)
         dlg.setCurrentFont(btn.font())
+        fixWidgetSizeOnHiDpi(dlg)
         # set sample text in dialog with some hack
         try:
             sample = dlg.findChildren(QLineEdit)[3]
             sample.setText('AaBbYy@2013 %s' % self.langCombo.currentText())
         except Exception:
-            pass  # it may fail in the future
+            logging.warning('failed to hack Qt font dialog')
         ret = dlg.exec_()
         if ret:
             self._setFontButton(btn, dlg.selectedFont())
