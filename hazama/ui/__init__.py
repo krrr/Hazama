@@ -68,6 +68,8 @@ def setTranslationLocale():
 def showErrors(type, **extra_args):
     """Show information about variety of errors."""
     app = QApplication.instance()
+    if not app:
+        app = init()
     {'dbError': lambda hint='': QMessageBox.critical(
         None,
         app.translate('Errors', 'Failed to access database'),
