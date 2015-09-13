@@ -13,6 +13,7 @@ QMainWindow QToolBar[extendTitleBar="true"] {
 }
 
 QLabel#countLabel {color: #909090}
+QMainWindow QToolBar[extendTitleBar="true"] #countLabel {color: #111111}
 
 QLineEdit#searchBox QToolButton {border: 0px}
 QLineEdit#searchBox QToolButton:pressed {
