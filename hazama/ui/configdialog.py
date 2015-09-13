@@ -62,9 +62,12 @@ class ConfigDialog(QDialog, Ui_configDialog):
         self.defFontBtn.configName = 'default'
         self.buttons = (self.dtFontBtn, self.titleFontBtn, self.textFontBtn,
                         self.defFontBtn)
+        ratio = getDpiScaleRatio(False)
         for i in self.buttons:
             i.clicked.connect(self.handleFontBtn)
             self._setFontButton(i, getattr(font, i.configName))
+            if ratio > 1:
+                i.setMinimumWidth((i.minimumWidth() * ratio))
 
     def showEvent(self, event):
         # set minimum height of aboutBrowser according to its contents
