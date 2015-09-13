@@ -173,18 +173,20 @@ class Fonts:
         self.datetime = QFont()
         self.text = QFont()
         self.default = QApplication.instance().font()
-        self.default_m = QFontMetrics(self.default)
-        self.title_m = self.datetime_m = None
+        self.default_m = QFontMetrics(self.default, None)
+        self.title_m = self.datetime_m = self.text_m = None
 
     def load(self):
+        # passing None as 2nd arg to QFontMetrics make difference on high DPI
         self.title.fromString(settings['Font'].get('title'))
-        self.title_m = QFontMetrics(self.title)
+        self.title_m = QFontMetrics(self.title, None)
         self.datetime.fromString(settings['Font'].get('datetime'))
-        self.datetime_m = QFontMetrics(self.datetime)
+        self.datetime_m = QFontMetrics(self.datetime, None)
         self.text.fromString(settings['Font'].get('text'))
+        self.text_m = QFontMetrics(self.text, None)
         if 'default' in settings['Font']:
             self.default.fromString(settings['Font'].get('default'))
-            self.default_m = QFontMetrics(self.default)
+            self.default_m = QFontMetrics(self.default, None)
             QApplication.instance().setFont(self.default)
 
 

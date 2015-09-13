@@ -20,8 +20,7 @@ class NListDelegate(QStyledItemDelegate):
         self.title_h = max(QFontInfo(font.title).pixelSize(),
                            QFontInfo(font.datetime).pixelSize()) + 4  # dt and title font area
         self.titleArea_h = self.title_h + 4
-        self.text_h = (QFontMetrics(font.text).lineSpacing() *
-                       settings['Main'].getint('previewLines'))
+        self.text_h = font.text_m.lineSpacing() * settings['Main'].getint('previewLines')
         self.tagPath_h = QFontInfo(qApp.font()).pixelSize() + 4
         self.tag_h = self.tagPath_h + 4
         self.dt_w = font.datetime_m.width(datetimeTrans('2000-01-01 00:00')) + 40
