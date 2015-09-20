@@ -34,7 +34,10 @@ class ConfigDialog(QDialog, Ui_configDialog):
         # load settings
         self.aindCheck.setChecked(settings['Editor'].getboolean('autoIndent'))
         self.tListCountCheck.setChecked(settings['Main'].getboolean('tagListCount'))
-        self.tfocusCheck.setChecked(settings['Editor'].getboolean('titleFocus'))
+        if settings['Editor'].getboolean('titleFocus'):
+            self.focusTitleRadio.setChecked(True)
+        else:
+            self.focusTextRadio.setChecked(True)
         self.bkCheck.setChecked(settings['Main'].getboolean('backup'))
         if isDwmUsable():
             self.extendBgCheck.setChecked(
@@ -88,7 +91,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
         settings['Main']['extendTitleBarBg'] = str(extend)
         settings['Editor']['autoIndent'] = str(self.aindCheck.isChecked())
         settings['Main']['tagListCount'] = str(self.tListCountCheck.isChecked())
-        settings['Editor']['titleFocus'] = str(self.tfocusCheck.isChecked())
+        settings['Editor']['titleFocus'] = str(self.focusTitleRadio.isChecked())
         settings['Main']['backup'] = str(self.bkCheck.isChecked())
         settings['Main']['previewLines'] = str(self.preLinesBox.value())
         for i in self.buttons:
