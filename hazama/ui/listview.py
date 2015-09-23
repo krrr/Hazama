@@ -348,6 +348,7 @@ class TagList(QListWidget):
     def __init__(self, *args, **kwargs):
         super(TagList, self).__init__(*args, **kwargs)
         self.trackList = None  # update in mousePressEvent
+        self.setVerticalScrollMode(self.ScrollPerPixel)
         self.setDelegateOfTheme()
 
         self.setUniformItemSizes(True)
@@ -453,6 +454,10 @@ class NikkiList(QListView):
     def __init__(self, parent=None):
         super(NikkiList, self).__init__(parent)
         self._delegate = None
+        # ScrollPerPixel means user can draw scroll bar and move list items pixel by pixel,
+        # but mouse wheel still scroll item by item (the number of items scrolled depends on
+        # qApp.wheelScrollLines)
+        self.setVerticalScrollMode(self.ScrollPerPixel)
         self.setDelegateOfTheme()
         # disable default editor. Editor is implemented in the View
         self.setEditTriggers(QAbstractItemView.NoEditTriggers)
