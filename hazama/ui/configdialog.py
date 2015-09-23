@@ -1,6 +1,6 @@
+import logging
 from PySide.QtGui import *
 from PySide.QtCore import *
-import logging
 from hazama import __version__, db
 from hazama.ui import (font, setStyleSheet, readRcTextFile, isDwmUsable, getDpiScaleRatio,
                        fixWidgetSizeOnHiDpi)
@@ -107,7 +107,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
         if extendPrev != extend: self.extendBgChanged.emit()
         if themePrev != theme or extendPrev != extend: setStyleSheet()
 
-        logging.info('Settings saved')
+        logging.info('Settings changed')
         self.accepted.emit()
         self.close()
 

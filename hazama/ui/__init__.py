@@ -1,11 +1,11 @@
-from PySide.QtGui import QApplication, QIcon, QFont, QFontMetrics, QMessageBox
-from PySide.QtCore import QLocale, QTranslator, QLibraryInfo, QDateTime, QFile
 import sys
 import os
 import time
 import logging
-from hazama.config import settings, appPath
+from PySide.QtGui import QApplication, QIcon, QFont, QFontMetrics, QMessageBox
+from PySide.QtCore import QLocale, QTranslator, QLibraryInfo, QDateTime, QFile
 import hazama.ui.rc
+from hazama.config import settings, appPath, saveSettings
 
 
 locale = None
@@ -65,7 +65,7 @@ def setTranslationLocale():
     datetimeFmt = (dateFmt + ' ' + timeFmt) if timeFmt else dateFmt
 
 
-def showErrors(type, **extra_args):
+def showErrors(type_, **extra_args):
     """Show information about variety of errors."""
     app = QApplication.instance()
     if not app:
@@ -84,7 +84,7 @@ def showErrors(type, **extra_args):
          None,
          app.translate('Errors', 'Failed to access file'),
          app.translate('Errors', info))
-     }[type](**extra_args)
+     }[type_](**extra_args)
 
 
 def setStdEditMenuIcons(menu):
@@ -201,6 +201,7 @@ class Fonts:
 
 def init():
     app = QApplication(sys.argv)
+    app.lastWindowClosed.connect(saveSettings)
     logging.debug('DPI scale ratio %s' % getDpiScaleRatio())
 
     ico = QIcon()

@@ -7,7 +7,7 @@ from hazama.ui.customwidgets import QLineEditWithMenuIcon
 from hazama.ui.configdialog import ConfigDialog
 from hazama.ui.mainwindow_ui import Ui_mainWindow
 from hazama.ui.heatmap import HeatMap
-from hazama.config import settings, saveSettings
+from hazama.config import settings
 
 
 class MainWindow(QMainWindow, Ui_mainWindow):
@@ -109,9 +109,7 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         settings['Main']['tagListVisible'] = str(tListVisible)
         if tListVisible:
             settings['Main']['tagListWidth'] = str(self.splitter.sizes()[0])
-        saveSettings()
         event.accept()
-        qApp.quit()
 
     def retranslate(self):
         """Set translation after language changed in ConfigDialog"""
