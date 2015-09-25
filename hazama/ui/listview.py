@@ -526,6 +526,7 @@ class NikkiList(QListView):
         """Write editor's data to model and database, and destroy editor"""
         editor = self.editors[id]
         if needSave:
+            qApp.setOverrideCursor(QCursor(Qt.WaitCursor))
             dic = editor.toNikkiDict()
             if not editor.tagModified:  # let database skip heavy tag update operation
                 dic['tags'] = None
@@ -539,6 +540,7 @@ class NikkiList(QListView):
 
             if id == -1: self.countChanged.emit()  # new diary
             if editor.tagModified: self.tagsChanged.emit()
+            qApp.restoreOverrideCursor()
         editor.deleteLater()
         del self.editors[id]
 
