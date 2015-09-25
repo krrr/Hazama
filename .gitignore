@@ -6,6 +6,7 @@ custom.qss
 xmlsample
 build
 .idea
+*.iml
 hazama/test.py
 hazama/ui/*_ui.py
 hazama/ui/rc.py
