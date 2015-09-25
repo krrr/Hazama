@@ -3,6 +3,7 @@ from PySide.QtGui import *
 
 
 class TagCompleter(QCompleter):
+    # QCompleter is not designed to use in this way, so these codes are terrible
     def __init__(self, tagList, parent=None):
         super(TagCompleter, self).__init__(tagList, parent)
         self.tagList = tagList
@@ -28,6 +29,7 @@ class TagCompleter(QCompleter):
             return [path, ]
 
 
+# noinspection PyUnresolvedReferences
 class TextFormatter:
     """setXX methods are used in NTextDocument and NTextEdit to apply formats."""
     HlColor = QColor(248, 162, 109, 100)

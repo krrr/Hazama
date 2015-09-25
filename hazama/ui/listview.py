@@ -4,7 +4,7 @@ from PySide.QtGui import *
 from PySide.QtCore import *
 import logging
 import random
-from hazama.ui import font, datetimeTrans
+from hazama.ui import font, datetimeTrans, getDpiScaleRatio
 from hazama.ui.editor import Editor
 from hazama.ui.customobjects import NTextDocument, MultiSortFilterProxyModel
 from hazama.ui.customwidgets import NElideLabel, NDocumentLabel
@@ -17,11 +17,13 @@ class NListDelegate(QStyledItemDelegate):
     painting method compared to colorful theme."""
     def __init__(self):
         super(NListDelegate, self).__init__()  # don't pass parent because of mem problem
-        self.title_h = max(QFontInfo(font.title).pixelSize(),
-                           QFontInfo(font.datetime).pixelSize()) + 4  # dt and title font area
+        # To avoid some font has much more space at top and bottom, we use ascent instead
+        # of height, and add it with a small number.
+        magic = int(4 * getDpiScaleRatio())
+        self.title_h = max(font.title_m.ascent(), font.datetime_m.ascent()) + magic
         self.titleArea_h = self.title_h + 4
         self.text_h = font.text_m.lineSpacing() * settings['Main'].getint('previewLines')
-        self.tagPath_h = QFontInfo(qApp.font()).pixelSize() + 4
+        self.tagPath_h = font.default_m.ascent() + magic
         self.tag_h = self.tagPath_h + 4
         self.dt_w = font.datetime_m.width(datetimeTrans('2000-01-01 00:00')) + 40
         self.all_h = None  # updated in sizeHint before each item being painting
@@ -93,7 +95,7 @@ class NListDelegate(QStyledItemDelegate):
                 tagPath.lineTo(0, self.tagPath_h/2)
                 tagPath.closeSubpath()
                 painter.drawPath(tagPath)
-                painter.drawText(8, 1, oneTag_w, self.tagPath_h, Qt.AlignCenter, t)
+                painter.drawText(8, 0, oneTag_w, self.tagPath_h, Qt.AlignCenter, t)
                 painter.translate(oneTag_w+15, 0)  # translate by offset
             else:
                 painter.resetTransform()
@@ -225,7 +227,7 @@ class NListDelegateColorful(QItemDelegate):
 class TListDelegate(QStyledItemDelegate):
     def __init__(self, parent=None):
         super(TListDelegate, self).__init__(parent)
-        self.h = QFontInfo(font.default).pixelSize()+8
+        self.h = font.default_m.height() + 8
 
     def paint(self, painter, option, index):
         x, y, w = option.rect.x(), option.rect.y(), option.rect.width()
