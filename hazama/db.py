@@ -1,6 +1,4 @@
 ﻿import sqlite3
-from sqlite3 import DatabaseError
-import sys
 import os
 import shutil
 from datetime import date, timedelta
@@ -36,6 +34,8 @@ CREATE TRIGGER IF NOT EXISTS autodeltag AFTER DELETE ON Nikki_Tags
     Nikki_Tags.tagid=Tags.id)==0; END;
 '''
 
+DatabaseError = sqlite3.DatabaseError
+
 
 class DatabaseLockedError(Exception): pass
 
@@ -49,6 +49,7 @@ class Nikki:
     Tags: tags
     TextFormat: rich text formats and their owner
     """
+    _instance = None
 
     def __init__(self, db_path=None):
         self._path = self._conn = None
@@ -94,7 +95,8 @@ class Nikki:
         self._conn.close()
         self._conn = self._exe = None
 
-    def _check_schema(self): self._conn.executescript(schema)
+    def _check_schema(self):
+        self._conn.executescript(schema)
 
     def sorted(self, order, reverse=True):
         assert order in ['datetime', 'title', 'length']
@@ -118,41 +120,6 @@ class Nikki:
 
         return dict(id=r[0], title=r[3], datetime=r[1], text=r[2],
                     tags=tags, formats=formats)
-
-    def importxml(self, path):
-        """Import XML file"""
-        import xml.etree.ElementTree as ET
-        tree = ET.parse(path)
-        root = tree.getroot()
-        for i in root:
-            formats = i.find('formats')
-            formats = [(f.get('start'), f.get('length'), f.get('type'))
-                       for f in formats] if formats else None
-            self.save(id=-1, datetime=i.get('datetime'),
-                      title=i.get('title'), tags=i.get('tags'),
-                      text=i.text, formats=formats, batch=True)
-        self._commit()
-        logging.info('importing(XML) succeeded')
-
-    def exportxml(self, path):
-        """Export to XML file"""
-        import xml.etree.ElementTree as ET
-        root = ET.Element('nikkichou')
-        for row in self.sorted('datetime'):
-            nikki = ET.SubElement(root, 'nikki')
-            nikki.text = row['text']
-            for attr in ['title', 'datetime', 'tags']:
-                nikki.set(attr, row[attr])
-            # save format if current nikki has
-            if row['formats']:
-                formats = ET.SubElement(nikki, 'formats')
-                for f in row['formats']:
-                    fmt = ET.SubElement(formats, 'fmt')
-                    for index, item in enumerate(['start', 'length', 'type']):
-                        fmt.set(item, str(f[index]))
-        tree = ET.ElementTree(root)
-        tree.write(path, encoding='utf-8')
-        logging.info('exporting(XML) succeeded')
 
     def exporttxt(self, path, selected=None):
         """Export to TXT file using template(string format).
@@ -236,15 +203,17 @@ class Nikki:
         max_id = self._exe('SELECT max(id) FROM Nikki').fetchone()[0]
         return max_id + 1 if max_id else 1
 
-    def getpath(self): return self._path
+    def getpath(self):
+        return self._path
 
     @classmethod
     def setinstance(cls, instance):
-        assert getattr(cls, 'instance', None) is None
-        cls.instance = instance
+        assert cls._instance is None
+        cls._instance = instance
 
     @classmethod
-    def getinstance(cls): return cls.instance
+    def getinstance(cls):
+        return cls._instance
 
 
 def list_backups():
@@ -267,7 +236,6 @@ def restore_backup(bk_name):
 
 def backup():
     """Do daily backup and delete old backups if not did yet."""
-
     db_path = Nikki.getinstance().getpath()
     if not os.path.isdir('backup'): os.mkdir('backup')
     backups = list_backups()

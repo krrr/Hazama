@@ -108,8 +108,7 @@ class Editor(QWidget, Ui_editor):
         self.textEditor.setRichText(dic.get('text', ''), dic.get('formats'))
         # if title is empty, use datetime instead. if no datetime (new), use "New Diary"
         hint = (dic.get('title') or
-                (datetimeTrans(self.datetime, forceDateOnly=True)
-                 if 'datetime' in dic else None) or
+                (datetimeTrans(self.datetime, stripTime=True) if 'datetime' in dic else None) or
                 self.tr('New Diary'))
         self.setWindowTitle("%s - Hazama" % hint)
 

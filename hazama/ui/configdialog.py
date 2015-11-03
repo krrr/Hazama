@@ -107,7 +107,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
         if extendPrev != extend: self.extendBgChanged.emit()
         if themePrev != theme or extendPrev != extend: setStyleSheet()
 
-        logging.info('Settings changed')
+        logging.info('settings changed')
         self.accepted.emit()
         self.close()
 
@@ -162,8 +162,8 @@ class ConfigDialog(QDialog, Ui_configDialog):
         try:
             sample = dlg.findChildren(QLineEdit)[3]
             sample.setText('AaBbYy@2013 %s' % self.langCombo.currentText())
-        except Exception:
-            logging.warning('failed to hack Qt font dialog')
+        except Exception as e:
+            logging.warning('failed to hack Qt font dialog: %s' % e)
         ret = dlg.exec_()
         if ret:
             self._setFontButton(btn, dlg.selectedFont())
