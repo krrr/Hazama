@@ -193,10 +193,31 @@ class Fonts:
         self.datetime_m = QFontMetrics(self.datetime, None)
         self.text.fromString(settings['Font'].get('text'))
         self.text_m = QFontMetrics(self.text, None)
-        if 'default' in settings['Font']:
-            self.default.fromString(settings['Font'].get('default'))
+        defaultFont = settings['Font'].get('default')
+        if not defaultFont:
+            defaultFont = self.getPreferredFont()
+        if defaultFont:
+            self.default.fromString(defaultFont)
             self.default_m = QFontMetrics(self.default, None)
             QApplication.instance().setFont(self.default)
+
+    @staticmethod
+    def getPreferredFont():
+        """Return family of preferred font according to language and platform."""
+        isWin = hasattr(sys, 'getwindowsversion')
+        winVer = isWin or sys.getwindowsversion()
+        vistaOrLater = isWin or winVer.major >= 6
+        sevenOrLater = isWin or winVer.major >= 6 and winVer.minor >= 1
+
+        if isWin and settings['Main']['theme'] == '1px-rect' and getDpiScaleRatio() == 1:
+            # old theme looks well with default bitmap fonts only in normal DPI, and
+            # text of radio button will be cropped in ConfigDialog
+            return None
+        if isWin and sevenOrLater:
+            return {'zh_CN': 'Microsoft YaHei UI', 'ja_JP': 'Meiryo UI'}.get(locale.name())
+        elif isWin and vistaOrLater:
+            return {'zh_CN': 'Microsoft YaHei', 'ja_JP': 'Meiryo'}.get(locale.name())
+        return None
 
 
 def init():
@@ -209,10 +230,10 @@ def init():
         ico.addFile(':/appicon-%d.png' % i)
     app.setWindowIcon(ico)
 
+    setTranslationLocale()
     global font
     font = Fonts()
     font.load()
 
-    setTranslationLocale()
     setStyleSheet()
     return app
