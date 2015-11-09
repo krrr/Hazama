@@ -51,6 +51,9 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         searchBox.setMinimumWidth(searchBox.sizeHint().height() * 8)
         searchBox.contentChanged.connect(self.nList.setFilterBySearchString)
         self.toolBar.addWidget(searchBox)
+        spacerWidget = QWidget(self.toolBar)
+        spacerWidget.setFixedSize(getDpiScaleRatio()*3, 1)
+        self.toolBar.addWidget(spacerWidget)
         if settings['Main'].getboolean('tagListVisible'):
             self.tListAct.trigger()
         else:
@@ -206,8 +209,8 @@ class MainWindow(QMainWindow, Ui_mainWindow):
 
     def showEvent(self, event):
         # style polished, we can get correct height of toolbar now
-        if (settings['Main'].getboolean('extendTitleBarBg')
-           and winDwmExtendWindowFrame(self.winId(), self.toolBar.height())):
+        if (settings['Main'].getboolean('extendTitleBarBg') and
+           winDwmExtendWindowFrame(self.winId(), self.toolBar.height())):
             self.setAttribute(Qt.WA_TranslucentBackground)
 
         self.nList.setFocus()
@@ -215,8 +218,8 @@ class MainWindow(QMainWindow, Ui_mainWindow):
     def updateCountLabel(self):
         """Update label that display count of diaries in Main List.
         'XX diaries' format is just fine, don't use 'XX diaries,XX results'."""
-        filtered = (self.nList.modelProxy.filterPattern(0)
-                    or self.nList.modelProxy.filterPattern(1))
+        filtered = (self.nList.modelProxy.filterPattern(0) or
+                    self.nList.modelProxy.filterPattern(1))
         c = self.nList.modelProxy.rowCount() if filtered else self.nList.originModel.rowCount()
         self.countLabel.setText(self.tr('%i diaries') % c)
 

@@ -48,6 +48,7 @@ class HeatMap(QWidget):
         barLayout.addWidget(self.yearBtn)
         barLayout.addSpacerItem(QSpacerItem(30, 1, QSizePolicy.Expanding, QSizePolicy.Fixed))
         barLayout.addWidget(self.sample)
+        barLayout.addSpacerItem(QSpacerItem(3, 1, QSizePolicy.Fixed, QSizePolicy.Fixed))
         layout.addWidget(self.bar)
         layout.addWidget(self.view)
         # setup shortcuts
