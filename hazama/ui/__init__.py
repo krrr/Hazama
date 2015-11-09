@@ -9,7 +9,8 @@ from hazama.config import settings, appPath, saveSettings
 
 
 locale = None
-timeFmt = dateFmt = datetimeFmt = None
+# datetimeFmt may not contain time part (by default)
+dateFmt = datetimeFmt = fullDatetimeFmt = None
 font = None
 
 
@@ -59,10 +60,11 @@ def setTranslationLocale():
         _transQt.load('qt_' + lang, langPath)
     for i in [_trans, _transQt]: QApplication.instance().installTranslator(i)
 
-    global timeFmt, dateFmt, datetimeFmt
+    global dateFmt, datetimeFmt, fullDatetimeFmt
     timeFmt = settings['Main'].get('timeFormat')
     dateFmt = settings['Main'].get('dateFormat', locale.dateFormat())
     datetimeFmt = (dateFmt + ' ' + timeFmt) if timeFmt else dateFmt
+    fullDatetimeFmt = dateFmt + ' ' + (timeFmt or 'hh:mm')
 
 
 def showErrors(type_, **extra_args):

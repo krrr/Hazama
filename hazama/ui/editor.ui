@@ -69,6 +69,9 @@
      </property>
      <item>
       <widget class="QToolButton" name="dtBtn">
+       <property name="cursor">
+        <cursorShape>PointingHandCursor</cursorShape>
+       </property>
        <property name="toolTip">
         <string>Modify datetime</string>
        </property>

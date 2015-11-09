@@ -3,7 +3,7 @@ from PySide.QtCore import *
 from hazama.ui.editor_ui import Ui_editor
 from hazama.ui.customobjects import TagCompleter
 from hazama.ui.customwidgets import DateTimeDialog
-from hazama.ui import font, datetimeTrans, currentDatetime, datetimeFmt, fixWidgetSizeOnHiDpi
+from hazama.ui import font, datetimeTrans, currentDatetime, fullDatetimeFmt, fixWidgetSizeOnHiDpi
 from hazama.config import settings, nikki
 
 
@@ -89,7 +89,7 @@ class Editor(QWidget, Ui_editor):
         locale = QLocale()
         dbDatetimeFmt = 'yyyy-MM-dd HH:mm'
         dt = locale.toDateTime(dtStr, dbDatetimeFmt)
-        newDt = DateTimeDialog.getDateTime(dt, datetimeFmt, self)
+        newDt = DateTimeDialog.getDateTime(dt, fullDatetimeFmt, self)
         if newDt is not None:
             newDtStr = newDt.toString(dbDatetimeFmt)
             if newDtStr != self.datetime:
