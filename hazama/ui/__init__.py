@@ -207,9 +207,9 @@ class Fonts:
     def getPreferredFont():
         """Return family of preferred font according to language and platform."""
         isWin = hasattr(sys, 'getwindowsversion')
-        winVer = isWin or sys.getwindowsversion()
-        vistaOrLater = isWin or winVer.major >= 6
-        sevenOrLater = isWin or winVer.major >= 6 and winVer.minor >= 1
+        winVer = sys.getwindowsversion() if isWin else None
+        vistaOrLater = isWin and winVer.major >= 6
+        sevenOrLater = isWin and winVer.major >= 6 and winVer.minor >= 1
 
         if isWin and settings['Main']['theme'] == '1px-rect' and getDpiScaleRatio() == 1:
             # old theme looks well with default bitmap fonts only in normal DPI, and
