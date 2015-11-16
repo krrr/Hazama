@@ -1,3 +1,8 @@
+Icons for HiDPI:
+-big means 1.5x size
+-mega means 2x size
+
+```
 # clock.png and formats icon are from Keyamoon-IcoMoon
 # random.png, tlist.png, sort.png, search_clr.png,
 # search.png, new.png, delete.png, config.png, arrow-left.png, arrow-right.png are from SweetiePlus
@@ -75,4 +80,4 @@ No link is required on your site or application. In projects that are
 redistributed, like templates and opensource software, please keep the
 readme.txt file with the icons. Lastly, don't claim the icons as your
 own work.
-
+```

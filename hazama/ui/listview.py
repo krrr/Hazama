@@ -4,7 +4,7 @@ from PySide.QtGui import *
 from PySide.QtCore import *
 import logging
 import random
-from hazama.ui import font, datetimeTrans, getDpiScaleRatio
+from hazama.ui import font, datetimeTrans, getDpiScaleRatio, makeQIcon
 from hazama.ui.editor import Editor
 from hazama.ui.customobjects import NTextDocument, MultiSortFilterProxyModel
 from hazama.ui.customwidgets import NElideLabel, NDocumentLabel
@@ -141,12 +141,12 @@ class NListDelegateColorful(QItemDelegate):
             self.datetimeIco = QToolButton(self, objectName='NListItemDtIco')
             minSz = max(font.datetime_m.ascent(), 12)
             self.datetimeIco.setIconSize(QSize(minSz, minSz))
-            self.datetimeIco.setIcon(QIcon(':/calendar-32.png'))
+            self.datetimeIco.setIcon(QIcon(':/calendar.png'))
 
             self.tagIco = QToolButton(self, objectName='NListItemTagIco')
             minSz = max(font.default_m.ascent(), 12)
             self.tagIco.setIconSize(QSize(minSz, minSz))
-            self.tagIco.setIcon(QIcon(':/tag-32.png'))
+            self.tagIco.setIcon(QIcon(':/tag.png'))
 
             self._vLayout0 = QVBoxLayout(self)
             self._hLayout0 = QHBoxLayout()
@@ -475,9 +475,11 @@ class NikkiList(QListView):
         # setup actions
         self.editAct = QAction(self.tr('Edit'), self,
                                triggered=self.startEditor)
-        self.delAct = QAction(QIcon(':/menu/list_delete.png'), self.tr('Delete'), self,
+        self.delAct = QAction(makeQIcon(':/menu/list-delete.png'),
+                              self.tr('Delete'), self,
                               shortcut=QKeySequence.Delete, triggered=self.delNikki)
-        self.randAct = QAction(QIcon(':/menu/random.png'), self.tr('Random'), self,
+        self.randAct = QAction(makeQIcon(':/menu/random-big.png'),
+                               self.tr('Random'), self,
                                shortcut=QKeySequence(Qt.Key_F7), triggered=self.selectRandomly)
         for i in [self.editAct, self.delAct, self.randAct]: self.addAction(i)
         # setup editors

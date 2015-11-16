@@ -177,6 +177,24 @@ def fixWidgetSizeOnHiDpi(widget):
     widget.resize(widget.size() * getDpiScaleRatio(False))
 
 
+def makeQIcon(*filenames):
+    """A Shortcut to construct a QIcon which has multiple images. Try to add all sizes
+    (xx.png & xx-big.png & xx-mega.png) when only one filename supplied."""
+    ico = QIcon()
+    if len(filenames) == 1:
+        fname = filenames[0]
+        ico.addFile(fname)
+        assert '.' in fname
+        b, ext = fname.rsplit('.')
+        # they fails silently when file not exist
+        ico.addFile(b + '-big.' + ext)
+        ico.addFile(b + '-mega.' + ext)
+    else:
+        for i in filenames:
+            ico.addFile(i)
+    return ico
+
+
 class Fonts:
     """Manage all fonts used in application"""
     def __init__(self):
@@ -227,10 +245,7 @@ def init():
     app.lastWindowClosed.connect(saveSettings)
     logging.debug('DPI scale ratio %s' % getDpiScaleRatio())
 
-    ico = QIcon()
-    for i in [16, 64]:
-        ico.addFile(':/appicon-%d.png' % i)
-    app.setWindowIcon(ico)
+    app.setWindowIcon(makeQIcon(':/appicon-16.png', ':/appicon-64.png'))
 
     setTranslationLocale()
     global font

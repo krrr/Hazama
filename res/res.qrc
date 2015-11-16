@@ -8,8 +8,8 @@
     <file>search-clr-big.png</file>
     <file>clock.png</file>
     <file>check.png</file>
-    <file>calendar-32.png</file>
-    <file>tag-32.png</file>
+    <file>calendar.png</file>
+    <file>tag.png</file>
 
     <file>default.qss</file>
     <file>theme.colorful.qss</file>
@@ -33,12 +33,19 @@
   </qresource>
 
   <qresource>
-    <file>menu/list_delete.png</file>
+    <file>menu/list-delete.png</file>
+    <file>menu/list-delete-big.png</file>
     <file>menu/random.png</file>
+    <file>menu/random-big.png</file>
     <file>menu/highlight.png</file>
+    <file>menu/highlight-mega.png</file>
     <file>menu/strikeout.png</file>
+    <file>menu/strikeout-mega.png</file>
     <file>menu/underline.png</file>
+    <file>menu/underline-mega.png</file>
     <file>menu/italic.png</file>
+    <file>menu/italic-mega.png</file>
     <file>menu/bold.png</file>
+    <file>menu/bold-mega.png</file>
   </qresource>
 </RCC>

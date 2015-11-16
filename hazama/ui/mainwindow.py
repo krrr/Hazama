@@ -2,7 +2,7 @@ from PySide.QtGui import *
 from PySide.QtCore import *
 import logging
 from hazama.ui import (font, setTranslationLocale, winDwmExtendWindowFrame, getDpiScaleRatio,
-                       fixWidgetSizeOnHiDpi)
+                       fixWidgetSizeOnHiDpi, makeQIcon)
 from hazama.ui.customwidgets import QLineEditWithMenuIcon
 from hazama.ui.configdialog import ConfigDialog
 from hazama.ui.mainwindow_ui import Ui_mainWindow
@@ -251,10 +251,8 @@ class SearchBox(QLineEditWithMenuIcon):
         self.setTextMargins(QMargins(2, 0, sz.width(), 0))
 
         self._isTextBefore = True
-        self._searchIco = QIcon(':/search.png')
-        self._searchIco.addFile(':/search-big.png')
-        self._clrIco = QIcon(':/search-clr.png')
-        self._clrIco.addFile(':/search-clr-big.png')
+        self._searchIco = makeQIcon(':/search.png')
+        self._clrIco = makeQIcon(':/search-clr.png')
         self._updateIco('')  # initialize the icon
 
         self._delay = QTimer(self)
