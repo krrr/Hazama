@@ -30,7 +30,7 @@ class Editor(QWidget, Ui_editor):
         self.textEditor.setAutoIndent(
             settings['Editor'].getboolean('autoIndent'))
 
-        self.dtLabel.setFont(font.datetime)
+        self.dtBtn.setFont(font.datetime)
         sz = max(font.datetime_m.ascent(), 12)
         self.dtBtn.setIconSize(QSize(sz, sz))
 
@@ -94,7 +94,7 @@ class Editor(QWidget, Ui_editor):
             newDtStr = newDt.toString(dbDatetimeFmt)
             if newDtStr != self.datetime:
                 self.datetime = newDtStr
-                self.dtLabel.setText(datetimeTrans(newDtStr))
+                self.dtBtn.setText(datetimeTrans(newDtStr))
                 self.timeModified = True
 
     def fromNikkiDict(self, dic):
@@ -102,7 +102,7 @@ class Editor(QWidget, Ui_editor):
         self.id = dic['id']
         self.datetime = dic.get('datetime')
 
-        self.dtLabel.setText(datetimeTrans(self.datetime) if self.datetime else '')
+        self.dtBtn.setText(datetimeTrans(self.datetime) if self.datetime else '')
         self.titleEditor.setText(dic.get('title', ''))
         self.tagEditor.setText(dic.get('tags', ''))
         self.textEditor.setRichText(dic.get('text', ''), dic.get('formats'))
