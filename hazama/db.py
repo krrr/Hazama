@@ -1,8 +1,8 @@
 ﻿import sqlite3
 import os
 import shutil
-from datetime import date, timedelta
 import logging
+from datetime import date, timedelta
 
 
 # template used to format txt file
@@ -122,7 +122,7 @@ class Nikki:
                     tags=tags, formats=formats)
 
     def exporttxt(self, path, selected=None):
-        """Export to TXT file using template(string format).
+        """Export to TXT file using template (python string formatting).
         If selected contains diary dictionaries, only export diaries in it."""
         file = open(path, 'w', encoding='utf-8')
         try:
@@ -153,8 +153,7 @@ class Nikki:
 
     def _gettagid(self, name):
         """Get tag-id by name"""
-        return self._exe('SELECT id FROM Tags WHERE name=?',
-                         (name,)).fetchone()[0]
+        return self._exe('SELECT id FROM Tags WHERE name=?', (name,)).fetchone()[0]
 
     def changetagname(self, oldname, name):
         self._exe('UPDATE Tags SET name=? WHERE name=?', (name, oldname))
@@ -162,11 +161,10 @@ class Nikki:
 
     def save(self, id, datetime, title, tags, text, formats, batch=False):
         """
-        arguments:
-        id - if id is -1, then add a new diary. Else update matched diary
-        tags - string contains tags separated by space. if tags is None,
-               skip saving tags.
-        batch - commit will be skipped if True
+        :param id: if id is -1, then add a new diary. Else update matched diary
+        :param tags: None (skip saving tags) or a string contains space-separated tags
+        :param batch: commit will be skipped if True
+        :return: the id of saved diary if not batch, else None
         """
         new = id == -1
         id = self.getnewid() if new else id
@@ -221,7 +219,7 @@ def list_backups():
         files = sorted(os.listdir('backup'))
     except FileNotFoundError:
         return []
-    fil = lambda x: (len(x) > 10) and (x[4] == x[7] == '-') and (x[10] == '_')
+    fil = lambda x: len(x)>10 and x[4]==x[7]=='-' and x[10]=='_'
     return list(filter(fil, files))
 
 

@@ -64,6 +64,7 @@ def setTranslationLocale():
     timeFmt = settings['Main'].get('timeFormat')
     dateFmt = settings['Main'].get('dateFormat', locale.dateFormat())
     datetimeFmt = (dateFmt + ' ' + timeFmt) if timeFmt else dateFmt
+    # use hh:mm because locale.timeFormat will include seconds
     fullDatetimeFmt = dateFmt + ' ' + (timeFmt or 'hh:mm')
 
 
