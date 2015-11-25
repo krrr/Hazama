@@ -1,0 +1,9 @@
+QWidget#editor {
+    background-color: #EEEBD0;
+}
+
+QFrame#NListItem {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 #F2F0DE,
+        stop:1 #EBE8C9);
+}

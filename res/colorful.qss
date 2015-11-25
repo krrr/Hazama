@@ -1,3 +1,6 @@
+/* This file contains base of theme colorful and "green" color scheme, and other
+   color scheme QSS should override this. */
+
 QMainWindow QSplitter::handle {background: #979A9B}
 QListView#tList {
     padding-top: 3px;

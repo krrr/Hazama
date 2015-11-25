@@ -27,9 +27,10 @@ def currentDatetime():
 
 def readRcTextFile(path):
     """Read whole text file from qt resources system."""
+    assert path.startswith(':/')
     f = QFile(path)
     if not f.open(QFile.ReadOnly | QFile.Text):
-        raise Exception('read rc text failed')
+        raise FileNotFoundError('failed to read rc text %s' % path)
     text = str(f.readAll())
     f.close()
     return text
@@ -112,9 +113,11 @@ def setStyleSheet():
     else:
         ss = [readRcTextFile(':/default.qss')]
         # append theme part
-        theme = settings['Main'].get('theme')
-        if theme == 'colorful':
-            ss.append(readRcTextFile(':/theme.colorful.qss'))
+        if settings['Main']['theme'] == 'colorful':
+            ss.append(readRcTextFile(':/colorful.qss'))
+            scheme = settings['ThemeColorful']['colorScheme']
+            if scheme != 'green':
+                ss.append(readRcTextFile(':/colorful-%s.qss' % scheme))
         # load custom
         if os.path.isfile('custom.qss'):
             logging.info('set custom StyleSheet')

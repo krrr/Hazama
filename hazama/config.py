@@ -11,7 +11,8 @@ settings.update({
              'tagListCount': True, 'extendTitleBarBg': False, 'previewLines': 4,
              'listSortBy': 'datetime', 'listReverse': True, 'tagListVisible': False},
     'Editor': {'autoIndent': True, 'titleFocus': False},
-    'Font': {}
+    'Font': {},
+    'ThemeColorful': {'colorScheme': 'green'}
 })
 
 nikki = db.Nikki()

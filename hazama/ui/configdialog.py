@@ -11,6 +11,7 @@ from hazama.config import settings
 languages = {'en': 'English', 'zh_CN': '简体中文', 'ja_JP': '日本語'}
 languagesR = {b: a for a, b in languages.items()}
 themes = ['1px-rect', 'colorful']
+colorfulSchemes = ['green', 'yellow', 'white']
 
 
 class ConfigDialog(QDialog, Ui_configDialog):
@@ -54,9 +55,15 @@ class ConfigDialog(QDialog, Ui_configDialog):
         self.rstCombo.model().item(0).setSelectable(False)
         self.rstCombo.addItems(db.list_backups())
         self.themeCombo.addItems(themes)
-        self.themeCombo.setCurrentIndex(
-            themes.index(settings['Main']['theme']))
+        self.themeCombo.setCurrentIndex(themes.index(settings['Main']['theme']))
         self.preLinesBox.setValue(settings['Main'].getint('previewLines'))
+        # theme specific
+        if settings['Main']['theme'] == '1px-rect':
+            self._disableThemeSpe()
+        else:
+            self._enableThemeSpe()
+        self.themeCombo.currentIndexChanged.connect(
+            lambda idx: self._enableThemeSpe() if idx != 0 else self._disableThemeSpe())
         # setup font buttons & load settings(fonts)
         self.defFontGBox.setChecked('default' in settings['Font'])
         self.dtFontBtn.configName = 'datetime'
@@ -67,7 +74,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
                         self.defFontBtn)
         ratio = getDpiScaleRatio(False)
         for i in self.buttons:
-            i.clicked.connect(self.handleFontBtn)
+            i.clicked.connect(self._handleFontBtn)
             self._setFontButton(i, getattr(font, i.configName))
             if ratio > 1:
                 i.setMinimumWidth((i.minimumWidth() * ratio))
@@ -79,12 +86,12 @@ class ConfigDialog(QDialog, Ui_configDialog):
 
     def accept(self):
         # special pairs that need trigger signal or call functions
-        langPrev = settings['Main'].get('lang', 'en')
         lang = languagesR[self.langCombo.currentText()]
-        themePrev = settings['Main']['theme']
+        langChanged = lang != settings['Main'].get('lang', 'en')
         theme = self.themeCombo.currentText()
-        extendPrev = settings['Main'].getboolean('extendTitleBarBg')
+        themeChanged = theme != settings['Main']['theme']
         extend = self.extendBgCheck.isChecked()
+        extendChanged = extend != settings['Main'].getboolean('extendTitleBarBg')
 
         settings['Main']['lang'] = lang
         settings['Main']['theme'] = theme
@@ -97,15 +104,23 @@ class ConfigDialog(QDialog, Ui_configDialog):
         for i in self.buttons:
             settings['Font'][i.configName] = i.font().toString()
 
+        schemeChanged = False
+        scheme = self.schemeCombo.currentText()
+        if theme == 'colorful':
+            schemeChanged = scheme != settings['ThemeColorful']['colorScheme']
+            settings['ThemeColorful']['colorScheme'] = scheme
+
         if not self.defFontGBox.isChecked() and 'default' in settings['Font']:
             del settings['Font']['default']
         font.load()
 
-        # deal with special pairs
-        if langPrev != lang: self.langChanged.emit()
-        # this change dynamic property, so emit it before setStyleSheet
-        if extendPrev != extend: self.extendBgChanged.emit()
-        if themePrev != theme or extendPrev != extend: setStyleSheet()
+        if langChanged:
+            self.langChanged.emit()
+        if extendChanged:
+            # this change dynamic property, so emit it before setStyleSheet
+            self.extendBgChanged.emit()
+        if themeChanged or schemeChanged or extendChanged:
+            setStyleSheet()
 
         logging.info('settings changed')
         self.accepted.emit()
@@ -153,7 +168,21 @@ class ConfigDialog(QDialog, Ui_configDialog):
         else:
             self.rstCombo.setCurrentIndex(0)
 
-    def handleFontBtn(self):
+    def _disableThemeSpe(self):
+        for i in [self.schemeCombo, self.schemeLabel]:
+            i.setDisabled(True)
+        self.schemeCombo.clear()
+
+    def _enableThemeSpe(self):
+        theme = self.themeCombo.currentText()
+        for i in [self.schemeCombo, self.schemeLabel]:
+            i.setEnabled(True)
+        if theme == 'colorful':
+            self.schemeCombo.addItems(colorfulSchemes)
+            scm = settings['ThemeColorful']['colorScheme']
+            self.schemeCombo.setCurrentIndex(colorfulSchemes.index(scm))
+
+    def _handleFontBtn(self):
         btn = self.sender()
         dlg = QFontDialog(self)
         dlg.setCurrentFont(btn.font())
