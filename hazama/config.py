@@ -28,6 +28,8 @@ def changeCWD():
     # user will not care about CWD because this is GUI application?
     if '-portable' in sys.argv:
         os.chdir(appPath)
+    elif os.path.isfile(os.path.join(appPath, 'config.ini')):
+        os.chdir(appPath)
     else:
         if sys.platform == 'win32':
             p = os.path.join(os.environ['APPDATA'], 'Hazama')
