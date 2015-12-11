@@ -124,10 +124,19 @@ class MainWindow(QMainWindow, Ui_mainWindow):
     @Slot()
     def on_cfgAct_triggered(self):
         """Start config dialog"""
+        # prepare dates now for statistics if has appropriate order
+        # those codes only save 10 milliseconds (600 diaries)
+        datetimeRange = None
+        if settings['Main']['listSortBy'] == 'datetime':
+            m = self.nList.model()
+            datetimeRange = m.data(m.index(0, 1)), m.data(m.index(m.rowCount()-1, 1))
+            if settings['Main'].getboolean('listReverse'):
+                datetimeRange = datetimeRange[::-1]
+
         try:
             self.cfgDialog.activateWindow()
         except (AttributeError, RuntimeError):
-            self.cfgDialog = ConfigDialog(self)
+            self.cfgDialog = ConfigDialog(self, diaryDtRange=datetimeRange)
             self.cfgDialog.langChanged.connect(self.retranslate)
             self.cfgDialog.bkRestored.connect(self.nList.reload)
             self.cfgDialog.accepted.connect(self.nList.setDelegateOfTheme)

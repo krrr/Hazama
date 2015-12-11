@@ -5,7 +5,7 @@ from hazama import __version__, db
 from hazama.ui import (font, setStyleSheet, readRcTextFile, isDwmUsable, getDpiScaleRatio,
                        fixWidgetSizeOnHiDpi)
 from hazama.ui.configdialog_ui import Ui_configDialog
-from hazama.config import settings
+from hazama.config import settings, nikki
 
 
 languages = {'en': 'English', 'zh_CN': '简体中文', 'ja_JP': '日本語'}
@@ -20,7 +20,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
     accepted = Signal()
     extendBgChanged = Signal()
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, diaryDtRange=None):
         super(ConfigDialog, self).__init__(parent, Qt.WindowTitleHint)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setupUi(self)
@@ -78,6 +78,16 @@ class ConfigDialog(QDialog, Ui_configDialog):
             self._setFontButton(i, getattr(font, i.configName))
             if ratio > 1:
                 i.setMinimumWidth((i.minimumWidth() * ratio))
+        # setup statistics
+        if not diaryDtRange:
+            diaryDtRange = nikki.get_datetime_range()
+        diaryQtDateRange = tuple(map(lambda x: QDateTime.fromString(x, 'yyyy-MM-dd HH:mm'),
+                                     diaryDtRange))
+        days = diaryQtDateRange[0].daysTo(diaryQtDateRange[1])
+        freq = round(1 / (len(nikki) / days), 1)
+        oldest, newest = map(lambda x: x[:7], diaryDtRange)
+        self.staLabel.setText(self.tr('Every <b>%s</b> days a diary, from <b>%s</b> to <b>%s</b>') %
+                              (freq, oldest, newest))
 
     def showEvent(self, event):
         # set minimum height of aboutBrowser according to its contents

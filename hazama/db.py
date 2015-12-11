@@ -204,6 +204,9 @@ class Nikki:
     def getpath(self):
         return self._path
 
+    def get_datetime_range(self):
+        return self._exe('SELECT min(datetime), max(datetime) from Nikki').fetchone()
+
     @classmethod
     def setinstance(cls, instance):
         assert cls._instance is None
