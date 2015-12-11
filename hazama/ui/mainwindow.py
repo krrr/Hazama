@@ -132,13 +132,7 @@ class MainWindow(QMainWindow, Ui_mainWindow):
             self.cfgDialog.bkRestored.connect(self.nList.reload)
             self.cfgDialog.accepted.connect(self.nList.setDelegateOfTheme)
             self.cfgDialog.accepted.connect(self.tList.setDelegateOfTheme)
-
             self.cfgDialog.extendBgChanged.connect(self.onExtendTitleBarBgChanged)
-            # trick on connect accepted to show: it will call showEvent to
-            # call DWM API after onExtendTitleBarBgChanged caused StyleSheet
-            # changed and hide the window
-            self.cfgDialog.accepted.connect(self.show)
-
             self.cfgDialog.show()
 
     @Slot()
@@ -188,7 +182,12 @@ class MainWindow(QMainWindow, Ui_mainWindow):
     def onExtendTitleBarBgChanged(self):
         self.toolBar.setProperty(
             'extendTitleBar', settings['Main'].getboolean('extendTitleBarBg'))
-        self.hide()
+        self._applyExtendTitleBarBg()
+
+    def _applyExtendTitleBarBg(self):
+        if (settings['Main'].getboolean('extendTitleBarBg') and
+                winDwmExtendWindowFrame(self.winId(), self.toolBar.height())):
+            self.setAttribute(Qt.WA_TranslucentBackground)
 
     def sortOrderChanged(self, checked):
         name = self.sender().name
@@ -209,10 +208,7 @@ class MainWindow(QMainWindow, Ui_mainWindow):
 
     def showEvent(self, event):
         # style polished, we can get correct height of toolbar now
-        if (settings['Main'].getboolean('extendTitleBarBg') and
-           winDwmExtendWindowFrame(self.winId(), self.toolBar.height())):
-            self.setAttribute(Qt.WA_TranslucentBackground)
-
+        self._applyExtendTitleBarBg()
         self.nList.setFocus()
 
     def updateCountLabel(self):
