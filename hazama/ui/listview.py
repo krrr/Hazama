@@ -1,9 +1,10 @@
 """Main List and TagList, and their delegates.
 """
-from PySide.QtGui import *
-from PySide.QtCore import *
 import logging
 import random
+from collections import OrderedDict
+from PySide.QtGui import *
+from PySide.QtCore import *
 from hazama.ui import font, datetimeTrans, getDpiScaleRatio, makeQIcon
 from hazama.ui.editor import Editor
 from hazama.ui.customobjects import NTextDocument, MultiSortFilterProxyModel
@@ -483,7 +484,7 @@ class NikkiList(QListView):
                                shortcut=QKeySequence(Qt.Key_F7), triggered=self.selectRandomly)
         for i in [self.editAct, self.delAct, self.randAct]: self.addAction(i)
         # setup editors
-        self.editors = {}
+        self.editors = OrderedDict()  # diaryId => Editor, id of new diary is -1
         self.doubleClicked.connect(self.startEditor)
         self.activated.connect(self.startEditor)
 
@@ -505,30 +506,32 @@ class NikkiList(QListView):
 
     def startEditor(self):
         dic = self._getNikkiDict(self.currentIndex())
-        _id = dic['id']
-        if _id in self.editors:
-            self.editors[_id].activateWindow()
+        id_ = dic['id']
+        if id_ in self.editors:
+            self.editors[id_].activateWindow()
         else:
-            editor = Editor(nikkiDict=dic)
-            self.editors[_id] = editor
-            editor.closed.connect(self.closeEditor)
-            editor.preSc.activated.connect(lambda: self._editorMove(-1))
-            editor.nextSc.activated.connect(lambda: self._editorMove(1))
-            editor.show()
-            return _id
+            e = Editor(nikkiDict=dic)
+            self._setEditorStaggerPos(e)
+            self.editors[id_] = e
+            e.closed.connect(self.closeEditor)
+            e.preSc.activated.connect(lambda: self._editorMove(-1))
+            e.nextSc.activated.connect(lambda: self._editorMove(1))
+            e.show()
+            return id_
 
     def startEditorNew(self):
         if -1 in self.editors:
             self.editors[-1].activateWindow()
         else:
-            editor = Editor(nikkiDict={'id': -1})
-            self.editors[-1] = editor
-            editor.closed.connect(self.closeEditor)
-            editor.show()
+            e = Editor(nikkiDict={'id': -1})
+            self._setEditorStaggerPos(e)
+            self.editors[-1] = e
+            e.closed.connect(self.closeEditor)
+            e.show()
 
-    def closeEditor(self, id, needSave):
+    def closeEditor(self, id_, needSave):
         """Write editor's data to model and database, and destroy editor"""
-        editor = self.editors[id]
+        editor = self.editors[id_]
         if needSave:
             qApp.setOverrideCursor(QCursor(Qt.WaitCursor))
             dic = editor.toNikkiDict()
@@ -542,11 +545,18 @@ class NikkiList(QListView):
             self.setCurrentIndex(self.modelProxy.mapFromSource(
                 self.originModel.index(row, 0)))
 
-            if id == -1: self.countChanged.emit()  # new diary
+            if id_ == -1: self.countChanged.emit()  # new diary
             if editor.tagModified: self.tagsChanged.emit()
             qApp.restoreOverrideCursor()
         editor.deleteLater()
-        del self.editors[id]
+        del self.editors[id_]
+
+    def _setEditorStaggerPos(self, editor):
+        if self.editors:
+            lastOpenEditor = list(self.editors.values())[-1]
+            pos = lastOpenEditor.pos() + QPoint(16, 16) * getDpiScaleRatio()
+            # can't check available screen space because of bug in pyside
+            editor.move(pos)
 
     def load(self):
         self.startLoading.emit()
