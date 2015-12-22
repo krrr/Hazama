@@ -9,7 +9,7 @@
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU General Public License for more details.
-__version__ = '0.40.2'
+__version__ = '0.41'
 __desc__ = 'A simple cross-platform diary application'
 __author__ = 'krrr'
 
