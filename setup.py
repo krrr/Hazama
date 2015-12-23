@@ -94,7 +94,7 @@ class BuildExe(Command):
         # remaining let cx_freeze generate hazama.exe
         os.rename('main.py', 'hazama.py')
         try:
-            spawn(['python', pjoin('utils', 'setupfreeze.py'), 'build_exe'])
+            spawn([sys.executable, pjoin('utils', 'setupfreeze.py'), 'build_exe'])
         finally:
             os.rename('hazama.py', 'main.py')
         # remove duplicate python DLL
