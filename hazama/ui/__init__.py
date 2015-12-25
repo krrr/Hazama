@@ -249,7 +249,7 @@ def init():
     app.lastWindowClosed.connect(saveSettings)
     logging.debug('DPI scale ratio %s' % getDpiScaleRatio())
 
-    app.setWindowIcon(makeQIcon(':/appicon-16.png', ':/appicon-64.png'))
+    app.setWindowIcon(makeQIcon(':/appicon-24.png', ':/appicon-48.png', ':/appicon-64.png'))
 
     setTranslationLocale()
     global font
