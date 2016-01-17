@@ -3,7 +3,7 @@ import os
 import time
 import logging
 from PySide.QtGui import QApplication, QIcon, QFont, QFontMetrics, QMessageBox
-from PySide.QtCore import QLocale, QTranslator, QLibraryInfo, QDateTime, QFile
+from PySide.QtCore import QLocale, QTranslator, QLibraryInfo, QDateTime, QFile, QRect
 import hazama.ui.rc
 from hazama.config import settings, appPath, saveSettings
 
@@ -172,10 +172,31 @@ def getDpiScaleRatio():
 
 
 def fixWidgetSizeOnHiDpi(widget):
-    """Simply resize those hardcoded sizes (at ratio 1.0), and ignore sizes changed by user.
-    Because per-monitor DPI aware is not supported, user's size will be saved
-    directly."""
-    widget.resize(widget.size() * getDpiScaleRatio())
+    """Simply resize current size according to DPI."""
+    ratio = getDpiScaleRatio()
+    if ratio > 1:
+        widget.resize(widget.size() * ratio)
+
+
+def saveWidgetGeo(widget):
+    # ignore Qt's saveGeometry because we need to modify size without hiding window
+    geo = widget.geometry()
+    w, h = geo.width(), geo.height()
+
+    ratio = getDpiScaleRatio()
+    if ratio > 1:
+        w, h = round(w / ratio), round(h / ratio)
+
+    return ','.join(map(str, [geo.x(), geo.y(), w, h]))
+
+
+def restoreWidgetGeo(widget, geoStr):
+    # old version used widget.saveGeometry().toHex() and has no "," in it
+    if geoStr and ',' in geoStr:
+        rect = QRect(*map(int, geoStr.split(',')))
+        widget.setGeometry(rect)
+
+    fixWidgetSizeOnHiDpi(widget)
 
 
 def makeQIcon(*filenames):

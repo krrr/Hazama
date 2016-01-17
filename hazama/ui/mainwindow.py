@@ -2,7 +2,7 @@ from PySide.QtGui import *
 from PySide.QtCore import *
 import logging
 from hazama.ui import (font, setTranslationLocale, winDwmExtendWindowFrame, getDpiScaleRatio,
-                       fixWidgetSizeOnHiDpi, makeQIcon)
+                       makeQIcon, saveWidgetGeo, restoreWidgetGeo)
 from hazama.ui.customwidgets import QLineEditWithMenuIcon
 from hazama.ui.configdialog import ConfigDialog
 from hazama.ui.mainwindow_ui import Ui_mainWindow
@@ -15,11 +15,7 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         super(MainWindow, self).__init__()
         self.setupUi(self)
         self.cfgDialog = self.heatMap = None  # create on on_cfgAct_triggered
-        geo = settings['Main'].get('windowGeo')
-        if geo:
-            self.restoreGeometry(QByteArray.fromHex(geo))
-        else:
-            fixWidgetSizeOnHiDpi(self)
+        restoreWidgetGeo(self, settings['Main'].get('windowGeo'))
         # setup toolbar bg, the second stage is in showEvent
         self.toolBar.setProperty(
             'extendTitleBar', settings['Main'].getboolean('extendTitleBarBg'))
@@ -107,7 +103,7 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         self.sorAct.setMenu(menu)
 
     def closeEvent(self, event):
-        settings['Main']['windowGeo'] = str(self.saveGeometry().toHex())
+        settings['Main']['windowGeo'] = saveWidgetGeo(self)
         tListVisible = self.tList.isVisible()
         settings['Main']['tagListVisible'] = str(tListVisible)
         if tListVisible:

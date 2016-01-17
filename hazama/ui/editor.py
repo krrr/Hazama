@@ -3,7 +3,8 @@ from PySide.QtCore import *
 from hazama.ui.editor_ui import Ui_editor
 from hazama.ui.customobjects import TagCompleter
 from hazama.ui.customwidgets import DateTimeDialog
-from hazama.ui import font, datetimeTrans, currentDatetime, fullDatetimeFmt, fixWidgetSizeOnHiDpi
+from hazama.ui import (font, datetimeTrans, currentDatetime, fullDatetimeFmt,
+                       saveWidgetGeo, restoreWidgetGeo)
 from hazama.config import settings, nikki
 
 
@@ -18,11 +19,7 @@ class Editor(QWidget, Ui_editor):
         super(Editor, self).__init__(*args, **kwargs)
         self.setupUi(self)
         self.datetime = self.id = self.timeModified = self.tagModified = None
-        geo = settings['Editor'].get('windowGeo')
-        if geo:
-            self.restoreGeometry(QByteArray.fromHex(geo))
-        else:
-            fixWidgetSizeOnHiDpi(self)
+        restoreWidgetGeo(self, settings['Editor'].get('windowGeo'))
 
         self.titleEditor.setFont(font.title)
         self.titleEditor.returnPressed.connect(lambda: self.textEditor.setFocus())
@@ -57,12 +54,12 @@ class Editor(QWidget, Ui_editor):
 
     def closeEvent(self, event):
         """Normal close will save diary. For cancel operation, call closeNoSave."""
-        settings['Editor']['windowGeo'] = str(self.saveGeometry().toHex())
+        settings['Editor']['windowGeo'] = saveWidgetGeo(self)
         self.closed.emit(self.id, self.needSave())
         event.accept()
 
     def closeNoSave(self):
-        settings['Editor']['windowGeo'] = str(self.saveGeometry().toHex())
+        settings['Editor']['windowGeo'] = saveWidgetGeo(self)
         self.hide()  # avoid closeEvent
         self.closed.emit(self.id, False)
 
