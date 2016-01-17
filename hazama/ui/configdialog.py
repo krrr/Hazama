@@ -72,7 +72,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
         self.defFontBtn.configName = 'default'
         self.buttons = (self.dtFontBtn, self.titleFontBtn, self.textFontBtn,
                         self.defFontBtn)
-        ratio = getDpiScaleRatio(False)
+        ratio = getDpiScaleRatio()
         for i in self.buttons:
             i.clicked.connect(self._handleFontBtn)
             self._setFontButton(i, getattr(font, i.configName))

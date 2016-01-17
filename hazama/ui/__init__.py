@@ -166,19 +166,16 @@ def isDwmUsable():
     return True
 
 
-def getDpiScaleRatio(forceMultipleOf25=True):
+def getDpiScaleRatio():
     dpi = QApplication.instance().desktop().logicalDpiX()  # when will x != y happen?
-    ratio = dpi / 96
-    if forceMultipleOf25 and round(ratio % .25, 2) != 0:
-        ratio = round(ratio - ratio % .25, 2)
-    return ratio
+    return dpi / 96
 
 
 def fixWidgetSizeOnHiDpi(widget):
     """Simply resize those hardcoded sizes (at ratio 1.0), and ignore sizes changed by user.
     Because per-monitor DPI aware is not supported, user's size will be saved
     directly."""
-    widget.resize(widget.size() * getDpiScaleRatio(False))
+    widget.resize(widget.size() * getDpiScaleRatio())
 
 
 def makeQIcon(*filenames):
