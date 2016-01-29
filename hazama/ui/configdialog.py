@@ -31,7 +31,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
         self.aboutBrowser.setHtml(about)
         self.aboutBrowser.document().setDocumentMargin(0)
         self.openOutBtn.hide()  # can't set initial state in creator
-        self.appIcoLabel.setFixedSize(QSize(32, 32) * getDpiScaleRatio())
+        self.appIcoLabel.setPixmap(qApp.windowIcon().pixmap(QSize(32, 32) * getDpiScaleRatio()))
         # load settings
         self.aindCheck.setChecked(settings['Editor'].getboolean('autoIndent'))
         self.tListCountCheck.setChecked(settings['Main'].getboolean('tagListCount'))

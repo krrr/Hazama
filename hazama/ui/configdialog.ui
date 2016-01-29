@@ -203,10 +203,7 @@
           <item>
            <widget class="QLabel" name="appIcoLabel">
             <property name="pixmap">
-             <pixmap resource="../../res/res.qrc">:/appicon-64.png</pixmap>
-            </property>
-            <property name="scaledContents">
-             <bool>true</bool>
+             <pixmap resource="../../res/res.qrc">:/appicon-48.png</pixmap>
             </property>
            </widget>
           </item>
