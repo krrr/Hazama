@@ -22,7 +22,8 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         self.toolBar.setIconSize(QSize(24, 24) * getDpiScaleRatio())
 
         # setup TagList width
-        tListW = settings['Main'].getint('tagListWidth', int(self.width() * 0.2))
+        tListW = settings['Main'].getint('tagListWidth')
+        tListW = tListW * getDpiScaleRatio() if tListW else int(self.width() * 0.2)
         if not self.isMaximized():
             self.splitter.setSizes([tListW, self.width()-tListW])
         # setup sort menu
@@ -107,7 +108,7 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         tListVisible = self.tList.isVisible()
         settings['Main']['tagListVisible'] = str(tListVisible)
         if tListVisible:
-            settings['Main']['tagListWidth'] = str(self.splitter.sizes()[0])
+            settings['Main']['tagListWidth'] = str(int(self.splitter.sizes()[0] / getDpiScaleRatio()))
         event.accept()
 
     def retranslate(self):
@@ -209,7 +210,7 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         else:
             self.nList.setFilterByTag('')
             self.tList.clear()
-            settings['Main']['tagListWidth'] = str(self.splitter.sizes()[0])
+            settings['Main']['tagListWidth'] = str(int(self.splitter.sizes()[0] / getDpiScaleRatio()))
 
     def showEvent(self, event):
         # style polished, we can get correct height of toolbar now
