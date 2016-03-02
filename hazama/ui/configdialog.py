@@ -20,7 +20,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
     accepted = Signal()
     extendBgChanged = Signal()
 
-    def __init__(self, parent=None, diaryDtRange=None):
+    def __init__(self, parent=None):
         super(ConfigDialog, self).__init__(parent, Qt.WindowTitleHint)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setupUi(self)
@@ -79,15 +79,30 @@ class ConfigDialog(QDialog, Ui_configDialog):
             if ratio > 1:
                 i.setMinimumWidth((i.minimumWidth() * ratio))
         # setup statistics
-        if not diaryDtRange:
+        diaryCount = len(nikki)
+        if diaryCount < 2:
+            diaryDtRange = None
+        elif settings['Main']['listSortBy'] == 'datetime' and parent:
+            # only save 10 milliseconds (600 diaries)
+            m = parent.findChild(QListView, 'nList').model()
+            diaryDtRange = m.data(m.index(0, 1)), m.data(m.index(m.rowCount()-1, 1))
+            if settings['Main'].getboolean('listReverse'):
+                diaryDtRange = diaryDtRange[::-1]
+        else:
             diaryDtRange = nikki.get_datetime_range()
-        diaryQtDateRange = tuple(map(lambda x: QDateTime.fromString(x, 'yyyy-MM-dd HH:mm'),
-                                     diaryDtRange))
-        days = diaryQtDateRange[0].daysTo(diaryQtDateRange[1])
-        freq = round(1 / (len(nikki) / days), 1)
-        oldest, newest = map(lambda x: x[:7], diaryDtRange)
-        self.staLabel.setText(self.tr('Every <b>%s</b> days a diary, from <b>%s</b> to <b>%s</b>') %
-                              (freq, oldest, newest))
+        if diaryDtRange:
+            qRange = tuple(map(lambda x: QDateTime.fromString(x, 'yyyy-MM-dd HH:mm'),
+                                         diaryDtRange))
+            days = qRange[0].daysTo(qRange[1])
+        else:
+            days = 0
+        if days > 0:
+            freq = round(1 / (diaryCount / days), 1)
+            oldest, newest = map(lambda x: x[:7], diaryDtRange)
+            self.staLabel.setText(self.tr('Every <b>%s</b> days a diary, from <b>%s</b> to <b>%s</b>') %
+                                  (freq, oldest, newest))
+        else:
+            self.staLabel.setText(self.tr('N/A'))
 
     def showEvent(self, event):
         # set minimum height of aboutBrowser according to its contents
