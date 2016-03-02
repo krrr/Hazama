@@ -150,20 +150,21 @@ def winDwmExtendWindowFrame(winId, topMargin):
 
 def isDwmUsable():
     """Check whether winDwmExtendWindowFrame usable."""
-    if sys.platform != 'win32': return False
-    from ctypes import byref, windll, c_bool
-    # check if DWM enabled
-    ver = sys.getwindowsversion()
-    # potential bug: windows 8 or later always have DWM enabled,
-    # but API used below depends on manifest file. so check version
-    if ver.major <= 6 and ver.minor <= 1:  # Windows is 7 or older
+    if sys.platform != 'win32':
+        return False
+    v = sys.getwindowsversion()
+    if (v.major, v.minor) >= (6, 2):  # >= Windows 8
+        # windows 8 or later always have DWM composition enabled, but API used below depends
+        # on manifest file (we doesn't have it)
+        return True
+    elif (v.major, v.minor) < (6, 0):  # < Windows Vista
+        return False
+    else:
+        from ctypes import byref, windll, c_bool
+
         b = c_bool()
-        try:
-            ret = windll.dwmapi.DwmIsCompositionEnabled(byref(b))
-            return ret == 0 and b.value
-        except AttributeError:  # no DWM, Windows is older than vista
-            return False
-    return True
+        ret = windll.dwmapi.DwmIsCompositionEnabled(byref(b))
+        return ret == 0 and b.value
 
 
 def getDpiScaleRatio():
