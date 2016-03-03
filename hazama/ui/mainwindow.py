@@ -174,6 +174,7 @@ class MainWindow(QMainWindow, Ui_mainWindow):
             self.heatMap.move(self.pos())
             self.heatMap.setWindowFlags(Qt.Window | Qt.WindowTitleHint)
             self.heatMap.setWindowTitle('HeatMap')
+            self.heatMap.move(self.pos() + QPoint(12, 12)*getDpiScaleRatio())
             self.heatMap.show()
 
     def onExtendTitleBarBgChanged(self):
