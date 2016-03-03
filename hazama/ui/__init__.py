@@ -5,7 +5,7 @@ import logging
 from PySide.QtGui import QApplication, QIcon, QFont, QFontMetrics, QMessageBox
 from PySide.QtCore import QLocale, QTranslator, QLibraryInfo, QDateTime, QFile, QRect
 import hazama.ui.rc
-from hazama.config import settings, appPath, saveSettings
+from hazama.config import settings, appPath, saveSettings, isWin, isWin7OrLater, isWinVistaOrLater
 
 
 locale = None
@@ -236,9 +236,7 @@ class Fonts:
         self.datetime_m = QFontMetrics(self.datetime, None)
         self.text.fromString(settings['Font'].get('text'))
         self.text_m = QFontMetrics(self.text, None)
-        defaultFont = settings['Font'].get('default')
-        if not defaultFont:
-            defaultFont = self.getPreferredFont()
+        defaultFont = settings['Font'].get('default') or self.getPreferredFont()
         if defaultFont:
             self.default.fromString(defaultFont)
             self.default_m = QFontMetrics(self.default, None)
@@ -247,18 +245,13 @@ class Fonts:
     @staticmethod
     def getPreferredFont():
         """Return family of preferred font according to language and platform."""
-        isWin = hasattr(sys, 'getwindowsversion')
-        winVer = sys.getwindowsversion() if isWin else None
-        vistaOrLater = isWin and winVer.major >= 6
-        sevenOrLater = isWin and winVer.major >= 6 and winVer.minor >= 1
-
         if isWin and settings['Main']['theme'] == '1px-rect' and getDpiScaleRatio() == 1:
             # old theme looks well with default bitmap fonts only in normal DPI, and
             # text of radio button will be cropped in ConfigDialog
             return None
-        if isWin and sevenOrLater:
+        if isWin7OrLater:
             return {'zh_CN': 'Microsoft YaHei UI', 'ja_JP': 'Meiryo UI'}.get(locale.name())
-        elif isWin and vistaOrLater:
+        elif isWinVistaOrLater:
             return {'zh_CN': 'Microsoft YaHei', 'ja_JP': 'Meiryo'}.get(locale.name())
         return None
 

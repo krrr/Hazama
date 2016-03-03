@@ -4,16 +4,27 @@ import sys
 import os
 from hazama import db
 
+
+# for default settings
+isWin = hasattr(sys, 'getwindowsversion')
+_winVer = sys.getwindowsversion() if isWin else None
+_winVer = (_winVer.major, _winVer.minor) if isWin else None
+isWinVistaOrLater = isWin and _winVer >= (6, 0)
+isWin7OrLater = isWin and _winVer >= (6, 1)
+isWin8OrLater = isWin and _winVer >= (6, 2)
+
 settings = ConfigParser()
 # set default values. some values have no defaults, such as windowGeo and tagListWidth
 settings.update({
-    'Main': {'debug': False, 'backup': True, 'dbPath': 'nikkichou.db', 'theme': '1px-rect',
-             'tagListCount': True, 'extendTitleBarBg': False, 'previewLines': 4,
+    'Main': {'debug': False, 'backup': True, 'dbPath': 'nikkichou.db',
+             'tagListCount': True, 'previewLines': 4,
              'listSortBy': 'datetime', 'listReverse': True, 'tagListVisible': False},
     'Editor': {'autoIndent': True, 'titleFocus': False},
     'Font': {},
     'ThemeColorful': {'colorScheme': 'green'}
 })
+settings['Main']['extendTitleBarBg'] = str(isWin8OrLater)  # Win8 has no aero glass
+settings['Main']['theme'] = 'colorful' if isWinVistaOrLater else '1px-rect'
 
 nikki = db.Nikki()
 
