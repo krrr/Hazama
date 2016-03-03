@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.0" language="ja_JP">
+<TS version="2.1" language="ja_JP">
 <context>
     <name>ConfigDialog</name>
     <message>
-        <location filename="../hazama/ui/configdialog.py" line="170"/>
+        <location filename="../hazama/ui/configdialog.py" line="185"/>
         <source>Restore backup</source>
         <translation>バックアップから復元</translation>
     </message>
@@ -14,17 +14,17 @@
         <translation type="obsolete">現在の日記帳はバックアップで置き換えられます。本当に復元しますか？</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog.py" line="146"/>
+        <location filename="../hazama/ui/configdialog.py" line="161"/>
         <source>Export Diary</source>
         <translation>日記のエクスポート</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog.py" line="147"/>
+        <location filename="../hazama/ui/configdialog.py" line="162"/>
         <source>Plain Text (*.txt)</source>
         <translation>テキスト (*.txt)</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog.py" line="152"/>
+        <location filename="../hazama/ui/configdialog.py" line="167"/>
         <source>Export Failed</source>
         <translation>エクスポート失敗</translation>
     </message>
@@ -44,14 +44,24 @@
         <translation>更新の確認</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog.py" line="171"/>
+        <location filename="../hazama/ui/configdialog.py" line="186"/>
         <source>Current diary book will be replaced with the backup!</source>
         <translation>現在の日記帳はバックアップで置き換えられます！</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog.py" line="90"/>
+        <location filename="../hazama/ui/configdialog.py" line="103"/>
         <source>Every &lt;b&gt;%s&lt;/b&gt; days a diary, from &lt;b&gt;%s&lt;/b&gt; to &lt;b&gt;%s&lt;/b&gt;</source>
         <translation>&lt;b&gt;%s&lt;/b&gt;日に一回の日記、&lt;b&gt;%s&lt;/b&gt;から&lt;b&gt;%s&lt;/b&gt;まで</translation>
+    </message>
+    <message>
+        <location filename="../hazama/ui/configdialog.py" line="29"/>
+        <source>website</source>
+        <translation>サイト</translation>
+    </message>
+    <message>
+        <location filename="../hazama/ui/configdialog.py" line="105"/>
+        <source>N/A</source>
+        <translation>N/A</translation>
     </message>
 </context>
 <context>
@@ -65,17 +75,17 @@
 <context>
     <name>Dialog</name>
     <message>
-        <location filename="../hazama/ui/configdialog.py" line="167"/>
+        <location filename="../hazama/ui/configdialog.py" line="182"/>
         <source>Restore</source>
         <translation>復元</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/listview.py" line="572"/>
+        <location filename="../hazama/ui/listview.py" line="582"/>
         <source>Cancel</source>
         <translation>キャンセル</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/listview.py" line="570"/>
+        <location filename="../hazama/ui/listview.py" line="580"/>
         <source>Delete</source>
         <translation>削除</translation>
     </message>
@@ -83,7 +93,7 @@
 <context>
     <name>Editor</name>
     <message>
-        <location filename="../hazama/ui/editor.py" line="112"/>
+        <location filename="../hazama/ui/editor.py" line="109"/>
         <source>New Diary</source>
         <translation>新しい日記</translation>
     </message>
@@ -133,7 +143,7 @@ Please check database path(have permission?). If it&apos;s corrupt, you may have
 <context>
     <name>HeatMap</name>
     <message>
-        <location filename="../hazama/ui/mainwindow.py" line="155"/>
+        <location filename="../hazama/ui/mainwindow.py" line="143"/>
         <source>(characters)</source>
         <translation>（文字）</translation>
     </message>
@@ -141,22 +151,22 @@ Please check database path(have permission?). If it&apos;s corrupt, you may have
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../hazama/ui/mainwindow.py" line="229"/>
+        <location filename="../hazama/ui/mainwindow.py" line="218"/>
         <source>%i diaries</source>
         <translation>%i件の日記</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/mainwindow.py" line="82"/>
+        <location filename="../hazama/ui/mainwindow.py" line="79"/>
         <source>Date</source>
         <translation>日時</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/mainwindow.py" line="84"/>
+        <location filename="../hazama/ui/mainwindow.py" line="81"/>
         <source>Title</source>
         <translation>表題</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/mainwindow.py" line="86"/>
+        <location filename="../hazama/ui/mainwindow.py" line="83"/>
         <source>Length</source>
         <translation>長さ</translation>
     </message>
@@ -166,17 +176,17 @@ Please check database path(have permission?). If it&apos;s corrupt, you may have
         <translation type="obsolete">降順</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/mainwindow.py" line="89"/>
+        <location filename="../hazama/ui/mainwindow.py" line="86"/>
         <source>Ascending</source>
         <translation>昇順</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/mainwindow.py" line="91"/>
+        <location filename="../hazama/ui/mainwindow.py" line="88"/>
         <source>Descending</source>
         <translation>降順</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/mainwindow.py" line="232"/>
+        <location filename="../hazama/ui/mainwindow.py" line="221"/>
         <source>loading...</source>
         <translation>読み込み中…</translation>
     </message>
@@ -222,17 +232,17 @@ Please check database path(have permission?). If it&apos;s corrupt, you may have
 <context>
     <name>NikkiList</name>
     <message>
-        <location filename="../hazama/ui/listview.py" line="476"/>
+        <location filename="../hazama/ui/listview.py" line="477"/>
         <source>Edit</source>
         <translation>編集</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/listview.py" line="479"/>
+        <location filename="../hazama/ui/listview.py" line="480"/>
         <source>Delete</source>
         <translation>削除</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/listview.py" line="482"/>
+        <location filename="../hazama/ui/listview.py" line="483"/>
         <source>Random</source>
         <translation>ランダム</translation>
     </message>
@@ -242,7 +252,7 @@ Please check database path(have permission?). If it&apos;s corrupt, you may have
         <translation type="obsolete">選択した日記の削除</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/listview.py" line="574"/>
+        <location filename="../hazama/ui/listview.py" line="584"/>
         <source>Selected diaries will be deleted permanently!</source>
         <translation>選択した日記は完全に削除されます！</translation>
     </message>
@@ -257,7 +267,7 @@ Please check database path(have permission?). If it&apos;s corrupt, you may have
         <translation type="obsolete">テキスト (*.txt);;リッチ　テキスト (*.rtf)</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/listview.py" line="573"/>
+        <location filename="../hazama/ui/listview.py" line="583"/>
         <source>Delete diaries</source>
         <translation>日記の削除</translation>
     </message>
@@ -265,7 +275,7 @@ Please check database path(have permission?). If it&apos;s corrupt, you may have
 <context>
     <name>SearchBox</name>
     <message>
-        <location filename="../hazama/ui/mainwindow.py" line="288"/>
+        <location filename="../hazama/ui/mainwindow.py" line="277"/>
         <source>Search</source>
         <translation>検索</translation>
     </message>
@@ -273,12 +283,12 @@ Please check database path(have permission?). If it&apos;s corrupt, you may have
 <context>
     <name>TagList</name>
     <message>
-        <location filename="../hazama/ui/listview.py" line="392"/>
+        <location filename="../hazama/ui/listview.py" line="393"/>
         <source>All</source>
         <translation>全て</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/listview.py" line="376"/>
+        <location filename="../hazama/ui/listview.py" line="377"/>
         <source>Rename</source>
         <translation>名前の変更</translation>
     </message>
@@ -286,22 +296,22 @@ Please check database path(have permission?). If it&apos;s corrupt, you may have
 <context>
     <name>configDialog</name>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="404"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="403"/>
         <source>Settings</source>
         <translation>設定</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="405"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="404"/>
         <source>Language:</source>
         <translation>言語:</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="408"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="407"/>
         <source>Editor</source>
         <translation>エディタ</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="409"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="408"/>
         <source>Auto indent</source>
         <translation>自動インデント</translation>
     </message>
@@ -311,33 +321,33 @@ Please check database path(have permission?). If it&apos;s corrupt, you may have
         <translation type="obsolete">現れる時に表題エディタをフォーカス</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="414"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="413"/>
         <source>General</source>
         <translation>全般</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="415"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="414"/>
         <source>Backup</source>
         <translation>バックアップ</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="417"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="416"/>
         <source>Backup every day and keep each one for a week.
 </source>
         <translation>毎日バックアップ、一週間前のを消す。</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="418"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="417"/>
         <source>Enable backup</source>
         <translation>バックアップ機能を有効にする</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="419"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="418"/>
         <source>Select to restore</source>
         <translation>一覧から選択</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="420"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="419"/>
         <source>Export</source>
         <translation>エクスポート</translation>
     </message>
@@ -348,77 +358,77 @@ Please check database path(have permission?). If it&apos;s corrupt, you may have
         <translation type="obsolete">日記を一つのテキストファイルにエクスポート。</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="423"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="422"/>
         <source>All diary</source>
         <translation>全ての日記</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="424"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="423"/>
         <source>Selected diary</source>
         <translation>選択した日記のみ</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="425"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="424"/>
         <source>Save as...</source>
         <translation>名前を付けて保存...</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="428"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="427"/>
         <source>Diary</source>
         <translation>日記帳</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="429"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="428"/>
         <source>Preview lines:</source>
         <translation>プレビューの行数:</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="434"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="433"/>
         <source>Fonts</source>
         <translation>フォント</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="435"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="434"/>
         <source>Datetime:</source>
         <translation>日時:</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="436"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="435"/>
         <source>Title:</source>
         <translation>表題:</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="437"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="436"/>
         <source>Text:</source>
         <translation>本文:</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="438"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="437"/>
         <source>Override default font</source>
         <translation>デフォルトフォントを変更する</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="440"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="439"/>
         <source>Appearance</source>
         <translation>外見</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="439"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="438"/>
         <source>Default:</source>
         <translation>デフォルト:</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="406"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="405"/>
         <source>Lists</source>
         <translation>リスト</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="407"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="406"/>
         <source>Show counts in TagList</source>
         <translation>タグ一覧にカウントを表示する</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="426"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="425"/>
         <source>Open output file</source>
         <translation>作成したファイルを開く</translation>
     </message>
@@ -428,7 +438,7 @@ Please check database path(have permission?). If it&apos;s corrupt, you may have
         <translation type="obsolete">現れる時に表題エリアをフォーカス（でなければ本文エリア）</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="422"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="421"/>
         <source>Export diary to single plain text file.
 </source>
         <translation>日記を一つのテキストファイルにエクスポート。</translation>
@@ -439,7 +449,7 @@ Please check database path(have permission?). If it&apos;s corrupt, you may have
         <translation type="obsolete">現れる時に表題エリアをフォーカス（さもなくば本文エリア）</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="432"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="431"/>
         <source>Theme:</source>
         <translation>テーマ:</translation>
     </message>
@@ -469,42 +479,42 @@ p, li { white-space: pre-wrap; }
         <translation type="obsolete">ハザマについて</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="413"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="412"/>
         <source>About Hazama</source>
         <translation>Hazamaについて</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="430"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="429"/>
         <source>Extend background of titlebar to toolbar</source>
         <translation>タイトルバーの背景をツールバーまで伸ばす</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="410"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="409"/>
         <source>Initial cursor position:</source>
         <translation>カーソルの初期位置:</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="411"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="410"/>
         <source>Title</source>
         <translation>表題</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="412"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="411"/>
         <source>Text</source>
         <translation>本文</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="431"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="430"/>
         <source>Theme</source>
         <translation>テーマ</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="433"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="432"/>
         <source>Color Scheme:</source>
         <translation>配色:</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog_ui.py" line="427"/>
+        <location filename="../hazama/ui/configdialog_ui.py" line="426"/>
         <source>Statistics</source>
         <translation>統計</translation>
     </message>

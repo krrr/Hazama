@@ -26,7 +26,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
         self.setupUi(self)
         fixWidgetSizeOnHiDpi(self)
         about = readRcTextFile(':/about.html').format(
-            ver=__version__, author=self.tr('author'),
+            ver=__version__, author=self.tr('author'), website=self.tr('website'),
             checkupdate=self.tr('check-update'))
         self.aboutBrowser.setHtml(about)
         self.aboutBrowser.document().setDocumentMargin(0)
