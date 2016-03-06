@@ -17,7 +17,7 @@ class NListDelegate(QStyledItemDelegate):
     """ItemDelegate of old theme 'one-pixel-rect' for NList, Using 'traditional'
     painting method compared to colorful theme."""
     def __init__(self):
-        super(NListDelegate, self).__init__()  # don't pass parent because of mem problem
+        super().__init__()  # don't pass parent because of mem problem
         # To avoid some font has much more space at top and bottom, we use ascent instead
         # of height, and add it with a small number.
         magic = int(4 * getDpiScaleRatio())
@@ -120,8 +120,7 @@ class NListDelegateColorful(QItemDelegate):
         sizeHint method is called very often. So font fallback will cause problem.
         """
         def __init__(self, parent=None):
-            super(NListDelegateColorful.ItemWidget, self).__init__(
-                parent, objectName='NListItem')
+            super().__init__(parent, objectName='NListItem')
             self.heightWithTag = self.heightNoTag = None
 
             self.title = NElideLabel(self, objectName='NListItemTitle')
@@ -140,12 +139,12 @@ class NListDelegateColorful(QItemDelegate):
 
             # use QToolButton to display icons
             self.datetimeIco = QToolButton(self, objectName='NListItemDtIco')
-            minSz = max(font.datetime_m.ascent(), 12)
+            minSz = max(font.datetime_m.ascent(), 12*getDpiScaleRatio())
             self.datetimeIco.setIconSize(QSize(minSz, minSz))
             self.datetimeIco.setIcon(QIcon(':/calendar.png'))
 
             self.tagIco = QToolButton(self, objectName='NListItemTagIco')
-            minSz = max(font.default_m.ascent(), 12)
+            minSz = max(font.default_m.ascent(), 12*getDpiScaleRatio())
             self.tagIco.setIconSize(QSize(minSz, minSz))
             self.tagIco.setIcon(QIcon(':/tag.png'))
 
@@ -175,13 +174,15 @@ class NListDelegateColorful(QItemDelegate):
             # Some layout behaviours are full of mystery, even changing order of
             # calls will break the UI
             self.datetime.setText(datetimeTrans(dt))
-            # without this width of dt will not updated (for performance reason?)
+            # without this width of dt will not be updated (for performance reason?)
             self._hLayout0.activate()
-            # width of title area depends on testW's width
+            # width of title area depends on itemW's width
             self.title.setText(
                 font.title_m.elidedText(title, Qt.ElideRight, self.title.width()))
             self.text.setText(text, formats)
-            if tags: self.tag.setText(tags)
+            if tags:
+                tags = ' \u2022 '.join(tags.split())  # use bullet to separate
+                self.tag.setText(tags)
             self.tag.setVisible(bool(tags))
             self.tagIco.setVisible(bool(tags))
 
@@ -189,45 +190,33 @@ class NListDelegateColorful(QItemDelegate):
             self.heightWithTag = self.sizeHint().height()
             self.heightNoTag = self.heightWithTag - self._hLayout1.sizeHint().height()
 
-        def resize(self, w, h):
-            if (w, h) != self.size().toTuple():
-                super(NListDelegateColorful.ItemWidget, self).resize(w, h)
-
     def __init__(self):
-        super(NListDelegateColorful, self).__init__()
-        self._testW = self.ItemWidget()
-        self._testW.refreshHeightInfo()
+        super().__init__()
+        self._itemW = self.ItemWidget()
+        self._itemW.refreshHeightInfo()
 
     def paint(self, painter, option, index):
         row = index.row()
-        dt, text, title, tags, formats = (index.sibling(row, i).data()
-                                          for i in range(1, 6))
-        selected = bool(option.state & QStyle.State_Selected)
-        active = bool(option.state & QStyle.State_Active)
 
-        tags = ' \u2022 '.join(tags.split())  # use bullet to separate
-        self._testW.resize(option.rect.size().width(), self._testW.heightWithTag
-                           if tags else self._testW.heightNoTag)
-        self._testW.setTexts(dt, text, title, tags, formats)
-        self._testW.setProperty('selected', selected)
-        self._testW.setProperty('active', active)
-        self._testW.refreshStyle()
+        self._itemW.resize(option.rect.size())
+        self._itemW.setTexts(*(index.sibling(row, i).data() for i in range(1, 6)))
+        self._itemW.setProperty('selected', bool(option.state & QStyle.State_Selected))
+        self._itemW.setProperty('active', bool(option.state & QStyle.State_Active))
+        self._itemW.refreshStyle()
 
         # don't use offset argument of QWidget.render
         painter.translate(option.rect.topLeft())
-        self._testW.render(
-            painter, QPoint(),
-            renderFlags=QWidget.DrawChildren)
+        self._itemW.render(painter, QPoint(), renderFlags=QWidget.DrawChildren)
         painter.resetTransform()
 
     def sizeHint(self, option, index):
         hasTag = bool(index.sibling(index.row(), 4).data())
-        return QSize(-1, self._testW.heightWithTag if hasTag else self._testW.heightNoTag)
+        return QSize(-1, self._itemW.heightWithTag if hasTag else self._itemW.heightNoTag)
 
 
 class TListDelegate(QStyledItemDelegate):
     def __init__(self, parent=None):
-        super(TListDelegate, self).__init__(parent)
+        super().__init__(parent)
         self.h = font.default_m.height() + 8
 
     def paint(self, painter, option, index):
@@ -284,8 +273,7 @@ class TListDelegateColorful(QItemDelegate):
     class ItemWidget(QFrame):
         # almost the same as NListDelegateColorful.ItemWidget
         def __init__(self, parent=None):
-            super(TListDelegateColorful.ItemWidget, self).__init__(
-                parent, objectName='TListItem')
+            super().__init__(parent, objectName='TListItem')
             self._hLayout = QHBoxLayout(self)
             self._hLayout.setContentsMargins(0, 0, 0, 0)
 
@@ -303,10 +291,10 @@ class TListDelegateColorful(QItemDelegate):
 
         def setFixedWidth(self, w):
             if w != self.width():
-                super(TListDelegateColorful.ItemWidget, self).setFixedWidth(w)
+                super().setFixedWidth(w)
 
     def __init__(self, parent=None):
-        super(TListDelegateColorful, self).__init__(parent)
+        super().__init__(parent)
         self._itemW = self.ItemWidget()
         self._itemW.setFixedHeight(self._itemW.sizeHint().height())
         self._countEnabled = settings['Main'].getboolean('tagListCount')
@@ -349,7 +337,7 @@ class TagList(QListWidget):
     tagNameModified = Signal(str)  # arg: newTagName
 
     def __init__(self, *args, **kwargs):
-        super(TagList, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.trackList = None  # update in mousePressEvent
         self.setVerticalScrollMode(self.ScrollPerPixel)
         self.setDelegateOfTheme()
@@ -385,7 +373,7 @@ class TagList(QListWidget):
             # editor.oldText is set in delegate
             nikki.changetagname(editor.oldText, newName)
             logging.info('tag [%s] changed to [%s]', editor.oldText, newName)
-            super(TagList, self).commitData(editor)
+            super().commitData(editor)
             self.tagNameModified.emit(newName)
 
     def load(self):
@@ -455,7 +443,7 @@ class NikkiList(QListView):
     tagsChanged = Signal()
 
     def __init__(self, parent=None):
-        super(NikkiList, self).__init__(parent)
+        super().__init__(parent)
         self._delegate = None
         # ScrollPerPixel means user can draw scroll bar and move list items pixel by pixel,
         # but mouse wheel still scroll item by item (the number of items scrolled depends on
