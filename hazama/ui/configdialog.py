@@ -178,13 +178,14 @@ class ConfigDialog(QDialog, Ui_configDialog):
     @Slot(str)
     def on_rstCombo_activated(self, filename):
         """Restore database backup"""
-        msg = QMessageBox()
+        msg = QMessageBox(self)
         okBtn = msg.addButton(qApp.translate('Dialog', 'Restore'), QMessageBox.AcceptRole)
         msg.setIcon(QMessageBox.Question)
         msg.addButton(qApp.translate('Dialog', 'Cancel'), QMessageBox.RejectRole)
         msg.setWindowTitle(self.tr('Restore backup'))
         msg.setText(self.tr('Current diary book will be replaced with the backup!'))
         msg.exec_()
+        msg.deleteLater()
 
         if msg.clickedButton() == okBtn:
             db.restore_backup(filename)
