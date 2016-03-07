@@ -12,7 +12,7 @@ from hazama.config import settings
 
 class MainWindow(QMainWindow, Ui_mainWindow):
     def __init__(self):
-        super(MainWindow, self).__init__()
+        super().__init__()
         self.setupUi(self)
         self.cfgDialog = self.heatMap = None  # create on on_cfgAct_triggered
         restoreWidgetGeo(self, settings['Main'].get('windowGeo'))
@@ -228,7 +228,7 @@ class SearchBox(QLineEditWithMenuIcon):
     contentChanged = Signal(str)  # replace textChanged
 
     def __init__(self, parent=None):
-        super(SearchBox, self).__init__(parent, objectName='searchBox')
+        super().__init__(parent, objectName='searchBox')
 
         self.button = QToolButton(self, objectName='searchBoxBtn')
         sz = QSize(16, 16) * getDpiScaleRatio()

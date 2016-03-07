@@ -8,7 +8,7 @@ class NikkiModel(QAbstractTableModel):
     Table structure: id | datetime | text | title | tags | formats | len(text)
     """
     def __init__(self, parent=None):
-        super(NikkiModel, self).__init__(parent)
+        super().__init__(parent)
         self._lst = []
 
     def loadFromDb(self):

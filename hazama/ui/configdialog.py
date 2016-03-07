@@ -21,7 +21,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
     extendBgChanged = Signal()
 
     def __init__(self, parent=None):
-        super(ConfigDialog, self).__init__(parent, Qt.WindowTitleHint)
+        super().__init__(parent, Qt.WindowTitleHint)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setupUi(self)
         fixWidgetSizeOnHiDpi(self)

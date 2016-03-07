@@ -10,7 +10,7 @@ defCellColors = (QColor(255, 255, 255), QColor(255, 243, 208),
 
 class HeatMap(QWidget):
     def __init__(self, *args, **kwargs):
-        super(HeatMap, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         layout = QVBoxLayout(self)
         layout.setSpacing(0)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -116,7 +116,7 @@ class HeatMapView(QGraphicsView):
     nameFontPx = 9  # month name
 
     def __init__(self, *args, **kwargs):
-        super(HeatMapView, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.yearVal = QDate.currentDate().year()
         self.cellBorderColorVal = Qt.lightGray
         for idx, c in enumerate(defCellColors):
@@ -207,7 +207,7 @@ class HeatMapView(QGraphicsView):
 
 class ColorSampleView(QGraphicsView):
     def __init__(self, parent=None, cellLen=None):
-        super(ColorSampleView, self).__init__(parent, objectName='heatMapSample',
+        super().__init__(parent, objectName='heatMapSample',
                                               alignment=Qt.AlignRight)
         self._colors = defCellColors
         self.cellLen = cellLen if cellLen else 9

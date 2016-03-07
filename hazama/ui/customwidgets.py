@@ -18,7 +18,7 @@ class NDocumentLabel(QFrame):
     to fixed number of lines set. If font fallback happen, it may look bad."""
 
     def __init__(self, parent=None, lines=None, **kwargs):
-        super(NDocumentLabel, self).__init__(parent, **kwargs)
+        super().__init__(parent, **kwargs)
         self._lines = self._heightHint = None
         self.doc = NTextDocument(self)
         self.doc.setDocumentMargin(0)
@@ -28,7 +28,7 @@ class NDocumentLabel(QFrame):
 
     def setFont(self, f):
         self.doc.setDefaultFont(f)
-        super(NDocumentLabel, self).setFont(f)
+        super().setFont(f)
         self.setLines(self._lines)  # refresh size hint
 
     def setText(self, text, formats):
@@ -50,7 +50,7 @@ class NDocumentLabel(QFrame):
 
     def resizeEvent(self, event):
         self.doc.setTextWidth(self.contentsRect().width())
-        super(NDocumentLabel, self).resizeEvent(event)
+        super().resizeEvent(event)
 
     def sizeHint(self):
         __, top, __, bottom = self.getContentsMargins()
@@ -63,7 +63,7 @@ class NTextEdit(QTextEdit, TextFormatter):
     SPACE_KINDS = (' ', '\u3000')  # full width space U+3000
 
     def __init__(self, *args, **kwargs):
-        super(NTextEdit, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._doc = NTextDocument(self)
         self.setDocument(self._doc)
         # remove highlight color's alpha to avoid alpha loss in copy&paste.
@@ -180,13 +180,13 @@ class NTextEdit(QTextEdit, TextFormatter):
                 for c in para[1:]:
                     if c != space: break
                     spaceCount += 1
-                super(NTextEdit, self).keyPressEvent(event)
+                super().keyPressEvent(event)
                 self.textCursor().insertText(space * spaceCount)
             else:
-                super(NTextEdit, self).keyPressEvent(event)
+                super().keyPressEvent(event)
             event.accept()
         else:
-            super(NTextEdit, self).keyPressEvent(event)
+            super().keyPressEvent(event)
 
     def insertFromMimeData(self, source):
         """Disable some unsupported types"""
@@ -199,7 +199,7 @@ class NLineEditMouse(QLineEditWithMenuIcon):
         if event.button() in (Qt.XButton1, Qt.XButton2):
             event.ignore()
         else:
-            super(NLineEditMouse, self).mousePressEvent(event)
+            super().mousePressEvent(event)
 
 
 class NElideLabel(QLabel):
@@ -218,7 +218,7 @@ class NElideLabel(QLabel):
 class DateTimeDialog(QDialog):
     """A dialog that let user change datetime, just like QColorDialog."""
     def __init__(self, dt, displayFmt, parent=None):
-        super(DateTimeDialog, self).__init__(parent, Qt.WindowTitleHint)
+        super().__init__(parent, Qt.WindowTitleHint)
         self.format = displayFmt
         self.setWindowModality(Qt.WindowModal)
         self.setWindowTitle(self.tr('Edit datetime'))

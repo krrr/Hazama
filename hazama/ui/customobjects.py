@@ -5,7 +5,7 @@ from PySide.QtGui import *
 class TagCompleter(QCompleter):
     # QCompleter is not designed to use in this way, so these codes are terrible
     def __init__(self, tagList, parent=None):
-        super(TagCompleter, self).__init__(tagList, parent)
+        super().__init__(tagList, parent)
         self.tagList = tagList
         self.setCaseSensitivity(Qt.CaseInsensitive)
 
@@ -86,17 +86,17 @@ class TextFormatter:
 class NTextDocument(QTextDocument, TextFormatter):
     """QTextDocument with format setting function. Formats are three-tuple
     (startIndex, length, type), the same form in database."""
+    _type2method = [None, TextFormatter.setBD, TextFormatter.setHL, TextFormatter.setIta,
+                    TextFormatter.setSO, TextFormatter.setUL]  # associated array
 
     def setText(self, text, formats=None):
-        type2method = {1: self.setBD, 2: self.setHL, 3: self.setIta,
-                       4: self.setSO, 5: self.setUL}
         self.setPlainText(text)
         if formats:
-            self._cur = QTextCursor(self)
-            for start, length, _type in formats:
-                self._cur.setPosition(start)
-                self._cur.setPosition(start + length, mode=self._cur.KeepAnchor)
-                type2method[_type](apply=True)
+            cur = self._cur = QTextCursor(self)
+            for start, length, type_ in formats:
+                cur.setPosition(start)
+                cur.setPosition(start+length, cur.KeepAnchor)
+                self._type2method[type_](self, True)
             del self._cur
 
         self.clearUndoRedoStacks()
@@ -170,7 +170,7 @@ class MultiSortFilterProxyModel(QSortFilterProxyModel):
         cols = regExp = None
 
     def __init__(self, *args, **kwargs):
-        super(MultiSortFilterProxyModel, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._filters = []
 
     def filterAcceptsRow(self, sourceRow, sourceParent):
@@ -191,7 +191,7 @@ class MultiSortFilterProxyModel(QSortFilterProxyModel):
         """Set the filter's pattern specified by filter id"""
         self._filters[id].regExp.setPattern(pattern)
         # let filter model update
-        super(MultiSortFilterProxyModel, self).setFilterFixedString('')
+        super().setFilterFixedString('')
 
     def filterPattern(self, id):
         """Return the filter's pattern specified by filter id"""

@@ -16,7 +16,7 @@ class Editor(QWidget, Ui_editor):
 
     def __init__(self, *args, **kwargs):
         dic = kwargs.pop('nikkiDict')
-        super(Editor, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.setupUi(self)
         self.datetime = self.id = self.timeModified = self.tagModified = None
         restoreWidgetGeo(self, settings['Editor'].get('windowGeo'))
@@ -72,7 +72,7 @@ class Editor(QWidget, Ui_editor):
             self.nextSc.activated.emit()
             event.accept()
         else:
-            super(Editor, self).mousePressEvent(event)
+            super().mousePressEvent(event)
 
     @Slot()
     def on_tagEditor_textEdited(self):
