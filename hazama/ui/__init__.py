@@ -177,27 +177,31 @@ def fixWidgetSizeOnHiDpi(widget):
     ratio = getDpiScaleRatio()
     if ratio > 1:
         widget.resize(widget.size() * ratio)
+        widget.setMinimumSize(widget.minimumSize() * ratio)  # after resize, prevent over sizing
 
 
 def saveWidgetGeo(widget):
     # ignore Qt's saveGeometry because we need to modify size without hiding window
-    geo = widget.geometry()
+    geo = widget.normalGeometry()
     w, h = geo.width(), geo.height()
 
     ratio = getDpiScaleRatio()
     if ratio > 1:
         w, h = round(w / ratio), round(h / ratio)
-
-    return ','.join(map(str, [geo.x(), geo.y(), w, h]))
+    return ','.join(map(str, [geo.x(), geo.y(), w, h, int(widget.isMaximized())]))
 
 
 def restoreWidgetGeo(widget, geoStr):
-    # old version used widget.saveGeometry().toHex() and has no "," in it
-    if geoStr and ',' in geoStr:
-        rect = QRect(*map(int, geoStr.split(',')))
-        widget.setGeometry(rect)
-
+    # elder version used widget.saveGeometry().toHex() and "x, y, w, h"
+    try:
+        x, y, w, h, maximized = map(int, geoStr.split(','))
+    except ValueError:
+        maximized = 0
+    else:
+        widget.setGeometry(QRect(x, y, w, h))
     fixWidgetSizeOnHiDpi(widget)
+    if maximized:
+        widget.showMaximized()
 
 
 def makeQIcon(*filenames):
