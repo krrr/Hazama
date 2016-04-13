@@ -41,15 +41,16 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         self.toolBar.addWidget(countLabel)
 
         # setup search box
-        searchBox = self.searchBox = SearchBox(self.toolBar)
-        p = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
+        box = self.searchBox = SearchBox(self.toolBar)
+        p = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
         p.setHorizontalStretch(5)
-        searchBox.setSizePolicy(p)
-        searchBox.setMinimumWidth(searchBox.sizeHint().height() * 8)
-        searchBox.contentChanged.connect(self.nList.setFilterBySearchString)
-        self.toolBar.addWidget(searchBox)
+        box.setSizePolicy(p)
+        box.setMinimumHeight(22 * getDpiScaleRatio())
+        box.setMinimumWidth(box.minimumHeight() * 7.5)
+        box.contentChanged.connect(self.nList.setFilterBySearchString)
+        self.toolBar.addWidget(box)
         spacerWidget = QWidget(self.toolBar)
-        spacerWidget.setFixedSize(getDpiScaleRatio()*3, 1)
+        spacerWidget.setFixedSize(2.5 * getDpiScaleRatio(), 1)
         self.toolBar.addWidget(spacerWidget)
         if settings['Main'].getboolean('tagListVisible'):
             self.tListAct.trigger()
