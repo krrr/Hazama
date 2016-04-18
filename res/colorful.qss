@@ -70,6 +70,7 @@ QFrame#NListItem #NListItemText {
 }
 QFrame#NListItem QToolButton {  /* icons */
     margin: 0px;
+    margin-right: 1px;
     border: none;
 }
 
