@@ -8,7 +8,6 @@ from hazama import db
 # for default settings
 isWin = hasattr(sys, 'getwindowsversion')
 _winVer = sys.getwindowsversion() if isWin else None
-_winVer = (_winVer.major, _winVer.minor) if isWin else None
 isWinVistaOrLater = isWin and _winVer >= (6, 0)
 isWin7OrLater = isWin and _winVer >= (6, 1)
 isWin8OrLater = isWin and _winVer >= (6, 2)

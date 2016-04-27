@@ -5,7 +5,8 @@ import logging
 from PySide.QtGui import QApplication, QIcon, QFont, QFontMetrics, QMessageBox
 from PySide.QtCore import QLocale, QTranslator, QLibraryInfo, QDateTime, QFile, QRect
 import hazama.ui.rc
-from hazama.config import settings, appPath, saveSettings, isWin, isWin7OrLater, isWinVistaOrLater
+from hazama.config import (settings, appPath, saveSettings, isWin, isWin7OrLater,
+                           isWinVistaOrLater, isWin8OrLater)
 
 
 locale = None
@@ -150,14 +151,13 @@ def winDwmExtendWindowFrame(winId, topMargin):
 
 def isDwmUsable():
     """Check whether winDwmExtendWindowFrame usable."""
-    if sys.platform != 'win32':
+    if not isWin:
         return False
-    v = sys.getwindowsversion()
-    if (v.major, v.minor) >= (6, 2):  # >= Windows 8
+    if isWin8OrLater:
         # windows 8 or later always have DWM composition enabled, but API used below depends
         # on manifest file (we doesn't have it)
         return True
-    elif (v.major, v.minor) < (6, 0):  # < Windows Vista
+    elif not isWinVistaOrLater:
         return False
     else:
         from ctypes import byref, windll, c_bool
@@ -193,6 +193,8 @@ def saveWidgetGeo(widget):
 
 def restoreWidgetGeo(widget, geoStr):
     # elder version used widget.saveGeometry().toHex() and "x, y, w, h"
+    if not geoStr:
+        return
     try:
         x, y, w, h, maximized = map(int, geoStr.split(','))
     except ValueError:
