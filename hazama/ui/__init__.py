@@ -3,7 +3,7 @@ import os
 import time
 import logging
 from PySide.QtGui import QApplication, QIcon, QFont, QFontMetrics, QMessageBox
-from PySide.QtCore import QLocale, QTranslator, QLibraryInfo, QDateTime, QFile, QRect
+from PySide.QtCore import QLocale, QTranslator, QLibraryInfo, QDateTime, QFile, QByteArray
 import hazama.ui.rc
 from hazama.config import (settings, appPath, saveSettings, isWin, isWin7OrLater,
                            isWinVistaOrLater, isWin8OrLater)
@@ -181,29 +181,19 @@ def fixWidgetSizeOnHiDpi(widget):
 
 
 def saveWidgetGeo(widget):
-    # ignore Qt's saveGeometry because we need to modify size without hiding window
-    geo = widget.normalGeometry()
-    w, h = geo.width(), geo.height()
-
-    ratio = getDpiScaleRatio()
-    if ratio > 1:
-        w, h = round(w / ratio), round(h / ratio)
-    return ','.join(map(str, [geo.x(), geo.y(), w, h, int(widget.isMaximized())]))
+    settings['Main']['geoDpiRatio'] = str(getDpiScaleRatio())
+    return str(widget.saveGeometry().toHex())
 
 
 def restoreWidgetGeo(widget, geoStr):
-    # elder version used widget.saveGeometry().toHex() and "x, y, w, h"
     if not geoStr:
         return
-    try:
-        x, y, w, h, maximized = map(int, geoStr.split(','))
-    except ValueError:
-        maximized = 0
-    else:
-        widget.setGeometry(QRect(x, y, w, h))
-    fixWidgetSizeOnHiDpi(widget)
-    if maximized:
-        widget.showMaximized()
+
+    success = widget.restoreGeometry(QByteArray.fromHex(geoStr))
+    ratio = getDpiScaleRatio()
+    geoRatio = float(settings['Main'].get('geoDpiRatio', ratio))
+    if success and abs(ratio - geoRatio) > 0.01:
+        widget.resize(widget.size() / geoRatio * ratio)
 
 
 def makeQIcon(*filenames):
