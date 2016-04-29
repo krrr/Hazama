@@ -1,7 +1,7 @@
 from PySide.QtGui import *
 from PySide.QtCore import *
 from itertools import chain
-from hazama.ui import getDpiScaleRatio, makeQIcon
+from hazama.ui import scaleRatio, makeQIcon
 
 # the default colors that represent heat of data, from cold to hot
 defCellColors = (QColor(255, 255, 255), QColor(255, 243, 208),
@@ -29,7 +29,7 @@ class HeatMap(QWidget):
         self.yearMenu = QMenu(self, objectName='heatMapMenu')
         self._yearActGroup = QActionGroup(self.yearMenu)
         self.setupYearMenu()
-        sz = QSize(16, 16) * getDpiScaleRatio()
+        sz = QSize(16, 16) * scaleRatio
         ico = makeQIcon(':/heatmap/arrow-left.png')
         preBtn = QToolButton(self, icon=ico, clicked=self.yearPre, iconSize=sz)
         ico = makeQIcon(':/heatmap/arrow-right.png')

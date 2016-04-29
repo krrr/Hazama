@@ -13,6 +13,7 @@ locale = None
 # datetimeFmt may not contain time part (by default)
 dateFmt = datetimeFmt = fullDatetimeFmt = None
 font = None
+scaleRatio = None
 
 
 def datetimeTrans(s, stripTime=False):
@@ -181,7 +182,7 @@ def fixWidgetSizeOnHiDpi(widget):
 
 
 def saveWidgetGeo(widget):
-    settings['Main']['geoDpiRatio'] = str(getDpiScaleRatio())
+    settings['Main']['geoDpiRatio'] = str(scaleRatio)
     return str(widget.saveGeometry().toHex())
 
 
@@ -190,10 +191,9 @@ def restoreWidgetGeo(widget, geoStr):
         return
 
     success = widget.restoreGeometry(QByteArray.fromHex(geoStr))
-    ratio = getDpiScaleRatio()
-    geoRatio = float(settings['Main'].get('geoDpiRatio', ratio))
-    if success and abs(ratio - geoRatio) > 0.01:
-        widget.resize(widget.size() / geoRatio * ratio)
+    geoRatio = float(settings['Main'].get('geoDpiRatio', scaleRatio))
+    if success and abs(scaleRatio - geoRatio) > 0.01:
+        widget.resize(widget.size() / geoRatio * scaleRatio)
 
 
 def makeQIcon(*filenames):
@@ -241,7 +241,7 @@ class Fonts:
     @staticmethod
     def getPreferredFont():
         """Return family of preferred font according to language and platform."""
-        if isWin and settings['Main']['theme'] == '1px-rect' and getDpiScaleRatio() == 1:
+        if isWin and settings['Main']['theme'] == '1px-rect' and scaleRatio == 1:
             # old theme looks well with default bitmap fonts only in normal DPI, and
             # text of radio button will be cropped in ConfigDialog
             return None
@@ -255,9 +255,11 @@ class Fonts:
 def init():
     app = QApplication(sys.argv)
     app.lastWindowClosed.connect(saveSettings)
-    logging.debug('DPI scale ratio %s' % getDpiScaleRatio())
-
     app.setWindowIcon(makeQIcon(':/appicon-24.png', ':/appicon-48.png', ':/appicon-64.png'))
+
+    global scaleRatio
+    scaleRatio = getDpiScaleRatio()
+    logging.debug('DPI scale ratio %s' % scaleRatio)
 
     setTranslationLocale()
     global font

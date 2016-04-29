@@ -2,7 +2,7 @@ import logging
 from PySide.QtGui import *
 from PySide.QtCore import *
 from hazama import __version__, db
-from hazama.ui import (font, setStyleSheet, readRcTextFile, isDwmUsable, getDpiScaleRatio,
+from hazama.ui import (font, setStyleSheet, readRcTextFile, isDwmUsable, scaleRatio,
                        fixWidgetSizeOnHiDpi)
 from hazama.ui.configdialog_ui import Ui_configDialog
 from hazama.config import settings, nikki
@@ -31,7 +31,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
         self.aboutBrowser.setHtml(about)
         self.aboutBrowser.document().setDocumentMargin(0)
         self.openOutBtn.hide()  # can't set initial state in creator
-        self.appIcoLabel.setPixmap(qApp.windowIcon().pixmap(QSize(32, 32) * getDpiScaleRatio()))
+        self.appIcoLabel.setPixmap(qApp.windowIcon().pixmap(QSize(32, 32) * scaleRatio))
         # load settings
         self.aindCheck.setChecked(settings['Editor'].getboolean('autoIndent'))
         self.tListCountCheck.setChecked(settings['Main'].getboolean('tagListCount'))
@@ -72,12 +72,11 @@ class ConfigDialog(QDialog, Ui_configDialog):
         self.defFontBtn.configName = 'default'
         self.buttons = (self.dtFontBtn, self.titleFontBtn, self.textFontBtn,
                         self.defFontBtn)
-        ratio = getDpiScaleRatio()
         for i in self.buttons:
             i.clicked.connect(self._handleFontBtn)
             self._setFontButton(i, getattr(font, i.configName))
-            if ratio > 1:
-                i.setMinimumWidth((i.minimumWidth() * ratio))
+            if scaleRatio > 1:
+                i.setMinimumWidth((i.minimumWidth() * scaleRatio))
         # setup statistics
         diaryCount = len(nikki)
         if diaryCount < 2:

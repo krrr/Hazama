@@ -5,7 +5,7 @@ import random
 from collections import OrderedDict
 from PySide.QtGui import *
 from PySide.QtCore import *
-from hazama.ui import font, datetimeTrans, getDpiScaleRatio, makeQIcon
+from hazama.ui import font, datetimeTrans, scaleRatio, makeQIcon
 from hazama.ui.editor import Editor
 from hazama.ui.customobjects import NTextDocument, MultiSortFilterProxyModel
 from hazama.ui.customwidgets import NElideLabel, NDocumentLabel
@@ -20,7 +20,7 @@ class NListDelegate(QStyledItemDelegate):
         super().__init__()  # don't pass parent because of mem problem
         # To avoid some font has much more space at top and bottom, we use ascent instead
         # of height, and add it with a small number.
-        magic = int(4 * getDpiScaleRatio())
+        magic = int(4 * scaleRatio)
         self.title_h = max(font.title_m.ascent(), font.datetime_m.ascent()) + magic
         self.titleArea_h = self.title_h + 4
         self.text_h = font.text_m.lineSpacing() * settings['Main'].getint('previewLines')
@@ -139,12 +139,12 @@ class NListDelegateColorful(QItemDelegate):
 
             # use QToolButton to display icons
             self.datetimeIco = QToolButton(self, objectName='NListItemDtIco')
-            minSz = max(font.datetime_m.ascent(), 12*getDpiScaleRatio())
+            minSz = max(font.datetime_m.ascent(), 12*scaleRatio)
             self.datetimeIco.setIconSize(QSize(minSz, minSz))
             self.datetimeIco.setIcon(QIcon(':/calendar.png'))
 
             self.tagIco = QToolButton(self, objectName='NListItemTagIco')
-            minSz = max(font.default_m.ascent(), 12*getDpiScaleRatio())
+            minSz = max(font.default_m.ascent(), 12*scaleRatio)
             self.tagIco.setIconSize(QSize(minSz, minSz))
             self.tagIco.setIcon(QIcon(':/tag.png'))
 
@@ -542,7 +542,7 @@ class NikkiList(QListView):
     def _setEditorStaggerPos(self, editor):
         if self.editors:
             lastOpenEditor = list(self.editors.values())[-1]
-            pos = lastOpenEditor.pos() + QPoint(16, 16) * getDpiScaleRatio()
+            pos = lastOpenEditor.pos() + QPoint(16, 16) * scaleRatio
             # can't check available screen space because of bug in pyside
             editor.move(pos)
 

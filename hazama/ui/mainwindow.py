@@ -1,7 +1,7 @@
 from PySide.QtGui import *
 from PySide.QtCore import *
 import logging
-from hazama.ui import (font, setTranslationLocale, winDwmExtendWindowFrame, getDpiScaleRatio,
+from hazama.ui import (font, setTranslationLocale, winDwmExtendWindowFrame, scaleRatio,
                        makeQIcon, saveWidgetGeo, restoreWidgetGeo)
 from hazama.ui.customwidgets import QLineEditWithMenuIcon
 from hazama.ui.configdialog import ConfigDialog
@@ -19,11 +19,11 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         # setup toolbar bg, the second stage is in showEvent
         self.toolBar.setProperty(
             'extendTitleBar', settings['Main'].getboolean('extendTitleBarBg'))
-        self.toolBar.setIconSize(QSize(24, 24) * getDpiScaleRatio())
+        self.toolBar.setIconSize(QSize(24, 24) * scaleRatio)
 
         # setup TagList width
         tListW = settings['Main'].getint('tagListWidth')
-        tListW = tListW * getDpiScaleRatio() if tListW else int(self.width() * 0.2)
+        tListW = tListW * scaleRatio if tListW else int(self.width() * 0.2)
         if not self.isMaximized():
             self.splitter.setSizes([tListW, self.width()-tListW])
         # setup sort menu
@@ -45,12 +45,12 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         p = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
         p.setHorizontalStretch(5)
         box.setSizePolicy(p)
-        box.setMinimumHeight(22 * getDpiScaleRatio())
+        box.setMinimumHeight(22 * scaleRatio)
         box.setMinimumWidth(box.minimumHeight() * 7.5)
         box.contentChanged.connect(self.nList.setFilterBySearchString)
         self.toolBar.addWidget(box)
         spacerWidget = QWidget(self.toolBar)
-        spacerWidget.setFixedSize(2.5 * getDpiScaleRatio(), 1)
+        spacerWidget.setFixedSize(2.5 * scaleRatio, 1)
         self.toolBar.addWidget(spacerWidget)
         if settings['Main'].getboolean('tagListVisible'):
             self.tListAct.trigger()
@@ -61,7 +61,7 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         searchSc.activated.connect(self.searchBox.setFocus)
 
         # setup bigger toolbar icons
-        ratio = getDpiScaleRatio()
+        ratio = scaleRatio
         originSz = QSize(24, 24)
         if ratio > 1.0:
             for i in [self.cfgAct, self.creAct, self.delAct, self.mapAct,
@@ -109,7 +109,7 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         tListVisible = self.tList.isVisible()
         settings['Main']['tagListVisible'] = str(tListVisible)
         if tListVisible:
-            settings['Main']['tagListWidth'] = str(int(self.splitter.sizes()[0] / getDpiScaleRatio()))
+            settings['Main']['tagListWidth'] = str(int(self.splitter.sizes()[0] / scaleRatio))
         event.accept()
 
     def retranslate(self):
@@ -175,7 +175,7 @@ class MainWindow(QMainWindow, Ui_mainWindow):
             self.heatMap.move(self.pos())
             self.heatMap.setWindowFlags(Qt.Window | Qt.WindowTitleHint)
             self.heatMap.setWindowTitle('HeatMap')
-            self.heatMap.move(self.pos() + QPoint(12, 12)*getDpiScaleRatio())
+            self.heatMap.move(self.pos() + QPoint(12, 12)*scaleRatio)
             self.heatMap.show()
 
     def onExtendTitleBarBgChanged(self):
@@ -203,7 +203,7 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         else:
             self.nList.setFilterByTag('')
             self.tList.clear()
-            settings['Main']['tagListWidth'] = str(int(self.splitter.sizes()[0] / getDpiScaleRatio()))
+            settings['Main']['tagListWidth'] = str(int(self.splitter.sizes()[0] / scaleRatio))
 
     def showEvent(self, event):
         # style polished, we can get correct height of toolbar now
@@ -232,7 +232,7 @@ class SearchBox(QLineEditWithMenuIcon):
         super().__init__(parent, objectName='searchBox')
 
         self.button = QToolButton(self, objectName='searchBoxBtn')
-        sz = QSize(16, 16) * getDpiScaleRatio()
+        sz = QSize(16, 16) * scaleRatio
         self.button.setFocusPolicy(Qt.NoFocus)
         self.button.setFixedSize(sz)
         self.button.setIconSize(sz)
