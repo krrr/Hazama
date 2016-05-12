@@ -34,6 +34,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
         self.appIcoLabel.setPixmap(qApp.windowIcon().pixmap(QSize(32, 32) * scaleRatio))
         # load settings
         self.aindCheck.setChecked(settings['Editor'].getboolean('autoIndent'))
+        self.autoRoCheck.setChecked(settings['Editor'].getboolean('autoReadOnly'))
         self.tListCountCheck.setChecked(settings['Main'].getboolean('tagListCount'))
         if settings['Editor'].getboolean('titleFocus'):
             self.focusTitleRadio.setChecked(True)
@@ -91,7 +92,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
             diaryDtRange = nikki.get_datetime_range()
         if diaryDtRange:
             qRange = tuple(map(lambda x: QDateTime.fromString(x, 'yyyy-MM-dd HH:mm'),
-                                         diaryDtRange))
+                               diaryDtRange))
             days = qRange[0].daysTo(qRange[1])
         else:
             days = 0
@@ -121,6 +122,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
         settings['Main']['theme'] = theme
         settings['Main']['extendTitleBarBg'] = str(extend)
         settings['Editor']['autoIndent'] = str(self.aindCheck.isChecked())
+        settings['Editor']['autoReadOnly'] = str(self.autoRoCheck.isChecked())
         settings['Main']['tagListCount'] = str(self.tListCountCheck.isChecked())
         settings['Editor']['titleFocus'] = str(self.focusTitleRadio.isChecked())
         settings['Main']['backup'] = str(self.bkCheck.isChecked())

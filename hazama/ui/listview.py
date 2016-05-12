@@ -498,7 +498,7 @@ class NikkiList(QListView):
         if id_ in self.editors:
             self.editors[id_].activateWindow()
         else:
-            e = Editor(nikkiDict=dic)
+            e = Editor(dic)
             self._setEditorStaggerPos(e)
             self.editors[id_] = e
             e.closed.connect(self.closeEditor)
@@ -511,7 +511,7 @@ class NikkiList(QListView):
         if -1 in self.editors:
             self.editors[-1].activateWindow()
         else:
-            e = Editor(nikkiDict={'id': -1})
+            e = Editor({'id': -1})
             self._setEditorStaggerPos(e)
             self.editors[-1] = e
             e.closed.connect(self.closeEditor)

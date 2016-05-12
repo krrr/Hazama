@@ -83,7 +83,7 @@ class NTextEdit(QTextEdit, TextFormatter):
         onULAct = lambda: super(NTextEdit, self).setUL(self.ulAct.isChecked())
         onItaAct = lambda: super(NTextEdit, self).setIta(self.itaAct.isChecked())
 
-        self.subMenu = QMenu(self.tr('Format'), self)
+        self.fmtMenu = QMenu(self.tr('Format'), self)
         # shortcuts of format actions only used to display shortcut-hint in menu
         self.hlAct = QAction(makeQIcon(':/menu/highlight.png'), self.tr('Highlight'),
                              self, triggered=onHLAct,
@@ -106,11 +106,11 @@ class NTextEdit(QTextEdit, TextFormatter):
         self.acts = (self.hlAct, self.bdAct, self.soAct, self.ulAct,
                      self.itaAct)  # excluding uncheckable clrAct
         for a in self.acts:
-            self.subMenu.addAction(a)
+            self.fmtMenu.addAction(a)
             a.setCheckable(True)
-        self.subMenu.addSeparator()
+        self.fmtMenu.addSeparator()
         self.addAction(self.clrAct)
-        self.subMenu.addAction(self.clrAct)
+        self.fmtMenu.addAction(self.clrAct)
         self.key2act = {
             Qt.Key_H: self.hlAct, Qt.Key_B: self.bdAct, Qt.Key_T: self.soAct,
             Qt.Key_U: self.ulAct, Qt.Key_I: self.itaAct}
@@ -124,16 +124,19 @@ class NTextEdit(QTextEdit, TextFormatter):
         self.autoIndent = enabled
 
     def contextMenuEvent(self, event):
-        if self.textCursor().hasSelection():
-            self._setFmtActs()
-            self.subMenu.setEnabled(True)
-        else:
-            self.subMenu.setEnabled(False)
         menu = self.createStandardContextMenu()
         setStdEditMenuIcons(menu)
-        before = menu.actions()[2]
-        menu.insertSeparator(before)
-        menu.insertMenu(before, self.subMenu)
+
+        if not self.isReadOnly():
+            if self.textCursor().hasSelection():
+                self._setFmtActs()
+                self.fmtMenu.setEnabled(True)
+            else:
+                self.fmtMenu.setEnabled(False)
+            before = menu.actions()[2]
+            menu.insertSeparator(before)
+            menu.insertMenu(before, self.fmtMenu)
+
         menu.exec_(event.globalPos())
         menu.deleteLater()
 
@@ -167,7 +170,8 @@ class NTextEdit(QTextEdit, TextFormatter):
         self.textCursor().setCharFormat(fmt)
 
     def keyPressEvent(self, event):
-        if event.modifiers() == Qt.ControlModifier and event.key() in self.key2act:
+        if (event.modifiers() == Qt.ControlModifier and not self.isReadOnly() and
+           event.key() in self.key2act):
             # set actions before calling format methods
             self._setFmtActs()
             self.key2act[event.key()].trigger()

@@ -4,7 +4,7 @@ from hazama.ui.editor_ui import Ui_editor
 from hazama.ui.customobjects import TagCompleter
 from hazama.ui.customwidgets import DateTimeDialog
 from hazama.ui import (font, datetimeTrans, currentDatetime, fullDatetimeFmt,
-                       saveWidgetGeo, restoreWidgetGeo)
+                       saveWidgetGeo, restoreWidgetGeo, datetimeToQt, dbDatetimeFmtQt)
 from hazama.config import settings, nikki
 
 
@@ -14,22 +14,22 @@ class Editor(QWidget, Ui_editor):
     """
     closed = Signal(int, bool)
 
-    def __init__(self, *args, **kwargs):
-        dic = kwargs.pop('nikkiDict')
-        super().__init__(*args, **kwargs)
+    def __init__(self, nikkiDict, parent=None):
+        super().__init__(parent)
         self.setupUi(self)
-        self.datetime = self.id = self.timeModified = self.tagModified = None
+        self.readOnly = self.datetime = self.id = self.timeModified = self.tagModified = None
         restoreWidgetGeo(self, settings['Editor'].get('windowGeo'))
 
         self.titleEditor.setFont(font.title)
         self.titleEditor.returnPressed.connect(lambda: self.textEditor.setFocus())
         self.textEditor.setFont(font.text)
-        self.textEditor.setAutoIndent(
-            settings['Editor'].getboolean('autoIndent'))
+        self.textEditor.setAutoIndent(settings['Editor'].getboolean('autoIndent'))
 
         self.dtBtn.setFont(font.datetime)
         sz = max(font.datetime_m.ascent(), 12)
         self.dtBtn.setIconSize(QSize(sz, sz))
+        self.lockBtn.setIconSize(QSize(sz, sz))
+        self.lockBtn.clicked.connect(lambda: self.setReadOnly(False))
 
         self.tagEditor.setTextMargins(QMargins(2, 0, 2, 0))
         self.tagEditor.setCompleter(
@@ -45,7 +45,7 @@ class Editor(QWidget, Ui_editor):
         self.preSc = QShortcut(QKeySequence('Ctrl+Shift+Tab'), self)
         self.nextSc = QShortcut(QKeySequence('Ctrl+Tab'), self)
 
-        self.fromNikkiDict(dic)
+        self.fromNikkiDict(nikkiDict)
 
     def needSave(self):
         return (self.textEditor.document().isModified() or
@@ -82,17 +82,28 @@ class Editor(QWidget, Ui_editor):
     @Slot()
     def on_dtBtn_clicked(self):
         """Show datetime edit dialog"""
+        if self.readOnly: return
         dtStr = currentDatetime() if self.datetime is None else self.datetime
-        locale = QLocale()
-        dbDatetimeFmt = 'yyyy-MM-dd HH:mm'
-        dt = locale.toDateTime(dtStr, dbDatetimeFmt)
-        newDt = DateTimeDialog.getDateTime(dt, fullDatetimeFmt, self)
+        newDt = DateTimeDialog.getDateTime(datetimeToQt(dtStr), fullDatetimeFmt, self)
         if newDt is not None:
-            newDtStr = newDt.toString(dbDatetimeFmt)
+            newDtStr = newDt.toString(dbDatetimeFmtQt)
             if newDtStr != self.datetime:
                 self.datetime = newDtStr
                 self.dtBtn.setText(datetimeTrans(newDtStr))
                 self.timeModified = True
+
+    def setReadOnly(self, readOnly):
+        self.titleEditor.setReadOnly(readOnly)
+        self.textEditor.setReadOnly(readOnly)
+        self.tagEditor.setReadOnly(readOnly)
+        self.textEditor.fmtMenu.setEnabled(False)
+        self.dtBtn.setCursor(Qt.ArrowCursor if readOnly else Qt.PointingHandCursor)
+        self.box.setStandardButtons(QDialogButtonBox.Close if readOnly else
+                                    QDialogButtonBox.Cancel | QDialogButtonBox.Save)
+        self.lockBtn.setVisible(readOnly)
+        self.titleEditor.setVisible(not readOnly or bool(self.titleEditor.text()))
+        self.tagEditor.setVisible(not readOnly or bool(self.tagEditor.text()))
+        self.readOnly = readOnly
 
     def fromNikkiDict(self, dic):
         self.timeModified = self.tagModified = False
@@ -104,10 +115,15 @@ class Editor(QWidget, Ui_editor):
         self.tagEditor.setText(dic.get('tags', ''))
         self.textEditor.setRichText(dic.get('text', ''), dic.get('formats'))
         # if title is empty, use datetime instead. if no datetime (new), use "New Diary"
-        hint = (dic.get('title') or
-                (datetimeTrans(self.datetime, stripTime=True) if 'datetime' in dic else None) or
-                self.tr('New Diary'))
-        self.setWindowTitle("%s - Hazama" % hint)
+        t = (dic.get('title') or
+             (datetimeTrans(self.datetime, stripTime=True) if 'datetime' in dic else None) or
+             self.tr('New Diary'))
+        self.setWindowTitle("%s - Hazama" % t)
+
+        readOnly = (settings['Editor'].getboolean('autoReadOnly') and
+                    self.datetime is not None and
+                    datetimeToQt(self.datetime).daysTo(QDateTime.currentDateTime()) > 3)
+        self.setReadOnly(readOnly)
 
     def toNikkiDict(self):
         text, formats = self.textEditor.getRichText()

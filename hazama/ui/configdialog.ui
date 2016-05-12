@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>372</width>
-    <height>420</height>
+    <width>388</width>
+    <height>429</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -110,6 +110,13 @@
           <property name="topMargin">
            <number>5</number>
           </property>
+          <item>
+           <widget class="QCheckBox" name="autoRoCheck">
+            <property name="text">
+             <string>Enable read-only mode for diaries older than 3 days</string>
+            </property>
+           </widget>
+          </item>
           <item>
            <widget class="QCheckBox" name="aindCheck">
             <property name="text">

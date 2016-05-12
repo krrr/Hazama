@@ -18,7 +18,7 @@ settings.update({
     'Main': {'debug': False, 'backup': True, 'dbPath': 'nikkichou.db',
              'tagListCount': True, 'previewLines': 4,
              'listSortBy': 'datetime', 'listReverse': True, 'tagListVisible': False},
-    'Editor': {'autoIndent': True, 'titleFocus': False},
+    'Editor': {'autoIndent': True, 'titleFocus': False, 'autoReadOnly': True},
     'Font': {},
     'ThemeColorful': {'colorScheme': 'green'}
 })
