@@ -41,6 +41,7 @@ class Editor(QWidget, Ui_editor):
         # seems PySide has problem with QKeySequence.StandardKeys
         self.closeSaveSc = QShortcut(QKeySequence.Save, self, self.close)
         self.closeNoSaveSc = QShortcut(QKeySequence('Ctrl+W'), self, self.closeNoSave)
+        self.quickCloseSc = QShortcut(QKeySequence('Esc'), self, self.closeNoSave)
         # Ctrl+Shift+Backtab doesn't work
         self.preSc = QShortcut(QKeySequence('Ctrl+Shift+Tab'), self)
         self.nextSc = QShortcut(QKeySequence('Ctrl+Tab'), self)
@@ -103,6 +104,7 @@ class Editor(QWidget, Ui_editor):
         self.lockBtn.setVisible(readOnly)
         self.titleEditor.setVisible(not readOnly or bool(self.titleEditor.text()))
         self.tagEditor.setVisible(not readOnly or bool(self.tagEditor.text()))
+        self.quickCloseSc.setEnabled(readOnly)
         self.readOnly = readOnly
 
     def fromNikkiDict(self, dic):
