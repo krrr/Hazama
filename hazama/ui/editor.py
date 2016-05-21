@@ -16,12 +16,14 @@ class Editor(QWidget, Ui_editor):
 
     def __init__(self, nikkiDict, parent=None):
         super().__init__(parent)
+        self._saveOnClose = True
         self.setupUi(self)
         self.readOnly = self.datetime = self.id = self.timeModified = self.tagModified = None
         restoreWidgetGeo(self, settings['Editor'].get('windowGeo'))
 
         self.titleEditor.setFont(font.title)
-        self.titleEditor.returnPressed.connect(lambda: self.textEditor.setFocus())
+        self.titleEditor.returnPressed.connect(
+            lambda: None if self.readOnly else self.textEditor.setFocus())
         self.textEditor.setFont(font.text)
         self.textEditor.setAutoIndent(settings['Editor'].getboolean('autoIndent'))
 
@@ -32,10 +34,9 @@ class Editor(QWidget, Ui_editor):
         self.lockBtn.clicked.connect(lambda: self.setReadOnly(False))
 
         self.tagEditor.setTextMargins(QMargins(2, 0, 2, 0))
-        self.tagEditor.setCompleter(
-            TagCompleter(list(nikki.gettags()), self.tagEditor))
-        saveBtn = self.box.button(QDialogButtonBox.Save)
-        self.tagEditor.returnPressed.connect(lambda: saveBtn.setFocus())
+        self.tagEditor.setCompleter(TagCompleter(list(nikki.gettags()), self.tagEditor))
+        self.tagEditor.returnPressed.connect(
+            lambda: None if self.readOnly else self.box.button(QDialogButtonBox.Save).setFocus())
 
         # setup shortcuts
         # seems PySide has problem with QKeySequence.StandardKeys
@@ -56,13 +57,12 @@ class Editor(QWidget, Ui_editor):
     def closeEvent(self, event):
         """Normal close will save diary. For cancel operation, call closeNoSave."""
         settings['Editor']['windowGeo'] = saveWidgetGeo(self)
-        self.closed.emit(self.id, self.needSave())
+        self.closed.emit(self.id, self.needSave() if self._saveOnClose else False)
         event.accept()
 
     def closeNoSave(self):
-        settings['Editor']['windowGeo'] = saveWidgetGeo(self)
-        self.hide()  # avoid closeEvent
-        self.closed.emit(self.id, False)
+        self._saveOnClose = False
+        self.close()
 
     def mousePressEvent(self, event):
         """Handle mouse back/forward button"""
@@ -99,8 +99,9 @@ class Editor(QWidget, Ui_editor):
         self.tagEditor.setReadOnly(readOnly)
         self.textEditor.fmtMenu.setEnabled(False)
         self.dtBtn.setCursor(Qt.ArrowCursor if readOnly else Qt.PointingHandCursor)
-        self.box.setStandardButtons(QDialogButtonBox.Close if readOnly else
-                                    QDialogButtonBox.Cancel | QDialogButtonBox.Save)
+        self.box.setStandardButtons(self.box.Close if readOnly else
+                                    self.box.Save | self.box.Cancel)
+        self.box.button(self.box.Close if readOnly else self.box.Save).setDefault(True)
         self.lockBtn.setVisible(readOnly)
         self.titleEditor.setVisible(not readOnly or bool(self.titleEditor.text()))
         self.tagEditor.setVisible(not readOnly or bool(self.tagEditor.text()))
