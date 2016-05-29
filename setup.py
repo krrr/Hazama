@@ -63,7 +63,7 @@ class BuildQt(Command):
         lang_dir = pjoin('hazama', 'lang')
         if not os.path.isdir(lang_dir): os.mkdir(lang_dir)
 
-        lres = find_executable('lrelease') or find_executable('lrelease-qt4')
+        lres = find_executable('lrelease-qt4') or find_executable('lrelease')
         if lres is None:
             raise DistutilsExecError('lrelease not found')
 
