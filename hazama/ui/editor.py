@@ -45,7 +45,9 @@ class Editor(QWidget, Ui_editor):
         self.quickCloseSc = QShortcut(QKeySequence('Esc'), self, self.closeNoSave)
         # Ctrl+Shift+Backtab doesn't work
         self.preSc = QShortcut(QKeySequence('Ctrl+Shift+Tab'), self)
+        self.quickPreSc = QShortcut(QKeySequence('Left'), self)
         self.nextSc = QShortcut(QKeySequence('Ctrl+Tab'), self)
+        self.quickNextSc = QShortcut(QKeySequence('Right'), self)
 
         self.fromNikkiDict(nikkiDict)
 
@@ -94,10 +96,8 @@ class Editor(QWidget, Ui_editor):
                 self.timeModified = True
 
     def setReadOnly(self, readOnly):
-        self.titleEditor.setReadOnly(readOnly)
-        self.textEditor.setReadOnly(readOnly)
-        self.tagEditor.setReadOnly(readOnly)
-        self.textEditor.fmtMenu.setEnabled(False)
+        for i in [self.titleEditor, self.textEditor, self.tagEditor]:
+            i.setReadOnly(readOnly)
         self.dtBtn.setCursor(Qt.ArrowCursor if readOnly else Qt.PointingHandCursor)
         self.box.setStandardButtons(self.box.Close if readOnly else
                                     self.box.Save | self.box.Cancel)
@@ -105,7 +105,8 @@ class Editor(QWidget, Ui_editor):
         self.lockBtn.setVisible(readOnly)
         self.titleEditor.setVisible(not readOnly or bool(self.titleEditor.text()))
         self.tagEditor.setVisible(not readOnly or bool(self.tagEditor.text()))
-        self.quickCloseSc.setEnabled(readOnly)
+        for i in [self.quickCloseSc, self.quickPreSc, self.quickNextSc]:
+            i.setEnabled(readOnly)
         self.readOnly = readOnly
 
     def fromNikkiDict(self, dic):

@@ -502,8 +502,11 @@ class NikkiList(QListView):
             self._setEditorStaggerPos(e)
             self.editors[id_] = e
             e.closed.connect(self.closeEditor)
-            e.preSc.activated.connect(lambda: self._editorMove(-1))
-            e.nextSc.activated.connect(lambda: self._editorMove(1))
+            pre, next = lambda: self._editorMove(-1), lambda: self._editorMove(1)
+            e.preSc.activated.connect(pre)
+            e.quickPreSc.activated.connect(pre)
+            e.nextSc.activated.connect(next)
+            e.quickNextSc.activated.connect(next)
             e.show()
             return id_
 
