@@ -12,6 +12,6 @@ Build & Install
 
 Requirements (Arch Linux ver; AUR also available): python3, python-pyside, python-pyside-tools
 
-Requirements (Ubuntu ver): python3, python3-pyside, pyside-tools, lrelease-qt4
+Requirements (Ubuntu ver): python3, python3-pyside, pyside-tools, qt4-linguist-tools
 
 _EXE packaging requires cx_Freeze_

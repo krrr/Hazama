@@ -183,24 +183,23 @@ def getDpiScaleRatio():
 
 
 def fixWidgetSizeOnHiDpi(widget):
-    """Simply resize current size according to DPI."""
-    ratio = getDpiScaleRatio()
-    if ratio > 1:
-        widget.resize(widget.size() * ratio)
-        widget.setMinimumSize(widget.minimumSize() * ratio)  # after resize, prevent over sizing
+    """Simply resize current size according to DPI. Should be called after setupUi."""
+    if scaleRatio > 1:
+        widget.resize(widget.size() * scaleRatio)
+        widget.setMinimumSize(widget.minimumSize() * scaleRatio)  # prevent over sizing after resize
 
 
 def saveWidgetGeo(widget):
-    settings['Main']['geoDpiRatio'] = str(scaleRatio)
-    return str(widget.saveGeometry().toHex())
+    return '%s,%s' % (widget.saveGeometry().toHex(), scaleRatio)
 
 
 def restoreWidgetGeo(widget, geoStr):
-    if not geoStr:
-        return
+    if not geoStr or geoStr.count(',') != 1:
+        return fixWidgetSizeOnHiDpi(widget)
 
-    success = widget.restoreGeometry(QByteArray.fromHex(geoStr))
-    geoRatio = float(settings['Main'].get('geoDpiRatio', scaleRatio))
+    a, b = geoStr.split(',')
+    success = widget.restoreGeometry(QByteArray.fromHex(a))
+    geoRatio = float(b)
     if success and abs(scaleRatio - geoRatio) > 0.01:
         widget.resize(widget.size() / geoRatio * scaleRatio)
 
