@@ -7,7 +7,7 @@ from hazama.ui.customwidgets import QLineEditWithMenuIcon
 from hazama.ui.configdialog import ConfigDialog
 from hazama.ui.mainwindow_ui import Ui_mainWindow
 from hazama.ui.heatmap import HeatMap
-from hazama.config import settings
+from hazama.config import settings, isWin
 
 
 class MainWindow(QMainWindow, Ui_mainWindow):
@@ -16,9 +16,8 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         self.setupUi(self)
         self.cfgDialog = self.heatMap = None  # create on on_cfgAct_triggered
         restoreWidgetGeo(self, settings['Main'].get('windowGeo'))
-        # setup toolbar bg, the second stage is in showEvent
-        self.toolBar.setProperty(
-            'extendTitleBar', settings['Main'].getboolean('extendTitleBarBg'))
+        # setup toolbar bg properties; the second stage is in showEvent
+        self.onExtendTitleBarBgChanged(init=True)
         self.toolBar.setIconSize(QSize(24, 24) * scaleRatio)
 
         # setup TagList width
@@ -178,14 +177,24 @@ class MainWindow(QMainWindow, Ui_mainWindow):
             self.heatMap.move(self.pos() + QPoint(12, 12)*scaleRatio)
             self.heatMap.show()
 
-    def onExtendTitleBarBgChanged(self):
-        self.toolBar.setProperty(
-            'extendTitleBar', settings['Main'].getboolean('extendTitleBarBg'))
-        self._applyExtendTitleBarBg()
+    def onExtendTitleBarBgChanged(self, init=False):
+        # it's being called by __init__ when init is True
+        ex = settings['Main'].getboolean('extendTitleBarBg')
+        self.toolBar.setProperty('extendTitleBar', ex)
+        type_ = ''
+        if ex:
+            type_ = 'win' if isWin else 'other'
+        self.toolBar.setProperty('titleBarBgType', type_)
+        if not init:
+            self.style().unpolish(self)
+            self.style().polish(self)
+            self._applyExtendTitleBarBg()
 
     def _applyExtendTitleBarBg(self):
-        if (settings['Main'].getboolean('extendTitleBarBg') and
-                winDwmExtendWindowFrame(self.winId(), self.toolBar.height())):
+        if not settings['Main'].getboolean('extendTitleBarBg'):
+            return
+        if isWin:
+            winDwmExtendWindowFrame(self.winId(), self.toolBar.height())
             self.setAttribute(Qt.WA_TranslucentBackground)
 
     def sortOrderChanged(self, checked):

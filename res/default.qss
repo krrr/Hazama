@@ -5,11 +5,13 @@ QMainWindow QToolBar {
     padding: 2px;
     spacing: 0px
 }
-QMainWindow QToolBar[extendTitleBar="true"] {
-    /* Windows will add thin border to parts except toolbar (if system theme has this),
-    so toolbar border is duplicated */
+QMainWindow QToolBar[titleBarBgType="win"] {
     background: transparent;
+    /* Windows will add thin border to parts except toolbar (if system theme has this) */
     border: none;
+}
+QMainWindow QToolBar[titleBarBgType="other"] {
+    background: none;
 }
 
 QLabel#countLabel {color: #909090}

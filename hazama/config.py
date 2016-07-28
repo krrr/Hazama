@@ -2,6 +2,7 @@
 from configparser import ConfigParser
 import sys
 import os
+from os import path
 from hazama import db
 
 
@@ -16,38 +17,36 @@ settings = ConfigParser()
 # set default values. some values have no defaults, such as windowGeo and tagListWidth
 settings.update({
     'Main': {'debug': False, 'backup': True, 'dbPath': 'nikkichou.db',
-             'tagListCount': True, 'previewLines': 4,
-             'listSortBy': 'datetime', 'listReverse': True, 'tagListVisible': False},
+             'tagListCount': True, 'previewLines': 4, 'listSortBy': 'datetime',
+             'listReverse': True, 'tagListVisible': False,
+             'extendTitleBarBg': isWin8OrLater,  # Win8 has no aero glass
+             'theme': 'colorful' if isWinVistaOrLater else '1px-rect'},
     'Editor': {'autoIndent': True, 'titleFocus': False, 'autoReadOnly': True},
     'Font': {},
     'ThemeColorful': {'colorScheme': 'green'}
 })
-settings['Main']['extendTitleBarBg'] = str(isWin8OrLater)  # Win8 has no aero glass
-settings['Main']['theme'] = 'colorful' if isWinVistaOrLater else '1px-rect'
 
 nikki = db.Nikki()
 
 # set application path (used to load language file)
 if hasattr(sys, 'frozen'):
-    appPath = os.path.dirname(sys.argv[0])
+    appPath = path.dirname(sys.argv[0])
 else:
-    appPath = os.path.dirname(__file__)
+    appPath = path.dirname(__file__)
 
 
 def changeCWD():
     # user will not care about CWD because this is GUI application?
-    if '-portable' in sys.argv:
-        os.chdir(appPath)
-    elif os.path.isfile(os.path.join(appPath, 'config.ini')):
+    if '-portable' in sys.argv or path.isfile(path.join(appPath, 'config.ini')):
         os.chdir(appPath)
     else:
         if sys.platform == 'win32':
-            p = os.path.join(os.environ['APPDATA'], 'Hazama')
+            p = path.join(os.environ['APPDATA'], 'Hazama')
         else:
-            cfg_path = os.path.join(os.environ['HOME'], '.config')
-            if not os.path.isdir(cfg_path): os.mkdir(cfg_path)
-            p = os.path.join(cfg_path, 'Hazama')
-        if not os.path.isdir(p): os.mkdir(p)
+            cfg_path = path.join(os.environ['HOME'], '.config')
+            if not path.isdir(cfg_path): os.mkdir(cfg_path)
+            p = path.join(cfg_path, 'Hazama')
+        if not path.isdir(p): os.mkdir(p)
         os.chdir(p)
 
 
