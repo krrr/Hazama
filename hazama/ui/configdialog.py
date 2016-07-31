@@ -31,7 +31,10 @@ class ConfigDialog(QDialog, Ui_configDialog):
         self.aboutBrowser.setHtml(about)
         self.aboutBrowser.document().setDocumentMargin(0)
         self.openOutBtn.hide()  # can't set initial state in creator
-        self.appIcoLabel.setPixmap(qApp.windowIcon().pixmap(QSize(32, 32) * scaleRatio))
+        self.appIcoBtn.setIcon(qApp.windowIcon())
+        self.appIcoBtn.setIconSize(QSize(32, 32) * scaleRatio)
+        self.appIcoBtn.setStyleSheet('border: none')
+        self.appIcoBtn.clicked.connect(self.easterEgg)
         # load settings
         self.aindCheck.setChecked(settings['Editor'].getboolean('autoIndent'))
         self.autoRoCheck.setChecked(settings['Editor'].getboolean('autoReadOnly'))
@@ -219,6 +222,46 @@ class ConfigDialog(QDialog, Ui_configDialog):
         ret = dlg.exec_()
         if ret:
             self._setFontButton(btn, dlg.selectedFont())
+
+    def easterEgg(self):
+        if self.appIcoBtn.icon().isNull():
+            return
+
+        def flyPaperPlane():
+            nonlocal v
+            v += 0.3
+            flyIco.move(flyIco.pos() - QPoint(v, v))
+            if flyIco.x() < -100:
+                timer.stop()
+
+        flyIco = QLabel(self)
+        flyIco.setPixmap(self.appIcoBtn.icon().pixmap(self.appIcoBtn.iconSize()))
+        flyIco.setAlignment(Qt.AlignCenter)
+        flyIco.setFixedSize(self.appIcoBtn.size())
+        pos = self.appIcoBtn.mapTo(self, QPoint(0, 0))
+        flyIco.move(pos)
+        flyIco.show()
+        self.appIcoBtn.setFixedSize(self.appIcoBtn.size())
+        self.appIcoBtn.setIcon(QIcon())  # set empty icon to hold place
+        v = 1.0
+        timer = QTimer(self.appIcoBtn)
+        timer.timeout.connect(flyPaperPlane)
+        timer.start(16)
+
+        def textEater():
+            nonlocal count
+            if not count:
+                return timer2.stop()
+            t = self.infoBox.title()
+            self.infoBox.setTitle(t[:idx] + t[idx+1:])
+            count -= 1
+            timer2.start(timer2.interval() - 15)
+
+        idx = self.infoBox.title().index('H')
+        count = 6
+        timer2 = QTimer(self.appIcoBtn)
+        timer2.timeout.connect(textEater)
+        timer2.start(100)
 
     @staticmethod
     def _setFontButton(btn, font_):

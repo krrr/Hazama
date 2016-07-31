@@ -208,9 +208,16 @@
            <number>0</number>
           </property>
           <item>
-           <widget class="QLabel" name="appIcoLabel">
-            <property name="pixmap">
-             <pixmap resource="../../res/res.qrc">:/appicon-48.png</pixmap>
+           <widget class="QPushButton" name="appIcoBtn">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="icon">
+             <iconset resource="../../res/res.qrc">
+              <normaloff>:/appicon-24.png</normaloff>:/appicon-24.png</iconset>
             </property>
            </widget>
           </item>
