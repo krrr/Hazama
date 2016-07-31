@@ -2,9 +2,9 @@ import sys
 import os
 import time
 import logging
+import hazama.ui.res_rc
 from PySide.QtGui import QApplication, QIcon, QFont, QFontMetrics, QMessageBox
 from PySide.QtCore import QLocale, QTranslator, QLibraryInfo, QDateTime, QFile, QByteArray
-import hazama.ui.rc
 from hazama.config import (settings, appPath, saveSettings, isWin, isWin7OrLater,
                            isWinVistaOrLater, isWin8OrLater)
 

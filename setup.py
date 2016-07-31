@@ -2,6 +2,7 @@
 import sys
 import os
 import shutil
+import hazama
 from os.path import join as pjoin
 from glob import glob
 from setuptools import setup
@@ -10,7 +11,6 @@ from distutils.errors import DistutilsExecError
 from distutils.spawn import find_executable, spawn
 from distutils.command.build import build
 from setuptools.command.install import install
-import hazama
 
 
 class CustomBuild(build):
@@ -43,28 +43,24 @@ class BuildQt(Command):
 
     @staticmethod
     def compile_ui():
-        for i in glob(pjoin('hazama', 'ui', '*.ui')):
-            spawn(['pyside-uic', '-o', i.split('.')[0]+'_ui.py', '-x', i])
-        # fix importing error in generated files
-        # resource will be imported in ui.__init__
-        for i in glob(pjoin('hazama', 'ui', '*_ui.py')):
-            with open(i, 'r', encoding='utf-8') as f:
-                text = [l for l in f if not l.startswith('import res_rc')]
-            with open(i, 'w', encoding='utf-8') as f:
-                f.write(''.join(text))
+        for src in glob(pjoin('hazama', 'ui', '*.ui')):
+            dst = src.replace('.ui', '_ui.py')
+            if not os.path.isfile(dst) or os.path.getmtime(src) > os.path.getmtime(dst):
+                spawn(['pyside-uic', '--from-imports', '-o', dst, '-x', src])
 
     @staticmethod
     def compile_rc():
         spawn(['pyside-rcc', '-py3', pjoin('res', 'res.qrc'), '-o',
-               pjoin('hazama', 'ui', 'rc.py')])
+               pjoin('hazama', 'ui', 'res_rc.py')])
 
     @staticmethod
     def compile_ts():
         lang_dir = pjoin('hazama', 'lang')
-        if not os.path.isdir(lang_dir): os.mkdir(lang_dir)
+        if not os.path.isdir(lang_dir):
+            os.mkdir(lang_dir)
 
         lres = find_executable('lrelease-qt4') or find_executable('lrelease')
-        if lres is None:
+        if not lres:
             raise DistutilsExecError('lrelease not found')
 
         for i in glob(pjoin('translation', '*.ts')):
@@ -188,8 +184,7 @@ Terminal=false
 
 
 if sys.platform == 'win32':  # fix env variables for PySide tools
-    import PySide
-    os.environ['PATH'] += ';' + os.path.dirname(PySide.__file__)
+    os.environ['PATH'] += ';' + pjoin(sys.exec_prefix, 'lib', 'site-packages', 'PySide')
 
 
 # FIXME: PySide installed by archlinux AUR will not recognized by setuptools, so requires not added.
