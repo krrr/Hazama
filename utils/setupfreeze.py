@@ -3,12 +3,11 @@ import sys
 import os
 from os import path
 from glob import glob
-import PySide
 from cx_Freeze import setup, Executable
 
 sys.path[0] = os.getcwd()  # this script will be called by ../setup.py
-from hazama import __version__, __author__
-pyside_dir = path.dirname(PySide.__file__)
+import hazama
+pyside_dir = os.path.join(sys.exec_prefix, 'lib', 'site-packages', 'PySide')
 
 
 # prepare translation files
@@ -25,8 +24,8 @@ main = Executable('hazama.py',
 
 setup(
     name='Hazama',
-    author=__author__,
-    version=__version__,
+    author=hazama.__author__,
+    version=hazama.__version__,
     description='Hazama',
     options={'build_exe': {
         'include_files': all_ts,
