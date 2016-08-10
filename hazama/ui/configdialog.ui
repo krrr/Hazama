@@ -37,8 +37,14 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_6">
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_4">
-         <item>
+        <layout class="QFormLayout" name="formLayout_3">
+         <property name="fieldGrowthPolicy">
+          <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+         </property>
+         <property name="verticalSpacing">
+          <number>5</number>
+         </property>
+         <item row="1" column="0">
           <widget class="QLabel" name="label_2">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
@@ -51,7 +57,7 @@
            </property>
           </widget>
          </item>
-         <item>
+         <item row="1" column="1">
           <widget class="QComboBox" name="langCombo">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
@@ -67,18 +73,12 @@
            </property>
           </widget>
          </item>
-         <item>
-          <spacer name="horizontalSpacer_2">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
+         <item row="2" column="0" colspan="2">
+          <widget class="QCheckBox" name="updateCheck">
+           <property name="text">
+            <string>Check for update automatically</string>
            </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
+          </widget>
          </item>
         </layout>
        </item>
@@ -94,7 +94,7 @@
           <item>
            <widget class="QCheckBox" name="tListCountCheck">
             <property name="text">
-             <string>Show counts in TagList</string>
+             <string>Show counts in tag list</string>
             </property>
            </widget>
           </item>
@@ -315,7 +315,10 @@
              <set>Qt::LinksAccessibleByKeyboard|Qt::LinksAccessibleByMouse</set>
             </property>
             <property name="openExternalLinks">
-             <bool>true</bool>
+             <bool>false</bool>
+            </property>
+            <property name="openLinks">
+             <bool>false</bool>
             </property>
            </widget>
           </item>

@@ -16,10 +16,10 @@ __author__ = 'krrr'
 
 def main_entry():
     import time
-    import logging
-    from hazama import db, config
-
     start_time = time.clock()
+    import logging
+    from hazama import config
+
     config.changeCWD()
     config.init()
     # setup logging
@@ -28,7 +28,7 @@ def main_entry():
     logging.info('Hazama v%s', __version__)
     logging.info(str(config.nikki))
 
-    from hazama import ui
+    from hazama import ui, db, updater
     app = ui.init()
     from hazama.ui.mainwindow import MainWindow
     w = MainWindow()
@@ -41,4 +41,19 @@ def main_entry():
         except OSError as e:
             from hazama.ui import showErrors
             showErrors('cantFile', info=str(e))
-    return app.exec_()
+
+    if config.settings['Update'].getboolean('needClean'):
+        updater.cleanBackup()
+        config.settings['Update']['needClean'] = str(False)
+
+    ret = app.exec_()
+    del w  # force close all child window of MainWindow
+
+    config.saveSettings()
+    from hazama import updater
+    # segfault might happen if not wait for them
+    for i in [updater.checkUpdateTask, updater.installUpdateTask]:
+        if i is not None:
+            logging.debug('waiting for thread to exit')
+            i.wait()
+    return ret

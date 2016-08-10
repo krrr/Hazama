@@ -6,6 +6,9 @@ from os import path
 from hazama import db
 
 
+# constants
+SOCKET_TIMEOUT = 10
+
 # for default settings
 isWin = hasattr(sys, 'getwindowsversion')
 _winVer = sys.getwindowsversion() if isWin else None
@@ -23,6 +26,7 @@ settings.update({
              'theme': 'colorful' if isWinVistaOrLater else '1px-rect'},
     'Editor': {'autoIndent': True, 'titleFocus': False, 'autoReadOnly': True},
     'Font': {},
+    'Update': {'autoCheck': False, 'newestIgnoredVer': '0.0.0', 'needClean': False},
     'ThemeColorful': {'colorScheme': 'green'}
 })
 

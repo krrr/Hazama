@@ -1,12 +1,13 @@
+import logging
 from PySide.QtGui import *
 from PySide.QtCore import *
-import logging
 from hazama.ui import (font, setTranslationLocale, winDwmExtendWindowFrame, scaleRatio,
                        makeQIcon, saveWidgetGeo, restoreWidgetGeo)
 from hazama.ui.customwidgets import QLineEditWithMenuIcon
 from hazama.ui.configdialog import ConfigDialog
 from hazama.ui.mainwindow_ui import Ui_mainWindow
 from hazama.ui.heatmap import HeatMap
+from hazama import updater
 from hazama.config import settings, isWin
 
 
@@ -60,14 +61,19 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         searchSc.activated.connect(self.searchBox.setFocus)
 
         # setup bigger toolbar icons
-        ratio = scaleRatio
         originSz = QSize(24, 24)
-        if ratio > 1.0:
+        if scaleRatio > 1.0:
             for i in [self.cfgAct, self.creAct, self.delAct, self.mapAct,
                       self.sorAct, self.tListAct]:
                 ico = i.icon()
-                ico.addPixmap(ico.pixmap(originSz).scaled(originSz * ratio))
+                ico.addPixmap(ico.pixmap(originSz).scaled(originSz * scaleRatio))
                 i.setIcon(ico)
+
+        # setup auto update check
+        if settings['Update'].getboolean('autoCheck'):
+            task = updater.CheckUpdate()
+            QTimer.singleShot(1200, task, SLOT('start()'))
+            task.succeeded.connect(self.setUpdateHint)  # use lambda here will cause segfault!
 
         # delay list loading until main event loop start
         QTimer.singleShot(0, self.nList, SLOT('load()'))
@@ -229,6 +235,25 @@ class MainWindow(QMainWindow, Ui_mainWindow):
 
     def updateCountLabelOnLoad(self):
         self.countLabel.setText(self.tr('loading...'))
+
+    def setUpdateHint(self, enabled=None):
+        if enabled is None:
+            enabled = bool(updater.foundUpdate)
+
+        if enabled:
+            ico = self.cfgAct.icon()
+            self.cfgAct.originIcon = QIcon(ico)  # get copy
+            sz = QSize(24, 24) * scaleRatio
+            origin = ico.pixmap(sz)
+            mark = QPixmap(':/toolbar/update-mark.png').scaled(sz)
+            painter = QPainter(origin)
+            painter.drawPixmap(0, 0, mark)
+            painter.end()  # this should be called at destruction, but... critical error everywhere?
+            ico.addPixmap(origin)
+            self.cfgAct.setIcon(ico)
+        elif hasattr(self.cfgAct, 'originIcon'):
+            self.cfgAct.setIcon(self.cfgAct.originIcon)
+            del self.cfgAct.originIcon
 
 
 class SearchBox(QLineEditWithMenuIcon):

@@ -5,7 +5,7 @@ import logging
 import hazama.ui.res_rc
 from PySide.QtGui import QApplication, QIcon, QFont, QFontMetrics, QMessageBox
 from PySide.QtCore import QLocale, QTranslator, QLibraryInfo, QDateTime, QFile, QByteArray
-from hazama.config import (settings, appPath, saveSettings, isWin, isWin7OrLater,
+from hazama.config import (settings, appPath, isWin, isWin7OrLater,
                            isWinVistaOrLater, isWin8OrLater)
 
 
@@ -261,8 +261,8 @@ class Fonts:
 
 
 def init():
+    logging.debug('Qt lib path: %s' % QLibraryInfo.location(QLibraryInfo.LibrariesPath))
     app = QApplication(sys.argv)
-    app.lastWindowClosed.connect(saveSettings)
     app.setWindowIcon(makeQIcon(':/appicon-24.png', ':/appicon-48.png', ':/appicon-64.png'))
 
     global scaleRatio

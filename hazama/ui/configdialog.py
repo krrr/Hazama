@@ -1,17 +1,65 @@
+import sys
 import logging
 from PySide.QtGui import *
 from PySide.QtCore import *
 from hazama import __version__, db
-from hazama.ui import (font, setStyleSheet, readRcTextFile, scaleRatio,
-                       fixWidgetSizeOnHiDpi)
+from hazama.ui import font, setStyleSheet, scaleRatio, fixWidgetSizeOnHiDpi
 from hazama.ui.configdialog_ui import Ui_configDialog
-from hazama.config import settings, nikki
+from hazama.config import settings, nikki, isWin7OrLater
+from hazama import updater
 
 
 languages = {'en': 'English', 'zh_CN': '简体中文', 'ja_JP': '日本語'}
 languagesR = {b: a for a, b in languages.items()}
 themes = ['1px-rect', 'colorful']
 colorfulSchemes = ['green', 'yellow', 'white']
+aboutBrowserCss = '''
+p, ul {margin:0px; font-size:9pt;}
+a {color:#00345e; text-decoration: none;}
+'''
+aboutInfo = '''
+<p align="center">{title}</p>
+
+<p align="center" style="margin-top:4px;">
+    <a href="hazama://check-update">{check_update}</a>
+    &nbsp;
+    <a href="https://krrr.github.io/hazama">{website}</a>
+    &nbsp;
+    <a href="https://github.com/krrr">{author}</a>
+</p>
+'''
+aboutUpdate = '''
+<p align="center">v{curtVer} <b>({title})</b></p>
+<p align="center">{size}: 10-15MB</p>
+
+{note}
+
+<p align="center" style="margin-top:4px;">
+  <a href="hzm://install-update">{install}</a>
+  &nbsp;
+  <a href="hzm://ignore-update">{ignore}</a>
+</p>
+'''
+aboutUpdateNoInstall = '''
+<p align="center">v{curtVer} <b>({title})</b></p>
+
+{note}
+
+<p align="center" style="margin-top:4px;">
+    <a href="https://krrr.github.io/hazama">{website}</a>
+    &nbsp;
+  <a href="hzm://ignore-update">{ignore}</a>
+</p>
+'''
+aboutError = '''
+<p align="center">{title}</p>
+
+<p align="center" style="margin-top:4px;">
+  <a href="hzm://{cmd}">{retry}</a>
+  &nbsp;
+  <a href="hzm://show-info">{ok}</a>
+</p>
+'''
 
 
 class ConfigDialog(QDialog, Ui_configDialog):
@@ -20,22 +68,35 @@ class ConfigDialog(QDialog, Ui_configDialog):
     accepted = Signal()
     extendBgChanged = Signal()
 
-    def __init__(self, parent=None):
+    def __init__(self, parent):
         super().__init__(parent, Qt.WindowTitleHint)
+        self.checkUpdateTask = self.installUpdateTask = None
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setupUi(self)
         fixWidgetSizeOnHiDpi(self)
-        about = readRcTextFile(':/about.html').format(
-            ver=__version__, author=self.tr('author'), website=self.tr('website'),
-            checkupdate=self.tr('check-update'))
-        self.aboutBrowser.setHtml(about)
+
+        # about browser
+        self.aboutBrowser.anchorClicked.connect(self._aboutAreaNavigate)
         self.aboutBrowser.document().setDocumentMargin(0)
+        self.aboutBrowser.document().setDefaultStyleSheet(aboutBrowserCss)
+        if updater.foundUpdate:
+            self._aboutAreaNavigate(QUrl('hzm://show-update'))
+        elif updater.checkUpdateTask:
+            # signal losing is impossible? because of GIL
+            task = self.checkUpdateTask = updater.checkUpdateTask
+            task.succeeded.connect(lambda: self._aboutAreaNavigate(QUrl('hzm://show-update')))
+            task.failed.connect(lambda e: self._aboutAreaError(e, 'check-update'))
+            self._aboutAreaNavigate(QUrl('hzm://show-info/' + self.tr('checking...')))
+        else:
+            self._aboutAreaNavigate(QUrl('hzm://show-info'))
+
         self.openOutBtn.hide()  # can't set initial state in creator
         self.appIcoBtn.setIcon(qApp.windowIcon())
         self.appIcoBtn.setIconSize(QSize(32, 32) * scaleRatio)
         self.appIcoBtn.setStyleSheet('border: none')
-        self.appIcoBtn.clicked.connect(self.easterEgg)
+        self.appIcoBtn.clicked.connect(self._easterEgg)
         # load settings
+        self.updateCheck.setChecked(settings['Update'].getboolean('autoCheck'))
         self.aindCheck.setChecked(settings['Editor'].getboolean('autoIndent'))
         self.autoRoCheck.setChecked(settings['Editor'].getboolean('autoReadOnly'))
         self.tListCountCheck.setChecked(settings['Main'].getboolean('tagListCount'))
@@ -104,12 +165,22 @@ class ConfigDialog(QDialog, Ui_configDialog):
             self.staLabel.setText(self.tr('N/A'))
 
     def showEvent(self, event):
-        # set minimum height of aboutBrowser according to its contents
-        doc = self.aboutBrowser.document()
-        self.aboutBrowser.setMinimumHeight(int(doc.size().height()))
+        # call to adjust has no effect before showing
+        self._adjustAboutAreaHeight()
+
+    def closeEvent(self, event):
+        if self.checkUpdateTask:
+            self.checkUpdateTask.disConn()
+        if self.installUpdateTask:
+            self.installUpdateTask.canceled = True
+            self.installUpdateTask.disConn()
+
+    def reject(self):
+        self.closeEvent(None)  # when Esc key pressed closeEvent will not be called
+        super().reject()
 
     def accept(self):
-        # special pairs that need trigger signal or call functions
+        # special pairs that may trigger signal or call functions
         lang = languagesR[self.langCombo.currentText()]
         langChanged = lang != settings['Main'].get('lang', 'en')
         theme = self.themeCombo.currentText()
@@ -120,6 +191,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
         settings['Main']['lang'] = lang
         settings['Main']['theme'] = theme
         settings['Main']['extendTitleBarBg'] = str(extend)
+        settings['Update']['autoCheck'] = str(self.updateCheck.isChecked())
         settings['Editor']['autoIndent'] = str(self.aindCheck.isChecked())
         settings['Editor']['autoReadOnly'] = str(self.autoRoCheck.isChecked())
         settings['Main']['tagListCount'] = str(self.tListCountCheck.isChecked())
@@ -223,7 +295,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
         if ret:
             self._setFontButton(btn, dlg.selectedFont())
 
-    def easterEgg(self):
+    def _easterEgg(self):
         if self.appIcoBtn.icon().isNull():
             return
 
@@ -262,6 +334,86 @@ class ConfigDialog(QDialog, Ui_configDialog):
         timer2 = QTimer(self.appIcoBtn)
         timer2.timeout.connect(textEater)
         timer2.start(100)
+
+    def _adjustAboutAreaHeight(self):
+        doc = self.aboutBrowser.document()
+        self.aboutBrowser.setMinimumHeight(int(doc.size().height()))
+
+    def _aboutAreaNavigate(self, url):
+        if url.isLocalFile() or url.scheme().startswith('http'):
+            return QDesktopServices.openUrl(url)
+
+        cmd = url.host()
+        if cmd == 'show-info':
+            title = 'v'+__version__
+            if url.path():
+                title += ' <b>(' + url.path()[1:] + ')</b>'
+            about = aboutInfo.format(
+                title=title, author=self.tr('Author'), website=self.tr('Website'),
+                check_update=self.tr('Check update'))
+            self.aboutBrowser.setHtml(about)
+            self._adjustAboutAreaHeight()
+        if cmd == 'check-update':
+            if self.checkUpdateTask and self.checkUpdateTask.isRunning():
+                return
+            if self.checkUpdateTask:
+                self.checkUpdateTask.disConn()
+            task = self.checkUpdateTask = updater.CheckUpdate()
+            task.succeeded.connect(lambda: self._aboutAreaNavigate(QUrl('hzm://show-update')))
+            task.failed.connect(lambda e: self._aboutAreaError(e, cmd))
+            task.start()
+            self._aboutAreaSet(self.tr('checking...'), False)
+        elif cmd == 'show-update':  # triggered by check-update
+            update = updater.foundUpdate
+            if update is None:
+                return self._aboutAreaNavigate(QUrl('hzm://show-info/' + self.tr('up-to-date')))
+
+            common = {'ignore': self.tr('Ignore this version'), 'curtVer': __version__,
+                      'title': self.tr('New version: v%s') % update.version,
+                      'note': update.note_html}
+            if hasattr(sys, 'frozen') and isWin7OrLater:
+                self.aboutBrowser.setHtml(aboutUpdate.format(
+                    install=self.tr('Install'), size=self.tr('Size'), **common))
+                self._adjustAboutAreaHeight()
+            else:
+                self.aboutBrowser.setHtml(aboutUpdateNoInstall.format(
+                    website=self.tr('Website'), **common))
+                self._adjustAboutAreaHeight()
+        elif cmd == 'install-update':
+            def succeeded():
+                self._aboutAreaSet(self.tr(
+                    'Succeeded (Restart needed for update to take effect)'))
+                updater.foundUpdate = None
+                self.parent().setUpdateHint(False)
+
+            self._aboutAreaSet(self.tr('Connecting...'))
+            task = self.installUpdateTask = updater.InstallUpdate(updater.foundUpdate)
+            task.progress.connect(lambda r, t: self._aboutAreaSet(
+                updater.textProgressBar(r, t), False))
+            task.downloadFinished.connect(lambda: self._aboutAreaSet(self.tr('Installing...')))
+            task.succeeded.connect(succeeded)
+            task.failed.connect(lambda e: self._aboutAreaError(e, cmd))
+            task.start()
+        elif cmd == 'ignore-update':
+            settings['Update']['newestIgnoredVer'] = updater.foundUpdate.version
+            self._aboutAreaNavigate(QUrl('hzm://show-info'))
+            self._adjustAboutAreaHeight()
+            updater.foundUpdate = None
+            self.parent().setUpdateHint(False)
+
+    def _aboutAreaError(self, msg, cmd):
+        if cmd == 'check-update':
+            err = self.tr('Failed to check update: %s')
+        else:
+            err = self.tr('Failed to install update: %s')
+        self.aboutBrowser.setHtml(aboutError.format(
+            title=err % msg, retry=self.tr('Retry'), cmd=cmd, ok=self.tr('OK')))
+        self._adjustAboutAreaHeight()
+
+    def _aboutAreaSet(self, oneLine, adjust=True):
+        self.aboutBrowser.setHtml('<p align="center">%s</p>' % oneLine)
+        if adjust:
+            self._adjustAboutAreaHeight()
 
     @staticmethod
     def _setFontButton(btn, font_):

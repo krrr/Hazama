@@ -17,8 +17,6 @@
     <file>colorful.qss</file>
     <file>colorful-yellow.qss</file>
     <file>colorful-white.qss</file>
-
-    <file>about.html</file>
   </qresource>
 
   <qresource>
@@ -28,6 +26,7 @@
     <file>toolbar/sort.png</file>
     <file>toolbar/heatmap.png</file>
     <file>toolbar/config.png</file>
+    <file>toolbar/update-mark.png</file>
   </qresource>
 
   <qresource>
