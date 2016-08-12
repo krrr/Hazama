@@ -9,6 +9,8 @@ from hazama.config import (settings, appPath, isWin, isWin7OrLater,
                            isWinVistaOrLater, isWin8OrLater)
 
 
+# qApp global var is None before entering event loop, use QApplication.instance() instead
+
 locale = None
 # datetimeFmt may not contain time part (by default)
 dateFmt = datetimeFmt = fullDatetimeFmt = None
@@ -177,11 +179,6 @@ def isDwmUsable():
         return ret == 0 and b.value
 
 
-def getDpiScaleRatio():
-    dpi = QApplication.instance().desktop().logicalDpiX()  # when will x != y happen?
-    return dpi / 96
-
-
 def fixWidgetSizeOnHiDpi(widget):
     """Simply resize current size according to DPI. Should be called after setupUi."""
     if scaleRatio > 1:
@@ -266,7 +263,7 @@ def init():
     app.setWindowIcon(makeQIcon(':/appicon-24.png', ':/appicon-48.png', ':/appicon-64.png'))
 
     global scaleRatio
-    scaleRatio = getDpiScaleRatio()
+    scaleRatio = app.desktop().logicalDpiX() / 96  # when will x != y happen?
     logging.debug('DPI scale ratio %s' % scaleRatio)
 
     setTranslationLocale()

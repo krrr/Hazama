@@ -3,9 +3,9 @@ import logging
 from PySide.QtGui import *
 from PySide.QtCore import *
 from hazama import __version__, db
-from hazama.ui import font, setStyleSheet, scaleRatio, fixWidgetSizeOnHiDpi
+from hazama.ui import font, setStyleSheet, scaleRatio, fixWidgetSizeOnHiDpi, isDwmUsable
 from hazama.ui.configdialog_ui import Ui_configDialog
-from hazama.config import settings, nikki, isWin7OrLater
+from hazama.config import settings, nikki, isWin7OrLater, isWin
 from hazama import updater
 
 
@@ -106,6 +106,9 @@ class ConfigDialog(QDialog, Ui_configDialog):
             self.focusTextRadio.setChecked(True)
         self.bkCheck.setChecked(settings['Main'].getboolean('backup'))
         self.extendBgCheck.setChecked(settings['Main'].getboolean('extendTitleBarBg'))
+        if isWin and not isDwmUsable():
+            self.extendBgCheck.setEnabled(False)
+            self.extendBgCheck.setChecked(False)
         # language ComboBox
         for l in sorted(languagesR):
             self.langCombo.addItem(l)

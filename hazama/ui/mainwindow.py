@@ -197,9 +197,7 @@ class MainWindow(QMainWindow, Ui_mainWindow):
             self._applyExtendTitleBarBg()
 
     def _applyExtendTitleBarBg(self):
-        if not settings['Main'].getboolean('extendTitleBarBg'):
-            return
-        if isWin:
+        if isWin and settings['Main'].getboolean('extendTitleBarBg'):
             winDwmExtendWindowFrame(self.winId(), self.toolBar.height())
             self.setAttribute(Qt.WA_TranslucentBackground)
 
