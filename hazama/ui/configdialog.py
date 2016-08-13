@@ -3,7 +3,8 @@ import logging
 from PySide.QtGui import *
 from PySide.QtCore import *
 from hazama import __version__, db
-from hazama.ui import font, setStyleSheet, scaleRatio, fixWidgetSizeOnHiDpi, isDwmUsable
+from hazama.ui import (font, setStyleSheet, scaleRatio, fixWidgetSizeOnHiDpi, isDwmUsable,
+                       dbDatetimeFmtQt)
 from hazama.ui.configdialog_ui import Ui_configDialog
 from hazama.config import settings, nikki, isWin7OrLater, isWin
 from hazama import updater
@@ -76,19 +77,19 @@ class ConfigDialog(QDialog, Ui_configDialog):
         fixWidgetSizeOnHiDpi(self)
 
         # about browser
-        self.aboutBrowser.anchorClicked.connect(self._aboutAreaNavigate)
+        self.aboutBrowser.anchorClicked.connect(self._NavigateAboutArea)
         self.aboutBrowser.document().setDocumentMargin(0)
         self.aboutBrowser.document().setDefaultStyleSheet(aboutBrowserCss)
         if updater.foundUpdate:
-            self._aboutAreaNavigate(QUrl('hzm://show-update'))
+            self._NavigateAboutArea(QUrl('hzm://show-update'))
         elif updater.checkUpdateTask:
             # signal losing is impossible? because of GIL
             task = self.checkUpdateTask = updater.checkUpdateTask
-            task.succeeded.connect(lambda: self._aboutAreaNavigate(QUrl('hzm://show-update')))
-            task.failed.connect(lambda e: self._aboutAreaError(e, 'check-update'))
-            self._aboutAreaNavigate(QUrl('hzm://show-info/' + self.tr('checking...')))
+            task.succeeded.connect(self._onCheckUpdateSucceeded)
+            task.failed.connect(self._aboutAreaError)
+            self._NavigateAboutArea(QUrl('hzm://show-info/' + self.tr('checking...')))
         else:
-            self._aboutAreaNavigate(QUrl('hzm://show-info'))
+            self._NavigateAboutArea(QUrl('hzm://show-info'))
 
         self.openOutBtn.hide()  # can't set initial state in creator
         self.appIcoBtn.setIcon(qApp.windowIcon())
@@ -154,7 +155,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
         else:
             diaryDtRange = nikki.get_datetime_range()
         if diaryDtRange:
-            qRange = tuple(map(lambda x: QDateTime.fromString(x, 'yyyy-MM-dd HH:mm'),
+            qRange = tuple(map(lambda x: QDateTime.fromString(x, dbDatetimeFmtQt),
                                diaryDtRange))
             days = qRange[0].daysTo(qRange[1])
         else:
@@ -168,6 +169,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
             self.staLabel.setText(self.tr('N/A'))
 
     def showEvent(self, event):
+        super().showEvent(event)  # centered on parent window
         # call to adjust has no effect before showing
         self._adjustAboutAreaHeight()
 
@@ -225,49 +227,6 @@ class ConfigDialog(QDialog, Ui_configDialog):
         logging.info('settings changed')
         self.accepted.emit()
         self.close()
-
-    @Slot()
-    def on_exportBtn_clicked(self):
-        export_all = self.exportOption.currentIndex() == 0
-        nList = self.parent().nList
-
-        path, _type = QFileDialog.getSaveFileName(
-            parent=self,
-            caption=self.tr('Export Diary'),
-            filter=self.tr('Plain Text (*.txt)'))
-        if path == '': return    # dialog cancelled
-        try:
-            nList.handleExport(path, export_all)
-        except Exception as e:
-            QMessageBox.warning(self, self.tr('Export Failed'), '%-20s' % e)
-            return
-
-        if not self.openOutBtn.isVisible():
-            self.openOutBtn.show()
-        else:  # two or more export happened
-            self.openOutBtn.clicked.disconnect()
-        self.openOutBtn.setFocus()
-        self.openOutBtn.clicked.connect(
-            lambda: QDesktopServices.openUrl('file:///' + path))
-
-    @Slot(str)
-    def on_rstCombo_activated(self, filename):
-        """Restore database backup"""
-        msg = QMessageBox(self)
-        okBtn = msg.addButton(qApp.translate('Dialog', 'Restore'), QMessageBox.AcceptRole)
-        msg.setIcon(QMessageBox.Question)
-        msg.addButton(qApp.translate('Dialog', 'Cancel'), QMessageBox.RejectRole)
-        msg.setWindowTitle(self.tr('Restore backup'))
-        msg.setText(self.tr('Current diary book will be replaced with the backup!'))
-        msg.exec_()
-        msg.deleteLater()
-
-        if msg.clickedButton() == okBtn:
-            db.restore_backup(filename)
-            self.close()
-            self.bkRestored.emit()
-        else:
-            self.rstCombo.setCurrentIndex(0)
 
     def _disableThemeSpe(self):
         for i in [self.schemeCombo, self.schemeLabel]:
@@ -342,7 +301,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
         doc = self.aboutBrowser.document()
         self.aboutBrowser.setMinimumHeight(int(doc.size().height()))
 
-    def _aboutAreaNavigate(self, url):
+    def _NavigateAboutArea(self, url):
         if url.isLocalFile() or url.scheme().startswith('http'):
             return QDesktopServices.openUrl(url)
 
@@ -362,14 +321,14 @@ class ConfigDialog(QDialog, Ui_configDialog):
             if self.checkUpdateTask:
                 self.checkUpdateTask.disConn()
             task = self.checkUpdateTask = updater.CheckUpdate()
-            task.succeeded.connect(lambda: self._aboutAreaNavigate(QUrl('hzm://show-update')))
-            task.failed.connect(lambda e: self._aboutAreaError(e, cmd))
+            task.succeeded.connect(self._onCheckUpdateSucceeded)
+            task.failed.connect(self._aboutAreaError)
             task.start()
-            self._aboutAreaSet(self.tr('checking...'), False)
+            self._setAboutArea(self.tr('checking...'), False)
         elif cmd == 'show-update':  # triggered by check-update
             update = updater.foundUpdate
             if update is None:
-                return self._aboutAreaNavigate(QUrl('hzm://show-info/' + self.tr('up-to-date')))
+                return self._NavigateAboutArea(QUrl('hzm://show-info/' + self.tr('up-to-date')))
 
             common = {'ignore': self.tr('Ignore this version'), 'curtVer': __version__,
                       'title': self.tr('New version: v%s') % update.version,
@@ -383,37 +342,31 @@ class ConfigDialog(QDialog, Ui_configDialog):
                     website=self.tr('Website'), **common))
                 self._adjustAboutAreaHeight()
         elif cmd == 'install-update':
-            def succeeded():
-                self._aboutAreaSet(self.tr(
-                    'Succeeded (Restart needed for update to take effect)'))
-                updater.foundUpdate = None
-                self.parent().setUpdateHint(False)
-
-            self._aboutAreaSet(self.tr('Connecting...'))
+            self._setAboutArea(self.tr('Connecting...'))
             task = self.installUpdateTask = updater.InstallUpdate(updater.foundUpdate)
-            task.progress.connect(lambda r, t: self._aboutAreaSet(
-                updater.textProgressBar(r, t), False))
-            task.downloadFinished.connect(lambda: self._aboutAreaSet(self.tr('Installing...')))
-            task.succeeded.connect(succeeded)
-            task.failed.connect(lambda e: self._aboutAreaError(e, cmd))
+            task.progress.connect(self._onInstallUpdateProgress)
+            task.downloadFinished.connect(self._onDownloadFinished)
+            task.succeeded.connect(self._onInstallUpdateSucceeded)
+            task.failed.connect(self._aboutAreaError)
             task.start()
         elif cmd == 'ignore-update':
             settings['Update']['newestIgnoredVer'] = updater.foundUpdate.version
-            self._aboutAreaNavigate(QUrl('hzm://show-info'))
-            self._adjustAboutAreaHeight()
+            self._NavigateAboutArea(QUrl('hzm://show-info'))
             updater.foundUpdate = None
             self.parent().setUpdateHint(False)
 
-    def _aboutAreaError(self, msg, cmd):
-        if cmd == 'check-update':
+    def _aboutAreaError(self, msg):
+        if self.sender() == self.checkUpdateTask:
             err = self.tr('Failed to check update: %s')
+            cmd = 'check-update'
         else:
             err = self.tr('Failed to install update: %s')
+            cmd = 'install-update'
         self.aboutBrowser.setHtml(aboutError.format(
             title=err % msg, retry=self.tr('Retry'), cmd=cmd, ok=self.tr('OK')))
         self._adjustAboutAreaHeight()
 
-    def _aboutAreaSet(self, oneLine, adjust=True):
+    def _setAboutArea(self, oneLine, adjust=True):
         self.aboutBrowser.setHtml('<p align="center">%s</p>' % oneLine)
         if adjust:
             self._adjustAboutAreaHeight()
@@ -424,3 +377,60 @@ class ConfigDialog(QDialog, Ui_configDialog):
         btn.setFont(font_)
         family = font_.family() if font_.exactMatch() else QFontInfo(font_).family()
         btn.setText('%s %spt' % (family, font_.pointSize()))
+
+    @Slot()
+    def on_exportBtn_clicked(self):
+        export_all = self.exportOption.currentIndex() == 0
+        nList = self.parent().nList
+
+        path, _type = QFileDialog.getSaveFileName(
+            parent=self,
+            caption=self.tr('Export Diary'),
+            filter=self.tr('Plain Text (*.txt)'))
+        if path == '': return    # dialog cancelled
+        try:
+            nList.handleExport(path, export_all)
+        except Exception as e:
+            QMessageBox.warning(self, self.tr('Export Failed'), '%-20s' % e)
+            return
+
+        if not self.openOutBtn.isVisible():
+            self.openOutBtn.show()
+        else:  # two or more export happened
+            self.openOutBtn.clicked.disconnect()
+        self.openOutBtn.setFocus()
+        self.openOutBtn.clicked.connect(
+            lambda: QDesktopServices.openUrl('file:///' + path))
+
+    @Slot(str)
+    def on_rstCombo_activated(self, filename):
+        """Restore database backup"""
+        msg = QMessageBox(self)
+        okBtn = msg.addButton(qApp.translate('Dialog', 'Restore'), QMessageBox.AcceptRole)
+        msg.setIcon(QMessageBox.Question)
+        msg.addButton(qApp.translate('Dialog', 'Cancel'), QMessageBox.RejectRole)
+        msg.setWindowTitle(self.tr('Restore backup'))
+        msg.setText(self.tr('Current diary book will be replaced with the backup!'))
+        msg.exec_()
+        msg.deleteLater()
+
+        if msg.clickedButton() == okBtn:
+            db.restore_backup(filename)
+            self.close()
+            self.bkRestored.emit()
+        else:
+            self.rstCombo.setCurrentIndex(0)
+
+    def _onCheckUpdateSucceeded(self):
+        self._NavigateAboutArea(QUrl('hzm://show-update'))
+
+    def _onInstallUpdateSucceeded(self):
+        self._setAboutArea(self.tr('Succeeded (Restart needed for update to take effect)'))
+        updater.foundUpdate = None
+        self.parent().setUpdateHint(False)
+
+    def _onInstallUpdateProgress(self, received, total):
+        self._setAboutArea(updater.textProgressBar(received, total), False)
+
+    def _onDownloadFinished(self):
+        self._setAboutArea(self.tr('Installing...'))

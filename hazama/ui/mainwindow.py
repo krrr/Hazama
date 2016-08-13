@@ -70,13 +70,13 @@ class MainWindow(QMainWindow, Ui_mainWindow):
                 i.setIcon(ico)
 
         # setup auto update check
-        if settings['Update'].getboolean('autoCheck'):
+        if updater.isCheckNeeded():
             task = updater.CheckUpdate()
-            QTimer.singleShot(1200, task, SLOT('start()'))
+            QTimer.singleShot(1200, task.start)
             task.succeeded.connect(self.setUpdateHint)  # use lambda here will cause segfault!
 
         # delay list loading until main event loop start
-        QTimer.singleShot(0, self.nList, SLOT('load()'))
+        QTimer.singleShot(0, self.nList.load)
 
     def createSortMenu(self):
         """Add sort order menu to sorAct."""

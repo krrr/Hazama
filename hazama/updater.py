@@ -9,13 +9,14 @@ import logging
 import hazama
 import zipfile
 import time
+from datetime import date, timedelta
 from urllib.request import urlopen, Request
 from collections import namedtuple
 from PySide.QtCore import QThread, Signal
 from hazama.config import appPath, settings, SOCKET_TIMEOUT
 
 
-_GITHUB_API_URL = 'https://api.github.com/repos/krrr/krrr.github.io/releases/latest'
+_GITHUB_API_URL = 'https://api.github.com/repos/krrr/Hazama/releases/latest'
 
 UpdateInfo = namedtuple('Update', ['version', 'note', 'url', 'note_html'])
 
@@ -26,7 +27,7 @@ def verToTuple(s):
     return tuple(map(int, s.split('.')))
 
 
-def note2html(s):
+def _note2html(s):
     out = ['<ul>']
     for l in s.split('\n'):
         if l[:2] in ['* ', '+ ', '- ']:
@@ -35,17 +36,17 @@ def note2html(s):
     return '\n'.join(out)
 
 
-def textProgressBar(iteration, total, prefix='', suffix='', bar_len=30):
+def textProgressBar(iteration, total, sep='&nbsp;', bar_len=30):
     """
     from https://stackoverflow.com/questions/3173320/text-progress-bar-in-the-console
     """
     filled_len = round(bar_len * iteration / total)
     percent = 100 * (iteration / total)
     bar = '▇' * filled_len + '▁' * (bar_len - filled_len)
-    return prefix + ' |' + bar + '| ' + '{:4.1f}'.format(percent) + '% ' + suffix
+    return '▕' + bar + '▏' + sep + '{:4.1f}'.format(percent) + '%'
 
 
-def urlopenErrSimplify(e):
+def _urlopenErrSimplify(e):
     e = str(e)
     if e.startswith('<urlopen error'):
         return e[15:-1]
@@ -63,6 +64,23 @@ def cleanBackup():
         logging.warning('failed to clean update backup: %s' % e)
 
 
+def isCheckNeeded():
+    if not settings['Update'].getboolean('autoCheck'):
+        return False
+    last = settings['Update'].get('lastCheckDate', '1970-01-01')
+    return str(last) < str(date.today() - timedelta(days=3))
+
+
+def _setCheckUpdateTask(to=None):
+    global checkUpdateTask
+    checkUpdateTask = to
+
+
+def _setInstallUpdateTask(to=None):
+    global installUpdateTask
+    installUpdateTask = to
+
+
 # QThread's class variables has some strange write delay, so use module variable here
 checkUpdateTask = installUpdateTask = None
 foundUpdate = None
@@ -73,7 +91,7 @@ class CheckUpdate(QThread):
     DummyNote = '**Changes**\n* wwww\n*ww\n**NEW**\n* aaa\n*bbb'
     DummyResult = UpdateInfo('9.9.9', DummyNote,
                              'https://github.com/krrr/krrr.github.io/releases/download/v1.0.2/a.zip',
-                             note2html(DummyNote))
+                             _note2html(DummyNote))
     failed = Signal(str)
     succeeded = Signal()
 
@@ -82,11 +100,10 @@ class CheckUpdate(QThread):
         self.result = None
 
         # __init__ should only be called from UI thread, so locking is unnecessary
-        global checkUpdateTask
         if checkUpdateTask:
             raise Exception('instance exists')
-        checkUpdateTask = self
-        self.finished.connect(lambda: globals().update(checkUpdateTask=None))
+        _setCheckUpdateTask(self)
+        self.finished.connect(_setCheckUpdateTask)
 
     def run(self):
         logging.info('update checking started')
@@ -101,6 +118,7 @@ class CheckUpdate(QThread):
             release = json.loads(resp.read().decode('utf-8'))
             ver = verToTuple(release['tag_name'])
             currentVer = verToTuple(hazama.__version__)
+            settings['Update']['lastCheckDate'] = str(date.today())
             if ver <= currentVer or ver <= verToTuple(settings['Update']['newestIgnoredVer']):
                 logging.info('update ignored: %s' % release['tag_name'])
                 return self.succeeded.emit()
@@ -112,7 +130,7 @@ class CheckUpdate(QThread):
                     continue
                 # tag_name looks like "v1.0.0"
                 update = UpdateInfo(release['tag_name'][1:], release['body'], i['url'],
-                                    note2html(release['body']))
+                                    _note2html(release['body']))
                 break
 
             logging.info('update found: %s' % release['tag_name'])
@@ -122,7 +140,7 @@ class CheckUpdate(QThread):
             self.succeeded.emit()
         except Exception as e:
             logging.error('check-update failed: %s' % e)
-            self.failed.emit(urlopenErrSimplify(e))
+            self.failed.emit(_urlopenErrSimplify(e))
 
     def disConn(self):
         self.succeeded.disconnect()
@@ -142,13 +160,13 @@ class InstallUpdate(QThread):
         self.updateInfo = updateInfo
 
         # __init__ should only be called from UI thread, so locking is unnecessary
-        global installUpdateTask
         if installUpdateTask:
             raise Exception('instance exists')
-        installUpdateTask = self
-        self.finished.connect(lambda: globals().update(installUpdateTask=None))
+        _setInstallUpdateTask(self)
+        self.finished.connect(_setCheckUpdateTask)
 
     def run(self):
+        f = path = None
         try:
             resp = urlopen(Request(self.updateInfo.url,
                                    headers={'Accept': 'application/octet-stream',
@@ -200,7 +218,11 @@ class InstallUpdate(QThread):
             self.succeeded.emit()
         except Exception as e:
             logging.error('download-update failed: %s' % e)
-            self.failed.emit(urlopenErrSimplify(e))
+            self.failed.emit(_urlopenErrSimplify(e))
+        finally:
+            if f:
+                f.close()
+                os.remove(path)
 
     def disConn(self):
         self.progress.disconnect()
