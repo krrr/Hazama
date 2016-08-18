@@ -71,7 +71,8 @@ class ConfigDialog(QDialog, Ui_configDialog):
 
     def __init__(self, parent):
         super().__init__(parent, Qt.WindowTitleHint)
-        self.checkUpdateTask = self.installUpdateTask = None
+        self._checkUpdateTask = self._installUpdateTask = None
+        self._dlProgressBlocks = None
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setupUi(self)
         fixWidgetSizeOnHiDpi(self)
@@ -84,7 +85,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
             self._NavigateAboutArea(QUrl('hzm://show-update'))
         elif updater.checkUpdateTask:
             # signal losing is impossible? because of GIL
-            task = self.checkUpdateTask = updater.checkUpdateTask
+            task = self._checkUpdateTask = updater.checkUpdateTask
             task.succeeded.connect(self._onCheckUpdateSucceeded)
             task.failed.connect(self._aboutAreaError)
             self._NavigateAboutArea(QUrl('hzm://show-info/' + self.tr('checking...')))
@@ -174,11 +175,11 @@ class ConfigDialog(QDialog, Ui_configDialog):
         self._adjustAboutAreaHeight()
 
     def closeEvent(self, event):
-        if self.checkUpdateTask:
-            self.checkUpdateTask.disConn()
-        if self.installUpdateTask:
-            self.installUpdateTask.canceled = True
-            self.installUpdateTask.disConn()
+        if self._checkUpdateTask:
+            self._checkUpdateTask.disConn()
+        if self._installUpdateTask:
+            self._installUpdateTask.canceled = True
+            self._installUpdateTask.disConn()
 
     def reject(self):
         self.closeEvent(None)  # when Esc key pressed closeEvent will not be called
@@ -316,11 +317,11 @@ class ConfigDialog(QDialog, Ui_configDialog):
             self.aboutBrowser.setHtml(about)
             self._adjustAboutAreaHeight()
         if cmd == 'check-update':
-            if self.checkUpdateTask and self.checkUpdateTask.isRunning():
+            if self._checkUpdateTask and self._checkUpdateTask.isRunning():
                 return
-            if self.checkUpdateTask:
-                self.checkUpdateTask.disConn()
-            task = self.checkUpdateTask = updater.CheckUpdate()
+            if self._checkUpdateTask:
+                self._checkUpdateTask.disConn()
+            task = self._checkUpdateTask = updater.CheckUpdate()
             task.succeeded.connect(self._onCheckUpdateSucceeded)
             task.failed.connect(self._aboutAreaError)
             task.start()
@@ -343,7 +344,9 @@ class ConfigDialog(QDialog, Ui_configDialog):
                 self._adjustAboutAreaHeight()
         elif cmd == 'install-update':
             self._setAboutArea(self.tr('Connecting...'))
-            task = self.installUpdateTask = updater.InstallUpdate(updater.foundUpdate)
+            self._dlProgressBlocks = max(
+                int(self.aboutBrowser.width() * 0.8 / font.default_m.width('▇')), 8)
+            task = self._installUpdateTask = updater.InstallUpdate(updater.foundUpdate)
             task.progress.connect(self._onInstallUpdateProgress)
             task.downloadFinished.connect(self._onDownloadFinished)
             task.succeeded.connect(self._onInstallUpdateSucceeded)
@@ -356,7 +359,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
             self.parent().setUpdateHint(False)
 
     def _aboutAreaError(self, msg):
-        if self.sender() == self.checkUpdateTask:
+        if self.sender() == self._checkUpdateTask:
             err = self.tr('Failed to check update: %s')
             cmd = 'check-update'
         else:
@@ -430,7 +433,8 @@ class ConfigDialog(QDialog, Ui_configDialog):
         self.parent().setUpdateHint(False)
 
     def _onInstallUpdateProgress(self, received, total):
-        self._setAboutArea(updater.textProgressBar(received, total), False)
+        self._setAboutArea(updater.textProgressBar(
+            received, total, barLen=self._dlProgressBlocks), False)
 
     def _onDownloadFinished(self):
         self._setAboutArea(self.tr('Installing...'))

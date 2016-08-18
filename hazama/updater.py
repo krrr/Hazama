@@ -36,13 +36,13 @@ def _note2html(s):
     return '\n'.join(out)
 
 
-def textProgressBar(iteration, total, sep='&nbsp;', bar_len=30):
+def textProgressBar(iteration, total, sep='&nbsp;', barLen=30):
     """
     from https://stackoverflow.com/questions/3173320/text-progress-bar-in-the-console
     """
-    filled_len = round(bar_len * iteration / total)
+    filledLen = round(barLen * iteration / total)
     percent = 100 * (iteration / total)
-    bar = '▇' * filled_len + '▁' * (bar_len - filled_len)
+    bar = '▇' * filledLen + '▁' * (barLen - filledLen)
     return '▕' + bar + '▏' + sep + '{:4.1f}'.format(percent) + '%'
 
 
@@ -65,6 +65,8 @@ def cleanBackup():
 
 
 def isCheckNeeded():
+    """Return False if checked within 3days. Creating thread will cause
+    subtle slowdown, so avoid doing it very often."""
     if not settings['Update'].getboolean('autoCheck'):
         return False
     last = settings['Update'].get('lastCheckDate', '1970-01-01')
@@ -148,6 +150,7 @@ class CheckUpdate(QThread):
 
 
 class InstallUpdate(QThread):
+    """Download and install update."""
     progress = Signal(int, int)  # received, total
     downloadFinished = Signal()
     failed = Signal(str)
@@ -163,7 +166,7 @@ class InstallUpdate(QThread):
         if installUpdateTask:
             raise Exception('instance exists')
         _setInstallUpdateTask(self)
-        self.finished.connect(_setCheckUpdateTask)
+        self.finished.connect(_setInstallUpdateTask)
 
     def run(self):
         f = path = None
