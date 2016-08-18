@@ -1,13 +1,13 @@
 """Setup database & settings and share them between modules"""
-from configparser import ConfigParser
 import sys
 import os
+from configparser import ConfigParser
 from os import path
 from hazama import db
 
 
 # constants
-SOCKET_TIMEOUT = 10
+SOCKET_TIMEOUT = 8
 
 # for default settings
 isWin = hasattr(sys, 'getwindowsversion')

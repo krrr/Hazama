@@ -51,20 +51,19 @@ class Editor(QWidget, Ui_editor):
 
         self.fromNikkiDict(nikkiDict)
 
-    def needSave(self):
-        return (self.textEditor.document().isModified() or
-                self.titleEditor.isModified() or self.timeModified or
-                self.tagModified)
+    def showEvent(self, event):
+        if settings['Editor'].getboolean('titleFocus'):
+            self.titleEditor.setCursorPosition(0)
+        else:
+            self.textEditor.setFocus()
+            self.textEditor.moveCursor(QTextCursor.Start)
+        event.accept()
 
     def closeEvent(self, event):
         """Normal close will save diary. For cancel operation, call closeNoSave."""
         settings['Editor']['windowGeo'] = saveWidgetGeo(self)
         self.closed.emit(self.id, self.needSave() if self._saveOnClose else False)
         event.accept()
-
-    def closeNoSave(self):
-        self._saveOnClose = False
-        self.close()
 
     def mousePressEvent(self, event):
         """Handle mouse back/forward button"""
@@ -77,23 +76,14 @@ class Editor(QWidget, Ui_editor):
         else:
             super().mousePressEvent(event)
 
-    @Slot()
-    def on_tagEditor_textEdited(self):
-        # tagEditor.isModified() will be reset by completer. So this instead.
-        self.tagModified = True
+    def closeNoSave(self):
+        self._saveOnClose = False
+        self.close()
 
-    @Slot()
-    def on_dtBtn_clicked(self):
-        """Show datetime edit dialog"""
-        if self.readOnly: return
-        dtStr = currentDatetime() if self.datetime is None else self.datetime
-        newDt = DateTimeDialog.getDateTime(datetimeToQt(dtStr), fullDatetimeFmt, self)
-        if newDt is not None:
-            newDtStr = newDt.toString(dbDatetimeFmtQt)
-            if newDtStr != self.datetime:
-                self.datetime = newDtStr
-                self.dtBtn.setText(datetimeTrans(newDtStr))
-                self.timeModified = True
+    def needSave(self):
+        return (self.textEditor.document().isModified() or
+                self.titleEditor.isModified() or self.timeModified or
+                self.tagModified)
 
     def setReadOnly(self, readOnly):
         for i in [self.titleEditor, self.textEditor, self.tagEditor]:
@@ -135,10 +125,20 @@ class Editor(QWidget, Ui_editor):
                     text=text, formats=formats, title=self.titleEditor.text(),
                     tags=self.tagEditor.text())
 
-    def showEvent(self, event):
-        if settings['Editor'].getboolean('titleFocus'):
-            self.titleEditor.setCursorPosition(0)
-        else:
-            self.textEditor.setFocus()
-            self.textEditor.moveCursor(QTextCursor.Start)
-        event.accept()
+    @Slot()
+    def on_tagEditor_textEdited(self):
+        # tagEditor.isModified() will be reset by completer. So this instead.
+        self.tagModified = True
+
+    @Slot()
+    def on_dtBtn_clicked(self):
+        """Show datetime edit dialog"""
+        if self.readOnly: return
+        dtStr = currentDatetime() if self.datetime is None else self.datetime
+        newDt = DateTimeDialog.getDateTime(datetimeToQt(dtStr), fullDatetimeFmt, self)
+        if newDt is not None:
+            newDtStr = newDt.toString(dbDatetimeFmtQt)
+            if newDtStr != self.datetime:
+                self.datetime = newDtStr
+                self.dtBtn.setText(datetimeTrans(newDtStr))
+                self.timeModified = True

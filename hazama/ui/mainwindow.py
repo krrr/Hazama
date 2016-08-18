@@ -78,6 +78,19 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         # delay list loading until main event loop start
         QTimer.singleShot(0, self.nList.load)
 
+    def showEvent(self, event):
+        # style polished, we can get correct height of toolbar now
+        self._applyExtendTitleBarBg()
+        self.nList.setFocus()
+
+    def closeEvent(self, event):
+        settings['Main']['windowGeo'] = saveWidgetGeo(self)
+        tListVisible = self.tList.isVisible()
+        settings['Main']['tagListVisible'] = str(tListVisible)
+        if tListVisible:
+            settings['Main']['tagListWidth'] = str(int(self.splitter.sizes()[0] / scaleRatio))
+        event.accept()
+
     def createSortMenu(self):
         """Add sort order menu to sorAct."""
         menu = QMenu(self)
@@ -99,7 +112,7 @@ class MainWindow(QMainWindow, Ui_mainWindow):
                 continue
             i.setCheckable(True)
             menu.addAction(i)
-            i.triggered[bool].connect(self.sortOrderChanged)
+            i.triggered[bool].connect(self.onSortOrderChanged)
         # restore from settings
         order = settings['Main']['listSortBy']
         locals()[order].setChecked(True)
@@ -109,20 +122,77 @@ class MainWindow(QMainWindow, Ui_mainWindow):
             asc.setChecked(True)
         self.sorAct.setMenu(menu)
 
-    def closeEvent(self, event):
-        settings['Main']['windowGeo'] = saveWidgetGeo(self)
-        tListVisible = self.tList.isVisible()
-        settings['Main']['tagListVisible'] = str(tListVisible)
-        if tListVisible:
-            settings['Main']['tagListWidth'] = str(int(self.splitter.sizes()[0] / scaleRatio))
-        event.accept()
-
     def retranslate(self):
         """Set translation after language changed in ConfigDialog"""
         setTranslationLocale()
         self.retranslateUi(self)
         self.searchBox.retranslate()
         self.updateCountLabel()
+
+    def onExtendTitleBarBgChanged(self, init=False):
+        # it's being called by __init__ when init is True
+        ex = settings['Main'].getboolean('extendTitleBarBg')
+        self.toolBar.setProperty('extendTitleBar', ex)
+        type_ = ''
+        if ex:
+            type_ = 'win' if isWin else 'other'
+        self.toolBar.setProperty('titleBarBgType', type_)
+        if not init:
+            self.style().unpolish(self)
+            self.style().polish(self)
+            self._applyExtendTitleBarBg()
+
+    def _applyExtendTitleBarBg(self):
+        if isWin and settings['Main'].getboolean('extendTitleBarBg'):
+            winDwmExtendWindowFrame(self.winId(), self.toolBar.height())
+            self.setAttribute(Qt.WA_TranslucentBackground)
+
+    def onSortOrderChanged(self, checked):
+        name = self.sender().name
+        if name in ['asc', 'desc']:
+            settings['Main']['listReverse'] = str(name == 'desc')
+        elif checked:
+            settings['Main']['listSortBy'] = name
+        self.nList.sort()
+
+    def toggleTagList(self, checked):
+        self.tList.setVisible(checked)
+        if checked:
+            self.tList.load()
+        else:
+            self.nList.setFilterByTag('')
+            self.tList.clear()
+            settings['Main']['tagListWidth'] = str(int(self.splitter.sizes()[0] / scaleRatio))
+
+    def updateCountLabel(self):
+        """Update label that display count of diaries in Main List.
+        'XX diaries' format is just fine, don't use 'XX diaries,XX results'."""
+        filtered = (self.nList.modelProxy.filterPattern(0) or
+                    self.nList.modelProxy.filterPattern(1))
+        c = self.nList.modelProxy.rowCount() if filtered else self.nList.originModel.rowCount()
+        self.countLabel.setText(self.tr('%i diaries') % c)
+
+    def updateCountLabelOnLoad(self):
+        self.countLabel.setText(self.tr('loading...'))
+
+    def setUpdateHint(self, enabled=None):
+        if enabled is None:
+            enabled = bool(updater.foundUpdate)
+
+        if enabled:
+            ico = self.cfgAct.icon()
+            self.cfgAct.originIcon = QIcon(ico)  # get copy
+            sz = QSize(24, 24) * scaleRatio
+            origin = ico.pixmap(sz)
+            mark = QPixmap(':/toolbar/update-mark.png').scaled(sz)
+            painter = QPainter(origin)
+            painter.drawPixmap(0, 0, mark)
+            painter.end()  # this should be called at destruction, but... critical error everywhere?
+            ico.addPixmap(origin)
+            self.cfgAct.setIcon(ico)
+        elif hasattr(self.cfgAct, 'originIcon'):
+            self.cfgAct.setIcon(self.cfgAct.originIcon)
+            del self.cfgAct.originIcon
 
     @Slot()
     def on_cfgAct_triggered(self):
@@ -183,76 +253,6 @@ class MainWindow(QMainWindow, Ui_mainWindow):
             self.heatMap.move(self.pos() + QPoint(12, 12)*scaleRatio)
             self.heatMap.show()
 
-    def onExtendTitleBarBgChanged(self, init=False):
-        # it's being called by __init__ when init is True
-        ex = settings['Main'].getboolean('extendTitleBarBg')
-        self.toolBar.setProperty('extendTitleBar', ex)
-        type_ = ''
-        if ex:
-            type_ = 'win' if isWin else 'other'
-        self.toolBar.setProperty('titleBarBgType', type_)
-        if not init:
-            self.style().unpolish(self)
-            self.style().polish(self)
-            self._applyExtendTitleBarBg()
-
-    def _applyExtendTitleBarBg(self):
-        if isWin and settings['Main'].getboolean('extendTitleBarBg'):
-            winDwmExtendWindowFrame(self.winId(), self.toolBar.height())
-            self.setAttribute(Qt.WA_TranslucentBackground)
-
-    def sortOrderChanged(self, checked):
-        name = self.sender().name
-        if name in ['asc', 'desc']:
-            settings['Main']['listReverse'] = str(name == 'desc')
-        elif checked:
-            settings['Main']['listSortBy'] = name
-        self.nList.sort()
-
-    def toggleTagList(self, checked):
-        self.tList.setVisible(checked)
-        if checked:
-            self.tList.load()
-        else:
-            self.nList.setFilterByTag('')
-            self.tList.clear()
-            settings['Main']['tagListWidth'] = str(int(self.splitter.sizes()[0] / scaleRatio))
-
-    def showEvent(self, event):
-        # style polished, we can get correct height of toolbar now
-        self._applyExtendTitleBarBg()
-        self.nList.setFocus()
-
-    def updateCountLabel(self):
-        """Update label that display count of diaries in Main List.
-        'XX diaries' format is just fine, don't use 'XX diaries,XX results'."""
-        filtered = (self.nList.modelProxy.filterPattern(0) or
-                    self.nList.modelProxy.filterPattern(1))
-        c = self.nList.modelProxy.rowCount() if filtered else self.nList.originModel.rowCount()
-        self.countLabel.setText(self.tr('%i diaries') % c)
-
-    def updateCountLabelOnLoad(self):
-        self.countLabel.setText(self.tr('loading...'))
-
-    def setUpdateHint(self, enabled=None):
-        if enabled is None:
-            enabled = bool(updater.foundUpdate)
-
-        if enabled:
-            ico = self.cfgAct.icon()
-            self.cfgAct.originIcon = QIcon(ico)  # get copy
-            sz = QSize(24, 24) * scaleRatio
-            origin = ico.pixmap(sz)
-            mark = QPixmap(':/toolbar/update-mark.png').scaled(sz)
-            painter = QPainter(origin)
-            painter.drawPixmap(0, 0, mark)
-            painter.end()  # this should be called at destruction, but... critical error everywhere?
-            ico.addPixmap(origin)
-            self.cfgAct.setIcon(ico)
-        elif hasattr(self.cfgAct, 'originIcon'):
-            self.cfgAct.setIcon(self.cfgAct.originIcon)
-            del self.cfgAct.originIcon
-
 
 class SearchBox(QLineEditWithMenuIcon):
     """The real-time search box in toolbar. contentChanged signal will be
@@ -288,17 +288,17 @@ class SearchBox(QLineEditWithMenuIcon):
         self._delay.timeout.connect(lambda: self.contentChanged.emit(self.text()))
         self.textChanged.connect(self._updateDelayTimer)
 
+    def resizeEvent(self, event):
+        w, h = event.size().toTuple()
+        pos_y = (h - self.button.height()) / 2
+        self.button.move(w - self.button.width() - pos_y, pos_y)
+
     def _updateDelayTimer(self, s):
         if s == '':  # fast clear
             self._delay.stop()
             self.contentChanged.emit(self.text())
         else:
             self._delay.start()  # restart if already started
-
-    def resizeEvent(self, event):
-        w, h = event.size().toTuple()
-        pos_y = (h - self.button.height()) / 2
-        self.button.move(w - self.button.width() - pos_y, pos_y)
 
     def _updateIco(self, text):
         """Update button icon"""

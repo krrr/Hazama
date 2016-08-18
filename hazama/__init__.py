@@ -1,4 +1,4 @@
-# Copyright (C) 2015 krrr <guogaishiwo@gmail.com>
+# Copyright (C) 2016 krrr <guogaishiwo@gmail.com>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -14,23 +14,34 @@ __desc__ = 'A simple cross-platform diary application'
 __author__ = 'krrr'
 
 
+# ---- Project Coding Guide ----
+# 1. Don't use lambda as slot, it may cause segfault (obj destroyed but signal not disconnected).
+# 2. Class definition order: __init__, Qt's methods, methods, slots
+
+# ---- Notes ----
+# 1. Only slots methods which is auto connected need Slot decorator
+
+
 def main_entry():
     import time
     start_time = time.clock()
     import logging
+    import sys
     from hazama import config
 
     config.changeCWD()
     config.init()
-    # setup logging
+
     level = logging.DEBUG if config.settings['Main'].getboolean('debug') else logging.INFO
     logging.basicConfig(format='%(levelname)s: %(message)s', level=level)
-    logging.info('Hazama v%s', __version__)
+    logging.info('Hazama v%s  (%s, Py%d.%d.%d)', __version__, sys.platform, *sys.version_info[:3])
     logging.info(str(config.nikki))
 
     from hazama import ui, db, updater
+    from hazama import updater
     app = ui.init()
     from hazama.ui.mainwindow import MainWindow
+
     w = MainWindow()
     w.show()
     logging.debug('startup took %.2f sec', time.clock()-start_time)
@@ -49,11 +60,12 @@ def main_entry():
     ret = app.exec_()
     del w  # force close all child window of MainWindow
 
+    db.Nikki.getinstance().disconnect()
     config.saveSettings()
-    from hazama import updater
+
     # segfault might happen if not wait for them
     for i in [updater.checkUpdateTask, updater.installUpdateTask]:
         if i is not None:
-            logging.debug('waiting for thread to exit')
+            logging.debug('waiting for %s to exit', i)
             i.wait()
     return ret

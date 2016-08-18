@@ -2,7 +2,8 @@ import sys
 import os
 import time
 import logging
-import hazama.ui.res_rc
+import PySide
+import hazama.ui.res_rc  # load resources
 from PySide.QtGui import QApplication, QIcon, QFont, QFontMetrics, QMessageBox
 from PySide.QtCore import QLocale, QTranslator, QLibraryInfo, QDateTime, QFile, QByteArray
 from hazama.config import (settings, appPath, isWin, isWin7OrLater,
@@ -26,7 +27,7 @@ def datetimeToQt(s):
 
 
 def datetimeTrans(s, stripTime=False):
-    """Convert datetime in database format to locale one."""
+    """Localize datetime in database format."""
     dt = QDateTime.fromString(s, dbDatetimeFmtQt)
     return locale.toString(dt, dateFmt if stripTime else datetimeFmt)
 
@@ -258,7 +259,8 @@ class Fonts:
 
 
 def init():
-    logging.debug('Qt lib path: %s' % QLibraryInfo.location(QLibraryInfo.LibrariesPath))
+    logging.debug('PySide ver: %s  (lib path: %s)', PySide.__version__,
+                  QLibraryInfo.location(QLibraryInfo.LibrariesPath))
     app = QApplication(sys.argv)
     app.setWindowIcon(makeQIcon(':/appicon-24.png', ':/appicon-48.png', ':/appicon-64.png'))
 
