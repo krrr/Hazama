@@ -262,7 +262,7 @@ def init():
     logging.debug('PySide ver: %s  (lib path: %s)', PySide.__version__,
                   QLibraryInfo.location(QLibraryInfo.LibrariesPath))
     app = QApplication(sys.argv)
-    app.setWindowIcon(makeQIcon(':/appicon-24.png', ':/appicon-48.png', ':/appicon-64.png'))
+    app.setWindowIcon(makeQIcon(':/appicon-24.png', ':/appicon-48.png'))
 
     global scaleRatio
     scaleRatio = app.desktop().logicalDpiX() / 96  # when will x != y happen?
