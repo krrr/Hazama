@@ -51,7 +51,7 @@ def main_entry():
             db.backup()
         except OSError as e:
             from hazama.ui import showErrors
-            showErrors('cantFile', info=str(e))
+            showErrors('cantFile', str(e))  # message not correct here, ignore it...
 
     if config.settings['Update'].getboolean('needClean'):
         updater.cleanBackup()

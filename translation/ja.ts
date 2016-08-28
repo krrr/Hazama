@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
-<TS version="2.0" language="ja_JP">
+<!DOCTYPE TS><TS version="1.1" language="ja_JP">
 <context>
     <name>ConfigDialog</name>
     <message>
-        <location filename="../hazama/ui/configdialog.py" line="258"/>
+        <location filename="../hazama/ui/configdialog.py" line="415"/>
         <source>Restore backup</source>
         <translation>バックアップから復元</translation>
     </message>
@@ -14,17 +13,17 @@
         <translation type="obsolete">現在の日記帳はバックアップで置き換えられます。本当に復元しますか？</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog.py" line="234"/>
+        <location filename="../hazama/ui/configdialog.py" line="391"/>
         <source>Export Diary</source>
         <translation>日記のエクスポート</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog.py" line="235"/>
+        <location filename="../hazama/ui/configdialog.py" line="392"/>
         <source>Plain Text (*.txt)</source>
         <translation>テキスト (*.txt)</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog.py" line="240"/>
+        <location filename="../hazama/ui/configdialog.py" line="397"/>
         <source>Export Failed</source>
         <translation>エクスポート失敗</translation>
     </message>
@@ -44,12 +43,12 @@
         <translation type="obsolete">更新の確認</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog.py" line="259"/>
+        <location filename="../hazama/ui/configdialog.py" line="416"/>
         <source>Current diary book will be replaced with the backup!</source>
         <translation>現在の日記帳はバックアップで置き換えられます！</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog.py" line="161"/>
+        <location filename="../hazama/ui/configdialog.py" line="168"/>
         <source>Every &lt;b&gt;%s&lt;/b&gt; days a diary, from &lt;b&gt;%s&lt;/b&gt; to &lt;b&gt;%s&lt;/b&gt;</source>
         <translation>&lt;b&gt;%s&lt;/b&gt;日に一回の日記、&lt;b&gt;%s&lt;/b&gt;から&lt;b&gt;%s&lt;/b&gt;まで</translation>
     </message>
@@ -59,47 +58,47 @@
         <translation type="obsolete">サイト</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog.py" line="163"/>
+        <location filename="../hazama/ui/configdialog.py" line="170"/>
         <source>N/A</source>
         <translation>N/A</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog.py" line="364"/>
+        <location filename="../hazama/ui/configdialog.py" line="328"/>
         <source>checking...</source>
         <translation>確認中...</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog.py" line="353"/>
+        <location filename="../hazama/ui/configdialog.py" line="315"/>
         <source>Author</source>
         <translation>作者</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog.py" line="353"/>
+        <location filename="../hazama/ui/configdialog.py" line="343"/>
         <source>Website</source>
         <translation>サイト</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog.py" line="354"/>
+        <location filename="../hazama/ui/configdialog.py" line="316"/>
         <source>Check update</source>
         <translation>更新の確認</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog.py" line="368"/>
+        <location filename="../hazama/ui/configdialog.py" line="332"/>
         <source>up-to-date</source>
         <translation>すでに最新</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog.py" line="371"/>
+        <location filename="../hazama/ui/configdialog.py" line="335"/>
         <source>New version: v%s</source>
         <translation>最新バージョン: v%s</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog.py" line="375"/>
+        <location filename="../hazama/ui/configdialog.py" line="339"/>
         <source>Install</source>
         <translation>インストール</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog.py" line="370"/>
+        <location filename="../hazama/ui/configdialog.py" line="334"/>
         <source>Ignore this version</source>
         <translation>このバージョンを無視する</translation>
     </message>
@@ -109,42 +108,42 @@
         <translation type="obsolete">サイズ</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog.py" line="382"/>
+        <location filename="../hazama/ui/configdialog.py" line="346"/>
         <source>Connecting...</source>
         <translation>接続中...</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog.py" line="386"/>
+        <location filename="../hazama/ui/configdialog.py" line="440"/>
         <source>Installing...</source>
         <translation>インストール中...</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog.py" line="388"/>
+        <location filename="../hazama/ui/configdialog.py" line="431"/>
         <source>Succeeded (Restart needed for update to take effect)</source>
         <translation>成功しました（更新が機能するのに再起動が必要）</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog.py" line="404"/>
+        <location filename="../hazama/ui/configdialog.py" line="364"/>
         <source>Failed to check update: %s</source>
         <translation>更新を確認できません: %s</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog.py" line="406"/>
+        <location filename="../hazama/ui/configdialog.py" line="367"/>
         <source>Failed to install update: %s</source>
         <translation>更新をインストールできません: %s</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog.py" line="407"/>
+        <location filename="../hazama/ui/configdialog.py" line="369"/>
         <source>Retry</source>
         <translation>再試行</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog.py" line="407"/>
+        <location filename="../hazama/ui/configdialog.py" line="369"/>
         <source>OK</source>
         <translation>OK</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/configdialog.py" line="375"/>
+        <location filename="../hazama/ui/configdialog.py" line="339"/>
         <source>Size</source>
         <translation>サイズ</translation>
     </message>
@@ -160,7 +159,7 @@
 <context>
     <name>Dialog</name>
     <message>
-        <location filename="../hazama/ui/configdialog.py" line="255"/>
+        <location filename="../hazama/ui/configdialog.py" line="412"/>
         <source>Restore</source>
         <translation>復元</translation>
     </message>
@@ -178,7 +177,7 @@
 <context>
     <name>Editor</name>
     <message>
-        <location filename="../hazama/ui/editor.py" line="124"/>
+        <location filename="../hazama/ui/editor.py" line="114"/>
         <source>New Diary</source>
         <translation>新しい日記</translation>
     </message>
@@ -193,19 +192,19 @@
     <message>
         <location filename="../hazama/ui/__init__.py" line="89"/>
         <source>Failed to access database</source>
-        <translation>データベース（日記帳ファイル）にアクセスできません</translation>
+        <translation type="obsolete">データベース（日記帳ファイル）にアクセスできません</translation>
     </message>
     <message>
         <location filename="../hazama/ui/__init__.py" line="92"/>
         <source>SQLite3: %s.
 
 Please check database path(have permission?). If it&apos;s corrupt, you may have to recover this file by hand or restore from backups.</source>
-        <translation>SQLite3: %s.
+        <translation type="obsolete">SQLite3: %s.
 
 データベースのパスを確認してください（権限がある？）。損壊した場合は、手動で修復またはバックアップから復元してください。</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/__init__.py" line="95"/>
+        <location filename="../hazama/ui/__init__.py" line="96"/>
         <source>Multiple access error</source>
         <translation>多重アクセスエラー</translation>
     </message>
@@ -215,20 +214,54 @@ Please check database path(have permission?). If it&apos;s corrupt, you may have
         <translation type="obsolete">日記帳は既に開かれていますため、終了します。</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/__init__.py" line="96"/>
+        <location filename="../hazama/ui/__init__.py" line="97"/>
         <source>This diary book is already open.</source>
         <translation>この日記帳は既に開かれています。</translation>
     </message>
     <message>
         <location filename="../hazama/ui/__init__.py" line="99"/>
         <source>Failed to access file</source>
+        <translation type="obsolete">ファイルにアクセスできません</translation>
+    </message>
+    <message>
+        <location filename="../hazama/ui/__init__.py" line="91"/>
+        <source>Diary book inaccessible</source>
+        <translation>日記帳にアクセスできません</translation>
+    </message>
+    <message>
+        <location filename="../hazama/ui/__init__.py" line="100"/>
+        <source>File inaccessible</source>
         <translation>ファイルにアクセスできません</translation>
+    </message>
+    <message>
+        <location filename="../hazama/ui/__init__.py" line="104"/>
+        <source>File corrupted</source>
+        <translation>ファイルが壊れています</translation>
+    </message>
+    <message>
+        <location filename="../hazama/ui/__init__.py" line="93"/>
+        <source>Diary book seems corrupted. You may have to recover it from backups.
+
+SQLite3: %s</source>
+        <translation>日記帳が破損している可能性があります。バックアップから復元する解決方法があります。
+
+SQLite3: %s</translation>
+    </message>
+    <message>
+        <location filename="../hazama/ui/__init__.py" line="105"/>
+        <source>%s is corrupted, please delete or fix it.</source>
+        <translation>%s が壊れているため、削除または修復が必要です。</translation>
+    </message>
+    <message>
+        <location filename="../hazama/ui/__init__.py" line="101"/>
+        <source>Failed to access %s</source>
+        <translation type="unfinished">%s にアクセスできません</translation>
     </message>
 </context>
 <context>
     <name>HeatMap</name>
     <message>
-        <location filename="../hazama/ui/mainwindow.py" line="149"/>
+        <location filename="../hazama/ui/mainwindow.py" line="219"/>
         <source>(characters)</source>
         <translation>（文字）</translation>
     </message>
@@ -236,22 +269,22 @@ Please check database path(have permission?). If it&apos;s corrupt, you may have
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../hazama/ui/mainwindow.py" line="234"/>
+        <location filename="../hazama/ui/mainwindow.py" line="173"/>
         <source>%i diaries</source>
         <translation>%i件の日記</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/mainwindow.py" line="85"/>
+        <location filename="../hazama/ui/mainwindow.py" line="98"/>
         <source>Date</source>
         <translation>日時</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/mainwindow.py" line="87"/>
+        <location filename="../hazama/ui/mainwindow.py" line="100"/>
         <source>Title</source>
         <translation>表題</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/mainwindow.py" line="89"/>
+        <location filename="../hazama/ui/mainwindow.py" line="102"/>
         <source>Length</source>
         <translation>長さ</translation>
     </message>
@@ -261,17 +294,17 @@ Please check database path(have permission?). If it&apos;s corrupt, you may have
         <translation type="obsolete">降順</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/mainwindow.py" line="92"/>
+        <location filename="../hazama/ui/mainwindow.py" line="105"/>
         <source>Ascending</source>
         <translation>昇順</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/mainwindow.py" line="94"/>
+        <location filename="../hazama/ui/mainwindow.py" line="107"/>
         <source>Descending</source>
         <translation>降順</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/mainwindow.py" line="237"/>
+        <location filename="../hazama/ui/mainwindow.py" line="176"/>
         <source>loading...</source>
         <translation>読み込み中…</translation>
     </message>
@@ -360,7 +393,7 @@ Please check database path(have permission?). If it&apos;s corrupt, you may have
 <context>
     <name>SearchBox</name>
     <message>
-        <location filename="../hazama/ui/mainwindow.py" line="312"/>
+        <location filename="../hazama/ui/mainwindow.py" line="310"/>
         <source>Search</source>
         <translation>検索</translation>
     </message>

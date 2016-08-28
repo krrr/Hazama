@@ -81,26 +81,32 @@ def setTranslationLocale():
     fullDatetimeFmt = dateFmt + ' ' + (timeFmt or 'hh:mm')
 
 
-def showErrors(type_, **extra_args):
+def showErrors(type_, *args, exit_=False):
     """Show variety of error dialogs."""
     app = QApplication.instance()
     if not app:
         app = init()
     {'dbError': lambda hint='': QMessageBox.critical(
         None,
-        app.translate('Errors', 'Failed to access database'),
-        app.translate('Errors', 'SQLite3: %s.\n\nPlease check database path(have permission?). '
-                      'If it\'s corrupt, you may have to recover this file by hand or restore '
-                      'from backups.') % hint),
+        app.translate('Errors', 'Diary book inaccessible'),
+        app.translate('Errors', 'Diary book seems corrupted. You may have to '
+                                'recover it from backups.\n\nSQLite3: %s') % hint),
      'dbLocked': lambda: QMessageBox.warning(
          None,
          app.translate('Errors', 'Multiple access error'),
          app.translate('Errors', 'This diary book is already open.')),
-     'cantFile': lambda info: QMessageBox.warning(
+     'cantFile': lambda filename: QMessageBox.critical(
          None,
-         app.translate('Errors', 'Failed to access file'),
-         app.translate('Errors', info))
-     }[type_](**extra_args)
+         app.translate('Errors', 'File inaccessible'),
+         app.translate('Errors', 'Failed to access %s') % filename),
+     'fileCorrupted': lambda filename: QMessageBox.critical(
+         None,
+         app.translate('Errors', 'File corrupted'),
+         app.translate('Errors', '%s is corrupted, please delete or fix it.') % filename)
+     }[type_](*args)
+
+    if exit_:
+        sys.exit(-1)
 
 
 def setStdEditMenuIcons(menu):

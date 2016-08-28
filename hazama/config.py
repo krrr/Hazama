@@ -1,7 +1,7 @@
 """Setup database & settings and share them between modules"""
 import sys
 import os
-from configparser import ConfigParser
+from configparser import ConfigParser, ParsingError
 from os import path
 from hazama import db
 
@@ -58,9 +58,9 @@ def saveSettings():
     try:
         with open('config.ini', 'w', encoding='utf-8') as f:
             settings.write(f)
-    except OSError as e:
+    except OSError:
         from hazama import ui
-        ui.showErrors('cantFile', info=str(e))
+        ui.showErrors('cantFile', 'config.ini')
 
 
 def init():
@@ -69,6 +69,9 @@ def init():
         # utf-8 with BOM will kill ConfigParser
         with open('config.ini', encoding='utf-8-sig') as f:
             settings.read_file(f)
+    except ParsingError:
+        from hazama import ui
+        ui.showErrors('fileCorrupted', 'config.ini', exit_=True)
     except FileNotFoundError:
         pass
 
@@ -76,9 +79,10 @@ def init():
         nikki.connect(settings['Main']['dbPath'])
     except db.DatabaseError as e:
         from hazama import ui
-        ui.showErrors('dbError', hint=str(e))
-        sys.exit(-1)
+        if str(e).startswith('unable to open'):
+            ui.showErrors('cantFile', settings['Main']['dbPath'], exit_=True)
+        else:
+            ui.showErrors('dbError', str(e), exit_=True)
     except db.DatabaseLockedError:
         from hazama import ui
-        ui.showErrors('dbLocked')
-        sys.exit(-1)
+        ui.showErrors('dbLocked', exit_=True)

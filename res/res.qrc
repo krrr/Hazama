@@ -2,7 +2,6 @@
   <qresource>
     <file>appicon-24.png</file>
     <file>appicon-48.png</file>
-    <file>appicon-64.png</file>
     <file>search.png</file>
     <file>search-big.png</file>
     <file>search-clr.png</file>
