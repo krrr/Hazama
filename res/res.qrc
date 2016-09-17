@@ -20,11 +20,23 @@
 
   <qresource>
     <file>toolbar/tlist.png</file>
+    <file>toolbar/tlist-big.png</file>
+    <file>toolbar/tlist-mega.png</file>
     <file>toolbar/new.png</file>
+    <file>toolbar/new-big.png</file>
+    <file>toolbar/new-mega.png</file>
     <file>toolbar/delete.png</file>
+    <file>toolbar/delete-big.png</file>
+    <file>toolbar/delete-mega.png</file>
     <file>toolbar/sort.png</file>
+    <file>toolbar/sort-big.png</file>
+    <file>toolbar/sort-mega.png</file>
     <file>toolbar/heatmap.png</file>
+    <file>toolbar/heatmap-big.png</file>
+    <file>toolbar/heatmap-mega.png</file>
     <file>toolbar/config.png</file>
+    <file>toolbar/config-big.png</file>
+    <file>toolbar/config-mega.png</file>
     <file>toolbar/update-mark.png</file>
   </qresource>
 

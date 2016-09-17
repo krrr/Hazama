@@ -1,17 +1,16 @@
-Icons for HiDPI:
--big means 1.5x size
--mega means 2x size
+### Filename suffixes for HiDPI
+* -big means 1.5x size
+* -mega means 2x size
 
+### Sources
+* clock.png, lock.png, format icons are from Keyamoon-IcoMoon
+* random.png, tlist.png, sort.png, search_clr.png,
+* search.png, new.png, delete.png, config.png, arrow-left.png, arrow-right.png are from SweetiePlus
+* some icons are modified from SweetiePlus.
+
+
+### SweetiePlus Readme
 ```
-# clock.png and formats icon are from Keyamoon-IcoMoon
-# random.png, tlist.png, sort.png, search_clr.png,
-# search.png, new.png, delete.png, config.png, arrow-left.png, arrow-right.png are from SweetiePlus
-# some icons are modified from SweetiePlus.
-
-
-SweetiePlus
------------
-
 Author     Joseph North
 Email      north@sublink.ca
 Website    http://sublink.ca/

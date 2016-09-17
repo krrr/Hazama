@@ -61,13 +61,11 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         searchSc.activated.connect(self.searchBox.setFocus)
 
         # setup bigger toolbar icons
-        originSz = QSize(24, 24)
         if scaleRatio > 1.0:
-            for i in [self.cfgAct, self.creAct, self.delAct, self.mapAct,
-                      self.sorAct, self.tListAct]:
-                ico = i.icon()
-                ico.addPixmap(ico.pixmap(originSz).scaled(originSz * scaleRatio))
-                i.setIcon(ico)
+            for act, fname in [(self.cfgAct, 'config'), (self.creAct, 'new'),
+                               (self.delAct, 'delete'), (self.mapAct, 'heatmap'),
+                               (self.sorAct, 'sort'), (self.tListAct, 'tlist')]:
+                act.setIcon(makeQIcon(':/toolbar/%s.png' % fname))
 
         # setup auto update check
         if updater.isCheckNeeded():
@@ -181,12 +179,11 @@ class MainWindow(QMainWindow, Ui_mainWindow):
 
         if enabled:
             ico = self.cfgAct.icon()
-            self.cfgAct.originIcon = QIcon(ico)  # get copy
+            self.cfgAct.originIcon = QIcon(ico)  # save copy
             sz = QSize(24, 24) * scaleRatio
             origin = ico.pixmap(sz)
-            mark = QPixmap(':/toolbar/update-mark.png').scaled(sz)
             painter = QPainter(origin)
-            painter.drawPixmap(0, 0, mark)
+            painter.drawPixmap(0, 0, QPixmap(':/toolbar/update-mark.png').scaled(sz))
             painter.end()  # this should be called at destruction, but... critical error everywhere?
             ico.addPixmap(origin)
             self.cfgAct.setIcon(ico)
