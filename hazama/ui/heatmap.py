@@ -30,9 +30,9 @@ class HeatMap(QWidget):
         self._yearActGroup = QActionGroup(self.yearMenu)
         self.setupYearMenu()
         sz = QSize(16, 16) * scaleRatio
-        ico = makeQIcon(':/heatmap/arrow-left.png')
+        ico = makeQIcon(':/heatmap/arrow-left.png', scaled2x=True)
         preBtn = QToolButton(self, icon=ico, clicked=self.yearPre, iconSize=sz)
-        ico = makeQIcon(':/heatmap/arrow-right.png')
+        ico = makeQIcon(':/heatmap/arrow-right.png', scaled2x=True)
         nextBtn = QToolButton(self, icon=ico, clicked=self.yearNext, iconSize=sz)
         # setup color sample
         self.sample = ColorSampleView(self, cellLen=11)

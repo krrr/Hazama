@@ -464,10 +464,10 @@ class NikkiList(QListView):
         # setup actions
         self.editAct = QAction(self.tr('Edit'), self,
                                triggered=self.startEditor)
-        self.delAct = QAction(makeQIcon(':/menu/list-delete.png'),
+        self.delAct = QAction(makeQIcon(':/menu/list-delete.png', scaled2x=True),
                               self.tr('Delete'), self,
                               shortcut=QKeySequence.Delete, triggered=self.delNikki)
-        self.randAct = QAction(makeQIcon(':/menu/random-big.png'),
+        self.randAct = QAction(makeQIcon(':/menu/random-big.png', scaled2x=True),
                                self.tr('Random'), self,
                                shortcut=QKeySequence(Qt.Key_F7), triggered=self.selectRandomly)
         for i in [self.editAct, self.delAct, self.randAct]: self.addAction(i)

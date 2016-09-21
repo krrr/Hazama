@@ -275,8 +275,8 @@ class SearchBox(QLineEditWithMenuIcon):
         self.setTextMargins(QMargins(2, 0, sz.width(), 0))
 
         self._isTextBefore = True
-        self._searchIco = makeQIcon(':/search.png')
-        self._clrIco = makeQIcon(':/search-clr.png')
+        self._searchIco = makeQIcon(':/search.png', scaled2x=True)
+        self._clrIco = makeQIcon(':/search-clr.png', scaled2x=True)
         self._updateIco('')  # initialize the icon
 
         self._delay = QTimer(self)

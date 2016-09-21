@@ -4,7 +4,7 @@ import time
 import logging
 import PySide
 import hazama.ui.res_rc  # load resources
-from PySide.QtGui import QApplication, QIcon, QFont, QFontMetrics, QMessageBox
+from PySide.QtGui import QApplication, QIcon, QFont, QFontMetrics, QMessageBox, QPixmap
 from PySide.QtCore import QLocale, QTranslator, QLibraryInfo, QDateTime, QFile, QByteArray
 from hazama.config import (settings, appPath, isWin, isWin7OrLater,
                            isWinVistaOrLater, isWin8OrLater)
@@ -208,18 +208,22 @@ def restoreWidgetGeo(widget, geoStr):
         widget.resize(widget.size() / geoRatio * scaleRatio)
 
 
-def makeQIcon(*filenames):
+def makeQIcon(*filenames, scaled2x=False):
     """A Shortcut to construct a QIcon which has multiple images. Try to add all sizes
     (xx.png & xx-big.png & xx-mega.png) when only one filename supplied."""
     ico = QIcon()
     if len(filenames) == 1:
         fname = filenames[0]
-        ico.addFile(fname)
         assert '.' in fname
         b, ext = fname.rsplit('.')
-        # they fails silently when file not exist
-        ico.addFile(b + '-big.' + ext)
-        ico.addFile(b + '-mega.' + ext)
+
+        ico.addFile(fname)
+        ico.addFile(b + '-big.' + ext)  # fails silently when file not exist
+        if scaled2x and scaleRatio > 1.5:
+            origin = QPixmap(fname)
+            ico.addPixmap(origin.scaled(origin.size() * 2))
+        else:
+            ico.addFile(b + '-mega.' + ext)
     else:
         for i in filenames:
             ico.addFile(i)
