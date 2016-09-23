@@ -41,7 +41,7 @@
       <property name="childrenCollapsible">
        <bool>false</bool>
       </property>
-      <widget class="TagList" name="tList">
+      <widget class="TagList" name="tagList">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Maximum" vsizetype="Expanding">
          <horstretch>1</horstretch>
@@ -70,7 +70,7 @@
         <enum>QAbstractItemView::ScrollPerPixel</enum>
        </property>
       </widget>
-      <widget class="NikkiList" name="nList">
+      <widget class="DiaryList" name="diaryList">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
          <horstretch>4</horstretch>
@@ -204,14 +204,14 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>NikkiList</class>
+   <class>DiaryList</class>
    <extends>QListView</extends>
    <header>hazama.ui.listview</header>
    <slots>
     <signal>countChanged()</signal>
     <signal>tagsChanged()</signal>
     <signal>startLoading()</signal>
-    <slot>delNikki()</slot>
+    <slot>deleteDiary()</slot>
     <slot>startEditorNew()</slot>
     <slot>setFilterByTag(QString)</slot>
     <slot>reload()</slot>
@@ -242,7 +242,7 @@
   <connection>
    <sender>creAct</sender>
    <signal>triggered()</signal>
-   <receiver>nList</receiver>
+   <receiver>diaryList</receiver>
    <slot>startEditorNew()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -258,8 +258,8 @@
   <connection>
    <sender>delAct</sender>
    <signal>triggered()</signal>
-   <receiver>nList</receiver>
-   <slot>delNikki()</slot>
+   <receiver>diaryList</receiver>
+   <slot>deleteDiary()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>-1</x>
@@ -288,7 +288,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>nList</sender>
+   <sender>diaryList</sender>
    <signal>countChanged()</signal>
    <receiver>mainWindow</receiver>
    <slot>updateCountLabel()</slot>
@@ -304,9 +304,9 @@
    </hints>
   </connection>
   <connection>
-   <sender>nList</sender>
+   <sender>diaryList</sender>
    <signal>tagsChanged()</signal>
-   <receiver>tList</receiver>
+   <receiver>tagList</receiver>
    <slot>reload()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -320,9 +320,9 @@
    </hints>
   </connection>
   <connection>
-   <sender>tList</sender>
+   <sender>tagList</sender>
    <signal>currentTagChanged(QString)</signal>
-   <receiver>nList</receiver>
+   <receiver>diaryList</receiver>
    <slot>setFilterByTag(QString)</slot>
    <hints>
     <hint type="sourcelabel">
@@ -336,9 +336,9 @@
    </hints>
   </connection>
   <connection>
-   <sender>tList</sender>
+   <sender>tagList</sender>
    <signal>tagNameModified(QString)</signal>
-   <receiver>nList</receiver>
+   <receiver>diaryList</receiver>
    <slot>refreshFilteredTags(QString)</slot>
    <hints>
     <hint type="sourcelabel">
@@ -352,7 +352,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>nList</sender>
+   <sender>diaryList</sender>
    <signal>startLoading()</signal>
    <receiver>mainWindow</receiver>
    <slot>updateCountLabelOnLoad()</slot>

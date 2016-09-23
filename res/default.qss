@@ -29,13 +29,13 @@ QWidget#editor #textEditor {
 }
 QWidget#editor #dtLabel {color: #505050}
 
-QListView#nList {
+QListView#diaryList {
     background-color: #f2f1e7;
     border: 0px;
     padding-top: 1px;
 }
 
-QListWidget#tList {
+QListWidget#tagList {
     background-color: #eab68a;
     border: 0px;
 }

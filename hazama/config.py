@@ -64,7 +64,7 @@ def saveSettings():
 
 
 def init():
-    """Load config.ini under CWD, initialize settings and nikki."""
+    """Load config.ini under CWD, initialize settings and diary book."""
     try:
         # utf-8 with BOM will kill ConfigParser
         with open('config.ini', encoding='utf-8-sig') as f:

@@ -19,9 +19,9 @@
   </qresource>
 
   <qresource>
-    <file>toolbar/tlist.png</file>
-    <file>toolbar/tlist-big.png</file>
-    <file>toolbar/tlist-mega.png</file>
+    <file>toolbar/tag-list.png</file>
+    <file>toolbar/tag-list-big.png</file>
+    <file>toolbar/tag-list-mega.png</file>
     <file>toolbar/new.png</file>
     <file>toolbar/new-big.png</file>
     <file>toolbar/new-mega.png</file>

@@ -2,11 +2,11 @@
    color scheme QSS should override this. */
 
 QMainWindow QSplitter::handle {background: #979A9B}
-QListView#tList {
+QListView#tagList {
     padding-top: 3px;
     background: #E7EFF5;
 }
-QListView#nList{
+QListView#diaryList {
     padding: 0px;
     background: #FAFAFA;
 }
@@ -44,45 +44,45 @@ QWidget#editor #tagEditor:focus, #titleEditor:focus, #textEditor:focus {
     background-color: rgba(255, 255, 255, 200);
 }
 
-/* NListItem part */
-QFrame#NListItem {
+/* DiaryListItem part */
+QFrame#DiaryListItem {
     padding: 4px;
     border-bottom: 1px solid #979A9B;
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
         stop:0 #EEF2DE,
         stop:1 #E3EBC7);
 }
-QFrame#NListItem * {
+QFrame#DiaryListItem * {
     color: #3F474E;
 }
-QFrame#NListItem[selected="true"][active="true"] {
+QFrame#DiaryListItem[selected="true"][active="true"] {
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
         stop:0 #DDF1F1,
         stop:1 #C5E2E3);
 }
-QFrame#NListItem[selected="true"][active="false"] {
+QFrame#DiaryListItem[selected="true"][active="false"] {
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
         stop:0 #EBEBEB,
         stop:1 #D9D9D9);
 }
-QFrame#NListItem #NListItemText {
+QFrame#DiaryListItem #DiaryListItemText {
     margin: 2px 3px 2px 5px;
 }
-QFrame#NListItem QToolButton {  /* icons */
+QFrame#DiaryListItem QToolButton {  /* icons */
     margin: 0px;
     margin-right: 1px;
     border: none;
 }
 
-/* TListItem part */
-QFrame#TListItem {
+/* TagListItem part */
+QFrame#TagListItem {
     padding: 6px 8px 6px 8px;
     background: transparent;
 }
-QFrame#TListItem * {
+QFrame#TagListItem * {
     color: #363D43;
 }
-QFrame#TListItem[selected="true"] {
+QFrame#TagListItem[selected="true"] {
     border-right: 3px solid #7092BE;
     border-top: 1px solid #979A9B;
     border-bottom: 1px solid #979A9B;

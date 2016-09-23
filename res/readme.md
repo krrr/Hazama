@@ -4,7 +4,7 @@
 
 ### Sources
 * clock.png, lock.png, format icons are from Keyamoon-IcoMoon
-* random.png, tlist.png, sort.png, search_clr.png,
+* random.png, tag-list.png, sort.png, search-clr.png,
 * search.png, new.png, delete.png, config.png, arrow-left.png, arrow-right.png are from SweetiePlus
 * some icons are modified from SweetiePlus.
 

@@ -327,7 +327,7 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="nikkichou">
+     <widget class="QWidget" name="diaryBook">
       <attribute name="title">
        <string>Diary</string>
       </attribute>

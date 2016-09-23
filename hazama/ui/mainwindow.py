@@ -47,7 +47,7 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         box.setSizePolicy(p)
         box.setMinimumHeight(22 * scaleRatio)
         box.setMinimumWidth(box.minimumHeight() * 7.5)
-        box.contentChanged.connect(self.nList.setFilterBySearchString)
+        box.contentChanged.connect(self.diaryList.setFilterBySearchString)
         self.toolBar.addWidget(box)
         spacerWidget = QWidget(self.toolBar)
         spacerWidget.setFixedSize(2.5 * scaleRatio, 1)
@@ -55,7 +55,7 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         if settings['Main'].getboolean('tagListVisible'):
             self.tListAct.trigger()
         else:
-            self.tList.hide()
+            self.tagList.hide()
         # setup shortcuts
         searchSc = QShortcut(QKeySequence.Find, self)
         searchSc.activated.connect(self.searchBox.setFocus)
@@ -64,7 +64,7 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         if scaleRatio > 1.0:
             for act, fname in [(self.cfgAct, 'config'), (self.creAct, 'new'),
                                (self.delAct, 'delete'), (self.mapAct, 'heatmap'),
-                               (self.sorAct, 'sort'), (self.tListAct, 'tlist')]:
+                               (self.sorAct, 'sort'), (self.tListAct, 'tag-list')]:
                 act.setIcon(makeQIcon(':/toolbar/%s.png' % fname))
 
         # setup auto update check
@@ -74,16 +74,16 @@ class MainWindow(QMainWindow, Ui_mainWindow):
             task.succeeded.connect(self.setUpdateHint)  # use lambda here will cause segfault!
 
         # delay list loading until main event loop start
-        QTimer.singleShot(0, self.nList.load)
+        QTimer.singleShot(0, self.diaryList.load)
 
     def showEvent(self, event):
         # style polished, we can get correct height of toolbar now
         self._applyExtendTitleBarBg()
-        self.nList.setFocus()
+        self.diaryList.setFocus()
 
     def closeEvent(self, event):
         settings['Main']['windowGeo'] = saveWidgetGeo(self)
-        tListVisible = self.tList.isVisible()
+        tListVisible = self.tagList.isVisible()
         settings['Main']['tagListVisible'] = str(tListVisible)
         if tListVisible:
             settings['Main']['tagListWidth'] = str(int(self.splitter.sizes()[0] / scaleRatio))
@@ -151,24 +151,24 @@ class MainWindow(QMainWindow, Ui_mainWindow):
             settings['Main']['listReverse'] = str(name == 'desc')
         elif checked:
             settings['Main']['listSortBy'] = name
-        self.nList.sort()
+        self.diaryList.sort()
 
     def toggleTagList(self, checked):
-        self.tList.setVisible(checked)
+        self.tagList.setVisible(checked)
         if checked:
-            self.tList.load()
+            self.tagList.load()
         else:
-            self.nList.setFilterByTag('')
-            self.tList.clear()
+            self.diaryList.setFilterByTag('')
+            self.tagList.clear()
             settings['Main']['tagListWidth'] = str(int(self.splitter.sizes()[0] / scaleRatio))
 
     def updateCountLabel(self):
         """Update label that display count of diaries in Main List.
         'XX diaries' format is just fine, don't use 'XX diaries,XX results'."""
-        filtered = (self.nList.modelProxy.filterPattern(0) or
-                    self.nList.modelProxy.filterPattern(1))
-        c = self.nList.modelProxy.rowCount() if filtered else self.nList.originModel.rowCount()
-        self.countLabel.setText(self.tr('%i diaries') % c)
+        filtered = (self.diaryList.modelProxy.filterPattern(0) or
+                    self.diaryList.modelProxy.filterPattern(1))
+        m = self.diaryList.modelProxy if filtered else self.diaryList.originModel
+        self.countLabel.setText(self.tr('%i diaries') % m.rowCount())
 
     def updateCountLabelOnLoad(self):
         self.countLabel.setText(self.tr('loading...'))
@@ -199,9 +199,9 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         except (AttributeError, RuntimeError):
             self.cfgDialog = ConfigDialog(self)
             self.cfgDialog.langChanged.connect(self.retranslate)
-            self.cfgDialog.bkRestored.connect(self.nList.reload)
-            self.cfgDialog.accepted.connect(self.nList.setDelegateOfTheme)
-            self.cfgDialog.accepted.connect(self.tList.setDelegateOfTheme)
+            self.cfgDialog.bkRestored.connect(self.diaryList.reload)
+            self.cfgDialog.accepted.connect(self.diaryList.setDelegateOfTheme)
+            self.cfgDialog.accepted.connect(self.tagList.setDelegateOfTheme)
             self.cfgDialog.extendBgChanged.connect(self.onExtendTitleBarBgChanged)
             self.cfgDialog.show()
 
@@ -228,7 +228,7 @@ class MainWindow(QMainWindow, Ui_mainWindow):
 
         # iter through model once and cache result.
         colorFunc.cached = {}
-        model = self.nList.originModel
+        model = self.diaryList.originModel
         for i in range(model.rowCount()):
             dt, length = model.index(i, 1).data(), model.index(i, 6).data()
             year, month, last = dt.split('-')

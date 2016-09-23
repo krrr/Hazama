@@ -13,8 +13,8 @@ from hazama.ui.diarymodel import DiaryModel
 from hazama.config import settings, db
 
 
-class NListDelegate(QStyledItemDelegate):
-    """ItemDelegate of old theme 'one-pixel-rect' for NList, Using 'traditional'
+class DiaryListDelegate(QStyledItemDelegate):
+    """ItemDelegate of old theme 'one-pixel-rect' for DiaryList, Using 'traditional'
     painting method compared to colorful theme."""
     def __init__(self):
         super().__init__()  # don't pass parent because of mem problem
@@ -112,38 +112,38 @@ class NListDelegate(QStyledItemDelegate):
         return QSize(-1, self.all_h+3)  # 3 is spacing between entries
 
 
-class NListDelegateColorful(QItemDelegate):
-    """ItemDelegate of theme 'colorful' for NList. Using widget rendering."""
+class DiaryListDelegateColorful(QItemDelegate):
+    """ItemDelegate of theme 'colorful' for DiaryList. Using widget rendering."""
     class ItemWidget(QFrame):
         """Widget that used to draw an item in ItemDelegate.paint method.
         This widget's height is 'fixed'(two possible height) because delegate's
         sizeHint method is called very often. So font fallback will cause problem.
         """
         def __init__(self, parent=None):
-            super().__init__(parent, objectName='NListItem')
+            super().__init__(parent, objectName='DiaryListItem')
             self.heightWithTag = self.heightNoTag = None
 
-            self.title = NElideLabel(self, objectName='NListItemTitle')
+            self.title = NElideLabel(self, objectName='DiaryListItemTitle')
             self.title.setFont(font.title)
             self.title.setAlignment(Qt.AlignVCenter | Qt.AlignRight)
             self.title.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
-            self.datetime = QLabel(self, objectName='NListItemDt')
+            self.datetime = QLabel(self, objectName='DiaryListItemDt')
             self.datetime.setFont(font.datetime)
             self.datetime.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Preferred)
 
-            self.text = NDocumentLabel(self, objectName='NListItemText')
+            self.text = NDocumentLabel(self, objectName='DiaryListItemText')
             self.text.setLines(settings['Main'].getint('previewLines'))
             self.text.setFont(font.text)
 
-            self.tag = NElideLabel(self, objectName='NListItemTag')
+            self.tag = NElideLabel(self, objectName='DiaryListItemTag')
 
             # use QToolButton to display icons
-            self.datetimeIco = QToolButton(self, objectName='NListItemDtIco')
+            self.datetimeIco = QToolButton(self, objectName='DiaryListItemDtIco')
             minSz = max(font.datetime_m.ascent(), 12*scaleRatio)
             self.datetimeIco.setIconSize(QSize(minSz, minSz))
             self.datetimeIco.setIcon(QIcon(':/calendar.png'))
 
-            self.tagIco = QToolButton(self, objectName='NListItemTagIco')
+            self.tagIco = QToolButton(self, objectName='DiaryListItemTagIco')
             minSz = max(font.default_m.ascent(), 12*scaleRatio)
             self.tagIco.setIconSize(QSize(minSz, minSz))
             self.tagIco.setIcon(QIcon(':/tag.png'))
@@ -214,7 +214,7 @@ class NListDelegateColorful(QItemDelegate):
         return QSize(-1, self._itemW.heightWithTag if hasTag else self._itemW.heightNoTag)
 
 
-class TListDelegate(QStyledItemDelegate):
+class TagListDelegate(QStyledItemDelegate):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.h = font.default_m.height() + 8
@@ -268,19 +268,19 @@ class TListDelegate(QStyledItemDelegate):
         return QSize(-1, self.h)
 
 
-class TListDelegateColorful(QItemDelegate):
-    """ItemDelegate of theme 'colorful' for TList. Using widget rendering."""
+class TagListDelegateColorful(QItemDelegate):
+    """ItemDelegate of theme 'colorful' for TagList. Using widget rendering."""
     class ItemWidget(QFrame):
-        # almost the same as NListDelegateColorful.ItemWidget
+        # almost the same as DiaryListDelegateColorful.ItemWidget
         def __init__(self, parent=None):
-            super().__init__(parent, objectName='TListItem')
+            super().__init__(parent, objectName='TagListItem')
             self._hLayout = QHBoxLayout(self)
             self._hLayout.setContentsMargins(0, 0, 0, 0)
 
-            self.name = NElideLabel(self, objectName='TListItemName')
+            self.name = NElideLabel(self, objectName='TagListItemName')
             self.name.setAlignment(Qt.AlignRight)
             self.name.elideMode = Qt.ElideLeft
-            self.count = QLabel(self, objectName='TListItemCount')
+            self.count = QLabel(self, objectName='TagListItemCount')
             self.count.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Preferred)
             self._hLayout.addWidget(self.count)
             self._hLayout.addWidget(self.name)
@@ -352,7 +352,7 @@ class TagList(QListWidget):
 
     def setDelegateOfTheme(self):
         theme = settings['Main']['theme']
-        d = {'colorful': TListDelegateColorful}.get(theme, TListDelegate)
+        d = {'colorful': TagListDelegateColorful}.get(theme, TagListDelegate)
         self.setItemDelegate(d())  # do not pass parent under PySide...
         # force items to be laid again
         self.setSpacing(self.spacing())
@@ -436,7 +436,7 @@ class TagList(QListWidget):
         self.trackList = None
 
 
-class NikkiList(QListView):
+class DiaryList(QListView):
     """Main List that display preview of diaries"""
     startLoading = Signal()
     countChanged = Signal()
@@ -467,7 +467,7 @@ class NikkiList(QListView):
                                triggered=self.startEditor)
         self.delAct = QAction(makeQIcon(':/menu/list-delete.png', scaled2x=True),
                               self.tr('Delete'), self,
-                              shortcut=QKeySequence.Delete, triggered=self.delNikki)
+                              shortcut=QKeySequence.Delete, triggered=self.deleteDiary)
         self.randAct = QAction(makeQIcon(':/menu/random-big.png', scaled2x=True),
                                self.tr('Random'), self,
                                shortcut=QKeySequence(Qt.Key_F7), triggered=self.selectRandomly)
@@ -535,7 +535,7 @@ class NikkiList(QListView):
 
     def setDelegateOfTheme(self):
         theme = settings['Main']['theme']
-        self._delegate = {'colorful': NListDelegateColorful}.get(theme, NListDelegate)()
+        self._delegate = {'colorful': DiaryListDelegateColorful}.get(theme, DiaryListDelegate)()
         self.setItemDelegate(self._delegate)
         # force items to be laid again
         self.setSpacing(self.spacing())
@@ -544,7 +544,7 @@ class NikkiList(QListView):
         self.originModel.clear()
         self.load()
 
-    def delNikki(self):
+    def deleteDiary(self):
         if len(self.selectedIndexes()) == 0:
             return
         msg = QMessageBox(self)

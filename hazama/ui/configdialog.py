@@ -149,7 +149,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
             diaryDtRange = None
         elif settings['Main']['listSortBy'] == 'datetime' and parent:
             # only save 10 milliseconds (600 diaries)
-            m = parent.findChild(QListView, 'nList').model()
+            m = parent.diaryList.model()
             diaryDtRange = m.data(m.index(0, 1)), m.data(m.index(m.rowCount()-1, 1))
             if settings['Main'].getboolean('listReverse'):
                 diaryDtRange = diaryDtRange[::-1]
@@ -384,7 +384,6 @@ class ConfigDialog(QDialog, Ui_configDialog):
     @Slot()
     def on_exportBtn_clicked(self):
         export_all = self.exportOption.currentIndex() == 0
-        nList = self.parent().nList
 
         path, _type = QFileDialog.getSaveFileName(
             parent=self,
@@ -392,7 +391,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
             filter=self.tr('Plain Text (*.txt)'))
         if path == '': return    # dialog cancelled
         try:
-            nList.handleExport(path, export_all)
+            self.parent().diaryList.handleExport(path, export_all)
         except Exception as e:
             QMessageBox.warning(self, self.tr('Export Failed'), '%-20s' % e)
             return
