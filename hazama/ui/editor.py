@@ -10,11 +10,11 @@ from hazama.config import settings, db
 
 class Editor(QWidget, Ui_editor):
     """The widget that used to edit diary's body, title, tag and datetime.
-    Signal closed: (id of nikki, needSave)
+    Signal closed: (diaryId, needSave)
     """
     closed = Signal(int, bool)
 
-    def __init__(self, nikkiDict, parent=None):
+    def __init__(self, diaryDict, parent=None):
         super().__init__(parent)
         self._saveOnClose = True
         self.setupUi(self)
@@ -34,7 +34,7 @@ class Editor(QWidget, Ui_editor):
         self.lockBtn.clicked.connect(lambda: self.setReadOnly(False))
 
         self.tagEditor.setTextMargins(QMargins(2, 0, 2, 0))
-        self.tagEditor.setCompleter(TagCompleter(list(db.gettags()), self.tagEditor))
+        self.tagEditor.setCompleter(TagCompleter(list(db.get_tags()), self.tagEditor))
         self.tagEditor.returnPressed.connect(
             lambda: None if self.readOnly else self.box.button(QDialogButtonBox.Save).setFocus())
 
@@ -49,7 +49,7 @@ class Editor(QWidget, Ui_editor):
         self.nextSc = QShortcut(QKeySequence('Ctrl+Tab'), self)
         self.quickNextSc = QShortcut(QKeySequence('Right'), self)
 
-        self.fromNikkiDict(nikkiDict)
+        self.fromDiaryDict(diaryDict)
 
     def showEvent(self, event):
         if settings['Editor'].getboolean('titleFocus'):
@@ -99,7 +99,7 @@ class Editor(QWidget, Ui_editor):
             i.setEnabled(readOnly)
         self.readOnly = readOnly
 
-    def fromNikkiDict(self, dic):
+    def fromDiaryDict(self, dic):
         self.timeModified = self.tagModified = False
         self.id = dic['id']
         self.datetime = dic.get('datetime')
@@ -119,11 +119,14 @@ class Editor(QWidget, Ui_editor):
                     datetimeToQt(self.datetime).daysTo(QDateTime.currentDateTime()) > 3)
         self.setReadOnly(readOnly)
 
-    def toNikkiDict(self):
+    def toDiaryDict(self):
         text, formats = self.textEditor.getRichText()
+        tags = self.tagEditor.text()
+        if self.tagModified:  # remove duplicate tags
+            tags = ' '.join(set(tags.split()))
         return dict(id=self.id, datetime=self.datetime or currentDatetime(),
                     text=text, formats=formats, title=self.titleEditor.text(),
-                    tags=self.tagEditor.text())
+                    tags=tags)
 
     @Slot()
     def on_tagEditor_textEdited(self):

@@ -44,41 +44,51 @@ class DatabaseLockedError(Exception): pass
 
 class DiaryBook:
     """This class handles save/read/import/export on SQLite3 database.
+    DiaryModel is just a copy/cache of this.
 
-    Each table's function:
+    Tables:
     Nikki: diary without format/tag fields.
     Nikki_Tags: mapping diary to tags
-    Tags: tags
-    TextFormat: rich text formats and their owner
+    Tags: tags' name
+    TextFormat: rich text formats
+
+    Columns meaning:
+    ID: rowid from database, id of deleted row may be reused
+    DATETIME:
+    TEXT:
+    TITLE:
+    TAGS: space separated tags
+    FORMATS: tuple of 3-tuples (start, len, type)
     """
     ID, DATETIME, TEXT, TITLE, TAGS, FORMATS = range(6)
+    EMPTY_DIARY = (-1, '', '', '', '', None)
     instance = None
 
     def __init__(self, db_path=None):
-        self._path = self._conn = None
+        self.path = self._conn = None
         self._commit = self._exe = None  # shortcut, update after connect
         assert DiaryBook.instance is None
         DiaryBook.instance = self
-        if db_path: self.connect(db_path)
+        if db_path:
+            self.connect(db_path)
 
     def __str__(self):
-        return 'Diary Book (%s) with %s diaries' % (self._path, len(self))
+        return 'Diary Book (%s) with %s diaries' % (self.path, len(self))
 
     def __len__(self):
         return self._exe('SELECT COUNT(id) FROM Nikki').fetchone()[0]
 
     def __iter__(self):
-        iter_all = self._exe('SELECT * FROM Nikki')
-        return map(self._joined, iter_all)
+        return map(self._joined, self._exe('SELECT * FROM Nikki'))
 
-    def __getitem__(self, key):
-        r = self._exe('SELECT * FROM Nikki WHERE id=?', (key,)).fetchone()
+    def __getitem__(self, id_):
+        r = self._exe('SELECT * FROM Nikki WHERE id=?', (id_,)).fetchone()
         if r is None:
-            raise IndexError
+            raise KeyError
         return self._joined(r)
 
     def connect(self, db_path):
-        self._path = db_path
+        self.path = db_path
         if self._conn: self.disconnect()
         self._conn = sqlite3.connect(db_path, timeout=0)
         self._commit, self._exe = self._conn.commit, self._conn.execute
@@ -93,35 +103,26 @@ class DiaryBook:
                 raise DatabaseLockedError
             else:
                 raise
-        self._check_schema()
+        self._conn.executescript(schema)  # check schema
 
     def disconnect(self):
         self._conn.close()
         self._conn = self._exe = None
 
-    def _check_schema(self):
-        self._conn.executescript(schema)
-
     def sorted(self, order, reverse=True):
         assert order in ['datetime', 'title', 'length']
         order = order.replace('length', 'LENGTH(text)')
         cmd = 'SELECT * FROM Nikki ORDER BY ' + order + (' DESC' if reverse else '')
-        for r in self._exe(cmd):
-            yield self._joined(r)
+        return map(self._joined, self._exe(cmd))
 
     def _joined(self, r):
         tags = ' '.join(self._exe(sql_tag_names, (r[0],)).fetchone() or '')
+        formats = tuple(self._exe(sql_diary_formats, (r[0],))) or None
+        return r + (tags, formats)
 
-        formats = self._exe(sql_diary_formats, (r[0],))
-        # cursor object only generates once, so we make a list
-        formats = list(formats) if formats else None
-
-        return dict(id=r[0], title=r[3], datetime=r[1], text=r[2],
-                    tags=tags, formats=formats)
-
-    def exporttxt(self, path, selected=None):
+    def export_txt(self, path, selected=None):
         """Export to TXT file using template (python string formatting).
-        If selected contains diary dictionaries, only export diaries in it."""
+        If selected contains diaries, then only export diaries in it."""
         file = open(path, 'w', encoding='utf-8')
         try:
             with open('template.txt', encoding='utf-8') as f:
@@ -130,73 +131,83 @@ class DiaryBook:
         except OSError:
             tpl = default_tpl
             tpl_type = 'default'
-        for n in (self.sorted('datetime', False) if selected is None
-                  else selected):
-            file.write(tpl.format(**n))
+        for d in (selected or self.sorted('datetime', False)):
+            file.write(tpl.format(**diary2dict(d)))
         file.close()
         logging.info('exporting succeeded (template: %s)', tpl_type)
 
-    def delete(self, id):
-        self._exe('DELETE FROM Nikki WHERE id = ?', (id,))
-        logging.info('diary deleted (ID: %s)' % id)
+    def delete(self, id_):
+        self._exe('DELETE FROM Nikki WHERE id = ?', (id_,))
+        logging.info('diary deleted (ID: %s)' % id_)
+        # tag data will be deleted automatically by trigger
         self._commit()
 
-    def gettags(self, getcount=False):
-        """Get all tags from database. If getcount is True,
-        return two-tuples (name, count) generator"""
-        return tuple(self._exe(sql_tag_with_count if getcount else 'SELECT name FROM Tags'))
+    def get_tags(self, count=False):
+        """Get all tags from database. If count is True then
+        return two-tuples (name, count) generator."""
+        return tuple(self._exe(sql_tag_with_count if count else 'SELECT name FROM Tags'))
 
-    def _gettagid(self, name):
+    def _get_tag_id(self, name):
         """Get tag-id by name"""
         return self._exe('SELECT id FROM Tags WHERE name=?', (name,)).fetchone()[0]
 
-    def changetagname(self, oldname, name):
-        self._exe('UPDATE Tags SET name=? WHERE name=?', (name, oldname))
+    def change_tag_name(self, old, new):
+        self._exe('UPDATE Tags SET name=? WHERE name=?', (new, old))
         self._commit()
 
-    def save(self, id, datetime, title, tags, text, formats, batch=False):
-        """
-        :param id: if id is -1, then add a new diary. Else update matched diary
-        :param tags: None (skip saving tags) or a string contains space-separated tags
+    def save(self, diary, batch=False):
+        """Save diary. If tags is None then skip saving tags.
+        :param diary: tuple or dict
         :param batch: commit will be skipped if True
-        :return: the id of saved diary if not batch, else None
+        :return: the id of saved diary if batch is False, otherwise None
         """
-        new = id == -1
+        diary = diary2dict(diary)
+        id_ = diary['id']
+        new = id_ == -1
 
         if new:
-            cur = self._exe('INSERT INTO Nikki VALUES(NULL,?,?,?)',
-                            (datetime, text, title))
-            id = cur.lastrowid
+            cur = self._exe('INSERT INTO Nikki VALUES(NULL, :datetime, '
+                            ':text, :title)', diary)
+            id_ = cur.lastrowid
         else:
-            self._exe('UPDATE Nikki SET datetime=?, text=?, title=? WHERE id=?',
-                      (datetime, text, title, id))
+            self._exe('UPDATE Nikki SET datetime=:datetime, text=:text, '
+                      'title=:title WHERE id=:id', diary)
         # formats processing
         if not new:  # delete existing format information
-            self._exe('DELETE FROM TextFormat WHERE nikkiid=?', (id,))
-        for i in (formats or []):
-            self._exe('INSERT INTO TextFormat VALUES(?,?,?,?)', (id,) + i)
+            self._exe('DELETE FROM TextFormat WHERE nikkiid=?', (id_,))
+        for i in (diary['formats'] or []):
+            self._exe('INSERT INTO TextFormat VALUES(?,?,?,?)', (id_,) + i)
         # tags processing
-        if tags is not None:
+        if diary['tags'] is not None:
             if not new:  # delete existing tags first
-                self._exe('DELETE FROM Nikki_Tags WHERE nikkiid=?', (id,))
-            for t in tags.split():
+                self._exe('DELETE FROM Nikki_Tags WHERE nikkiid=?', (id_,))
+            for t in diary['tags'].split():
                 try:
-                    tag_id = self._gettagid(t)
+                    tag_id = self._get_tag_id(t)
                 except TypeError:  # tag not exists
                     self._exe('INSERT INTO Tags VALUES(NULL,?)', (t,))
-                    self._commit()
-                    tag_id = self._gettagid(t)
-                self._exe('INSERT INTO Nikki_Tags VALUES(?,?)', (id, tag_id))
+                    tag_id = self._get_tag_id(t)
+                self._exe('INSERT INTO Nikki_Tags VALUES(?,?)', (id_, tag_id))
+
         if not batch:
             self._commit()
-            logging.info('diary saved(ID: %s)' % id)
-            return id
-
-    def getpath(self):
-        return self._path
+            logging.info('diary saved (ID: %s)' % id_)
+            return id_
 
     def get_datetime_range(self):
         return self._exe('SELECT min(datetime), max(datetime) from Nikki').fetchone()
+
+
+def diary2dict(d):
+    if isinstance(d, dict):
+        return d
+    return {'id': d[0], 'datetime': d[1], 'text': d[2], 'title': d[3],
+            'tags': d[4], 'formats': d[5]}
+
+
+def dict2diary(d, as_list=False):
+    ret = (d['id'], d['datetime'], d['text'], d['title'], d['tags'], d['formats'])
+    return list(ret) if as_list else ret
 
 
 def list_backups():
@@ -213,13 +224,13 @@ def restore_backup(bk_name):
     db = DiaryBook.instance
     db.disconnect()
     bk_path = os.path.join('backup', bk_name)
-    shutil.copyfile(bk_path, db.getpath())
-    db.connect(db.getpath())
+    shutil.copyfile(bk_path, db.path)
+    db.connect(db.path)
 
 
 def backup():
     """Do daily backup and delete old backups if not did yet."""
-    db_path = DiaryBook.instance.getpath()
+    db_path = DiaryBook.instance.path
     if not os.path.isdir('backup'): os.mkdir('backup')
     backups = list_backups()
     newest = backups[-1] if backups else ''

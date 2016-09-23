@@ -371,7 +371,7 @@ class TagList(QListWidget):
         newName = editor.text()
         if editor.isModified() and newName and ' ' not in newName:
             # editor.oldText is set in delegate
-            db.changetagname(editor.oldText, newName)
+            db.change_tag_name(editor.oldText, newName)
             logging.info('tag [%s] changed to [%s]', editor.oldText, newName)
             super().commitData(editor)
             self.tagNameModified.emit(newName)
@@ -382,13 +382,13 @@ class TagList(QListWidget):
         self.setCurrentRow(0)
         itemFlag = Qt.ItemIsEditable | Qt.ItemIsSelectable | Qt.ItemIsEnabled
         if settings['Main'].getboolean('tagListCount'):
-            for name, count in db.gettags(getcount=True):
+            for name, count in db.get_tags(count=True):
                 item = QListWidgetItem(name, self)
                 item.setFlags(itemFlag)
                 item.setData(Qt.ToolTipRole, name)
                 item.setData(Qt.UserRole, count)
         else:
-            for name in db.gettags(getcount=False):
+            for name in db.get_tags(count=False):
                 item = QListWidgetItem(name, self)
                 item.setData(Qt.ToolTipRole, name)
                 item.setFlags(itemFlag)
@@ -494,7 +494,7 @@ class NikkiList(QListView):
         self.setCurrentIndex(self.modelProxy.index(randRow, 0))
 
     def startEditor(self):
-        dic = self._getNikkiDict(self.currentIndex())
+        dic = self._getDiaryDict(self.currentIndex())
         id_ = dic['id']
         if id_ in self.editors:
             self.editors[id_].activateWindow()
@@ -502,12 +502,12 @@ class NikkiList(QListView):
             e = Editor(dic)
             self._setEditorStaggerPos(e)
             self.editors[id_] = e
-            e.closed.connect(self.closeEditor)
-            pre, next = lambda: self._editorMove(-1), lambda: self._editorMove(1)
+            e.closed.connect(self.onEditorClose)
+            pre, next_ = lambda: self._editorMove(-1), lambda: self._editorMove(1)
             e.preSc.activated.connect(pre)
             e.quickPreSc.activated.connect(pre)
-            e.nextSc.activated.connect(next)
-            e.quickNextSc.activated.connect(next)
+            e.nextSc.activated.connect(next_)
+            e.quickNextSc.activated.connect(next_)
             e.show()
             return id_
 
@@ -518,30 +518,8 @@ class NikkiList(QListView):
             e = Editor({'id': -1})
             self._setEditorStaggerPos(e)
             self.editors[-1] = e
-            e.closed.connect(self.closeEditor)
+            e.closed.connect(self.onEditorClose)
             e.show()
-
-    def closeEditor(self, id_, needSave):
-        """Write editor's data to model and database, and destroy editor"""
-        editor = self.editors[id_]
-        if needSave:
-            qApp.setOverrideCursor(QCursor(Qt.WaitCursor))
-            dic = editor.toNikkiDict()
-            if not editor.tagModified:  # let database skip heavy tag update operation
-                dic['tags'] = None
-            else:  # remove duplicate tags
-                dic['tags'] = ' '.join(set(dic['tags'].split()))
-            row = self.originModel.updateDiary(dic)
-
-            self.clearSelection()
-            self.setCurrentIndex(self.modelProxy.mapFromSource(
-                self.originModel.index(row, 0)))
-
-            if id_ == -1: self.countChanged.emit()  # new diary
-            if editor.tagModified: self.tagsChanged.emit()
-            qApp.restoreOverrideCursor()
-        editor.deleteLater()
-        del self.editors[id_]
 
     def _setEditorStaggerPos(self, editor):
         if self.editors:
@@ -591,12 +569,12 @@ class NikkiList(QListView):
         if export_all:
             selected = None
         else:
-            selected = [self._getNikkiDict(i) for i in self.selectedIndexes()]
-        db.exporttxt(path, selected)
+            selected = list(map(self._getDiaryDict, self.selectedIndexes()))
+        db.export_txt(path, selected)
 
-    def _getNikkiDict(self, idx):
-        """Get a nikki dict with its index in proxy model."""
-        return self.originModel.getNikkiDictByRow(self.modelProxy.mapToSource(idx).row())
+    def _getDiaryDict(self, idx):
+        """Get a diary tuple by its index in proxy model."""
+        return self.originModel.getDiaryDictByRow(self.modelProxy.mapToSource(idx).row())
 
     def sort(self):
         sortBy = settings['Main']['listSortBy']
@@ -621,8 +599,8 @@ class NikkiList(QListView):
         newIdx = self.modelProxy.index(row+step, 0)
         self.clearSelection()
         self.setCurrentIndex(newIdx)
-        dic = self._getNikkiDict(newIdx)
-        editor.fromNikkiDict(dic)
+        dic = self._getDiaryDict(newIdx)
+        editor.fromDiary(dic)
         self.editors[dic['id']] = self.editors.pop(_id)
 
     def setFilterBySearchString(self, s):
@@ -644,3 +622,24 @@ class NikkiList(QListView):
             diary = db[i.data()]
             model.setData(i.sibling(i.row(), DiaryModel.TAGS), diary['tags'])
         self.setFilterByTag(newTagName)
+
+    def onEditorClose(self, id_, needSave):
+        """Write editor's data to model and database, and destroy editor"""
+        editor = self.editors[id_]
+        new = id_ == -1
+        if needSave:
+            qApp.setOverrideCursor(QCursor(Qt.WaitCursor))
+            dic = editor.toDiaryDict()
+            if not new and not editor.tagModified:  # let database skip heavy tag update operation
+                dic['tags'] = None
+            row = self.originModel.saveDiary(dic)
+
+            self.clearSelection()
+            self.setCurrentIndex(self.modelProxy.mapFromSource(
+                self.originModel.index(row, 0)))
+
+            if new: self.countChanged.emit()  # new diary
+            if editor.tagModified: self.tagsChanged.emit()
+            qApp.restoreOverrideCursor()
+        editor.deleteLater()
+        del self.editors[id_]
