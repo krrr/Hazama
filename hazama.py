@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# this file is used to do testing without installing or build exe
+# used to run without installing; embedded into Windows EXE
 import sys
 from hazama import main_entry
 

@@ -6,7 +6,7 @@ Hazama is a GUI application for keeping diary, simple and highly customizable. I
 
 Build & Install
 ---
-* Run: `./setup.py build_qt && ./main.py`
+* Run: `./setup.py build_qt && ./hazama.py`
 * Install: `./setup.py build_qt && ./setup.py install && hazama`
 * Build EXE: `./setup.py build_qt && setup.py build_exe && build\hazama.exe`
 

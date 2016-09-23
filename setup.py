@@ -87,52 +87,10 @@ class BuildExe(Command):
     initialize_options = finalize_options = lambda self: None
 
     def run(self):
-        # remaining let cx_freeze generate hazama.exe
-        os.rename('main.py', 'hazama.py')
-        try:
-            spawn([sys.executable, pjoin('utils', 'setupfreeze.py'), 'build_exe'])
-        finally:
-            os.rename('hazama.py', 'main.py')
+        spawn([sys.executable, pjoin('utils', 'setupfreeze.py'), 'build_exe'])
         # remove duplicate python DLL
         dll_path = glob(pjoin('build', 'python*.dll'))[0]
         os.remove(pjoin('build', 'lib', os.path.basename(dll_path)))
-
-
-class MakePKGBUILD(Command):
-    description = 'Generate PKGBUILD for archlinux'
-    user_options = []
-    template = """
-# Maintainer: krrr <guogaishiwo@gmail.com>
-pkgname=hazama
-pkgver={ver}
-pkgrel=1
-pkgdesc="Diary application"
-arch=('any')
-url="https://krrr.github.io/hazama"
-license=('GPL')
-depends=('python' 'python-pyside')
-makedepends=('python-setuptools' 'python-pyside-tools')
-source=("https://github.com/krrr/Hazama/archive/v$pkgver.tar.gz")
-
-build() {{
-    cd "$srcdir/Hazama-$pkgver"
-    ./setup.py build
-}}
-
-package() {{
-    cd "$srcdir/Hazama-$pkgver"
-    # --skip-build avoid building again when --root specified
-    ./setup.py install --root "$pkgdir/" --skip-build
-}}
-"""
-
-    initialize_options = finalize_options = lambda self: None
-
-    def run(self):
-        with open('PKGBUILD', 'w') as f:
-            f.write(self.template.strip().format(ver=hazama.__version__))
-            f.write('\n')
-        os.system('makepkg -g >> PKGBUILD')
 
 
 class InstallDesktopEntry(Command):
@@ -187,7 +145,7 @@ if sys.platform == 'win32':  # fix env variables for PySide tools
     os.environ['PATH'] += ';' + pjoin(sys.exec_prefix, 'lib', 'site-packages', 'PySide')
 
 
-# FIXME: PySide installed by archlinux AUR will not recognized by setuptools, so requires not added.
+# PySide installed by linux package manager will not recognized by setuptools, so requires not added.
 setup(name='Hazama',
       author=hazama.__author__,
       version=hazama.__version__,
@@ -196,7 +154,7 @@ setup(name='Hazama',
       packages=['hazama', 'hazama.ui'],
       package_data={'hazama': ['lang/*.qm']},
       cmdclass={'build': CustomBuild, 'build_qt': BuildQt, 'install': CustomInstall,
-                'update_ts': UpdateTranslations, 'build_exe': BuildExe, 'pkgbuild': MakePKGBUILD,
+                'update_ts': UpdateTranslations, 'build_exe': BuildExe,
                 'desktop_entry': InstallDesktopEntry},
       zip_safe=False,
       entry_points={'gui_scripts': ['hazama = hazama:main_entry']})
