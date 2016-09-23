@@ -4,7 +4,7 @@ from PySide.QtGui import *
 from PySide.QtCore import *
 from hazama import __version__, diarybook
 from hazama.ui import (font, setStyleSheet, scaleRatio, fixWidgetSizeOnHiDpi, isDwmUsable,
-                       dbDatetimeFmtQt)
+                       dbDatetimeFmtQt, makeQIcon)
 from hazama.ui.configdialog_ui import Ui_configDialog
 from hazama.config import settings, db, isWin7OrLater, isWin
 from hazama import updater
@@ -92,6 +92,8 @@ class ConfigDialog(QDialog, Ui_configDialog):
         else:
             self._NavigateAboutArea(QUrl('hzm://show-info'))
 
+        if scaleRatio > 1:
+            self.openOutBtn.setIcon(makeQIcon(':/check.png', scaled2x=True))
         self.openOutBtn.hide()  # can't set initial state in creator
         self.appIcoBtn.setIcon(qApp.windowIcon())
         self.appIcoBtn.setIconSize(QSize(32, 32) * scaleRatio)
