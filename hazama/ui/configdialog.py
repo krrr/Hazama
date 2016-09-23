@@ -2,11 +2,11 @@ import sys
 import logging
 from PySide.QtGui import *
 from PySide.QtCore import *
-from hazama import __version__, db
+from hazama import __version__, diarybook
 from hazama.ui import (font, setStyleSheet, scaleRatio, fixWidgetSizeOnHiDpi, isDwmUsable,
                        dbDatetimeFmtQt)
 from hazama.ui.configdialog_ui import Ui_configDialog
-from hazama.config import settings, nikki, isWin7OrLater, isWin
+from hazama.config import settings, db, isWin7OrLater, isWin
 from hazama import updater
 
 
@@ -119,7 +119,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
         self.langCombo.setCurrentIndex(langIndex)
 
         self.rstCombo.model().item(0).setSelectable(False)
-        self.rstCombo.addItems(db.list_backups())
+        self.rstCombo.addItems(diarybook.list_backups())
         self.themeCombo.addItems(themes)
         self.themeCombo.setCurrentIndex(themes.index(settings['Main']['theme']))
         self.preLinesBox.setValue(settings['Main'].getint('previewLines'))
@@ -144,7 +144,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
             if scaleRatio > 1:
                 i.setMinimumWidth((i.minimumWidth() * scaleRatio))
         # setup statistics
-        diaryCount = len(nikki)
+        diaryCount = len(db)
         if diaryCount < 2:
             diaryDtRange = None
         elif settings['Main']['listSortBy'] == 'datetime' and parent:
@@ -154,7 +154,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
             if settings['Main'].getboolean('listReverse'):
                 diaryDtRange = diaryDtRange[::-1]
         else:
-            diaryDtRange = nikki.get_datetime_range()
+            diaryDtRange = db.get_datetime_range()
         if diaryDtRange:
             qRange = tuple(map(lambda x: QDateTime.fromString(x, dbDatetimeFmtQt),
                                diaryDtRange))
@@ -418,7 +418,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
         msg.deleteLater()
 
         if msg.clickedButton() == okBtn:
-            db.restore_backup(filename)
+            diarybook.restore_backup(filename)
             self.close()
             self.bkRestored.emit()
         else:

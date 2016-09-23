@@ -5,7 +5,7 @@ from hazama.ui.customobjects import TagCompleter
 from hazama.ui.customwidgets import DateTimeDialog
 from hazama.ui import (font, datetimeTrans, currentDatetime, fullDatetimeFmt,
                        saveWidgetGeo, restoreWidgetGeo, datetimeToQt, dbDatetimeFmtQt)
-from hazama.config import settings, nikki
+from hazama.config import settings, db
 
 
 class Editor(QWidget, Ui_editor):
@@ -34,7 +34,7 @@ class Editor(QWidget, Ui_editor):
         self.lockBtn.clicked.connect(lambda: self.setReadOnly(False))
 
         self.tagEditor.setTextMargins(QMargins(2, 0, 2, 0))
-        self.tagEditor.setCompleter(TagCompleter(list(nikki.gettags()), self.tagEditor))
+        self.tagEditor.setCompleter(TagCompleter(list(db.gettags()), self.tagEditor))
         self.tagEditor.returnPressed.connect(
             lambda: None if self.readOnly else self.box.button(QDialogButtonBox.Save).setFocus())
 

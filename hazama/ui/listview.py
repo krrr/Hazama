@@ -9,8 +9,8 @@ from hazama.ui import font, datetimeTrans, scaleRatio, makeQIcon
 from hazama.ui.editor import Editor
 from hazama.ui.customobjects import NTextDocument, MultiSortFilterProxyModel
 from hazama.ui.customwidgets import NElideLabel, NDocumentLabel
-from hazama.ui.listmodel import NikkiModel
-from hazama.config import settings, nikki
+from hazama.ui.diarymodel import DiaryModel
+from hazama.config import settings, db
 
 
 class NListDelegate(QStyledItemDelegate):
@@ -371,7 +371,7 @@ class TagList(QListWidget):
         newName = editor.text()
         if editor.isModified() and newName and ' ' not in newName:
             # editor.oldText is set in delegate
-            nikki.changetagname(editor.oldText, newName)
+            db.changetagname(editor.oldText, newName)
             logging.info('tag [%s] changed to [%s]', editor.oldText, newName)
             super().commitData(editor)
             self.tagNameModified.emit(newName)
@@ -382,13 +382,13 @@ class TagList(QListWidget):
         self.setCurrentRow(0)
         itemFlag = Qt.ItemIsEditable | Qt.ItemIsSelectable | Qt.ItemIsEnabled
         if settings['Main'].getboolean('tagListCount'):
-            for name, count in nikki.gettags(getcount=True):
+            for name, count in db.gettags(getcount=True):
                 item = QListWidgetItem(name, self)
                 item.setFlags(itemFlag)
                 item.setData(Qt.ToolTipRole, name)
                 item.setData(Qt.UserRole, count)
         else:
-            for name in nikki.gettags(getcount=False):
+            for name in db.gettags(getcount=False):
                 item = QListWidgetItem(name, self)
                 item.setData(Qt.ToolTipRole, name)
                 item.setFlags(itemFlag)
@@ -453,12 +453,13 @@ class NikkiList(QListView):
         # disable default editor. Editor is implemented in the View
         self.setEditTriggers(QAbstractItemView.NoEditTriggers)
         # setup models
-        self.originModel = NikkiModel(self)
+        self.originModel = DiaryModel(self)
         self.modelProxy = MultiSortFilterProxyModel(self)
         self.modelProxy.setSourceModel(self.originModel)
         self.modelProxy.setDynamicSortFilter(True)
-        self.modelProxy.addFilter(cols=[4], cs=Qt.CaseSensitive)
-        self.modelProxy.addFilter(cols=[1, 2, 3], cs=Qt.CaseInsensitive)
+        self.modelProxy.addFilter([db.TAGS], cs=Qt.CaseSensitive)
+        self.modelProxy.addFilter([db.DATETIME, db.TITLE, db.TEXT],
+                                  cs=Qt.CaseInsensitive)
         self.setModel(self.modelProxy)
         self.sort()
         # setup actions
@@ -530,7 +531,7 @@ class NikkiList(QListView):
                 dic['tags'] = None
             else:  # remove duplicate tags
                 dic['tags'] = ' '.join(set(dic['tags'].split()))
-            row = self.originModel.updateNikki(dic)
+            row = self.originModel.updateDiary(dic)
 
             self.clearSelection()
             self.setCurrentIndex(self.modelProxy.mapFromSource(
@@ -580,7 +581,7 @@ class NikkiList(QListView):
         if msg.clickedButton() == okBtn:
             indexes = [self.modelProxy.mapToSource(i)
                        for i in self.selectedIndexes()]
-            for i in indexes: nikki.delete(i.data())
+            for i in indexes: db.delete(i.data())
             for i in sorted([i.row() for i in indexes], reverse=True):
                 self.originModel.removeRow(i)
             self.countChanged.emit()
@@ -591,7 +592,7 @@ class NikkiList(QListView):
             selected = None
         else:
             selected = [self._getNikkiDict(i) for i in self.selectedIndexes()]
-        nikki.exporttxt(path, selected)
+        db.exporttxt(path, selected)
 
     def _getNikkiDict(self, idx):
         """Get a nikki dict with its index in proxy model."""
@@ -599,7 +600,7 @@ class NikkiList(QListView):
 
     def sort(self):
         sortBy = settings['Main']['listSortBy']
-        sortByCol = {'datetime': 1, 'title': 3, 'length': 6}.get(sortBy, 1)
+        sortByCol = getattr(DiaryModel, sortBy.upper(), DiaryModel.DATETIME)
         reverse = settings['Main'].getboolean('listReverse')
         self.modelProxy.sort(sortByCol,
                              Qt.DescendingOrder if reverse else Qt.AscendingOrder)
@@ -640,6 +641,6 @@ class NikkiList(QListView):
         needRefresh = [modelP.mapToSource(modelP.index(i, 0))
                        for i in range(modelP.rowCount())]
         for i in needRefresh:
-            diary = nikki[i.data()]
-            model.setData(i.sibling(i.row(), 4), diary['tags'])
+            diary = db[i.data()]
+            model.setData(i.sibling(i.row(), DiaryModel.TAGS), diary['tags'])
         self.setFilterByTag(newTagName)

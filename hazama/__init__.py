@@ -35,9 +35,9 @@ def main_entry():
     level = logging.DEBUG if config.settings['Main'].getboolean('debug') else logging.INFO
     logging.basicConfig(format='%(levelname)s: %(message)s', level=level)
     logging.info('Hazama v%s  (%s, Py%d.%d.%d)', __version__, sys.platform, *sys.version_info[:3])
-    logging.info(str(config.nikki))
+    logging.info(str(config.db))
 
-    from hazama import ui, db, updater
+    from hazama import ui, diarybook, updater
     from hazama import updater
     app = ui.init()
     from hazama.ui.mainwindow import MainWindow
@@ -48,7 +48,7 @@ def main_entry():
 
     if config.settings['Main'].getboolean('backup'):
         try:
-            db.backup()
+            diarybook.backup()
         except OSError as e:
             from hazama.ui import showErrors
             showErrors('cantFile', str(e))  # message not correct here, ignore it...
@@ -60,7 +60,7 @@ def main_entry():
     ret = app.exec_()
     del w  # force close all child window of MainWindow
 
-    db.Nikki.getinstance().disconnect()
+    diarybook.DiaryBook.instance.disconnect()
     config.saveSettings()
 
     # segfault might happen if not wait for them

@@ -3,7 +3,7 @@ import sys
 import os
 from configparser import ConfigParser, ParsingError
 from os import path
-from hazama import db
+from hazama import diarybook
 
 
 # constants
@@ -30,7 +30,7 @@ settings.update({
     'ThemeColorful': {'colorScheme': 'green'}
 })
 
-nikki = db.Nikki()
+db = diarybook.DiaryBook()
 
 # set application path (used to load language file)
 if hasattr(sys, 'frozen'):
@@ -76,13 +76,13 @@ def init():
         pass
 
     try:
-        nikki.connect(settings['Main']['dbPath'])
-    except db.DatabaseError as e:
+        db.connect(settings['Main']['dbPath'])
+    except diarybook.DatabaseError as e:
         from hazama import ui
         if str(e).startswith('unable to open'):
             ui.showErrors('cantFile', settings['Main']['dbPath'], exit_=True)
         else:
             ui.showErrors('dbError', str(e), exit_=True)
-    except db.DatabaseLockedError:
+    except diarybook.DatabaseLockedError:
         from hazama import ui
         ui.showErrors('dbLocked', exit_=True)
