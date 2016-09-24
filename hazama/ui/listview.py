@@ -7,7 +7,7 @@ from PySide.QtGui import *
 from PySide.QtCore import *
 from hazama.ui import font, datetimeTrans, scaleRatio, makeQIcon
 from hazama.ui.editor import Editor
-from hazama.ui.customobjects import NTextDocument, MultiSortFilterProxyModel
+from hazama.ui.customobjects import NTextDocument, MultiSortFilterProxyModel, DragScrollMixin
 from hazama.ui.customwidgets import NElideLabel, NDocumentLabel
 from hazama.ui.diarymodel import DiaryModel
 from hazama.config import settings, db
@@ -332,30 +332,23 @@ class TagListDelegateColorful(QItemDelegate):
         editor.setGeometry(option.rect)
 
 
-class TagList(QListWidget):
+class TagList(DragScrollMixin, QListWidget):
     currentTagChanged = Signal(str)  # str is tag-name or ''
     tagNameModified = Signal(str)  # arg: newTagName
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.trackList = None  # update in mousePressEvent
+    def __init__(self, parent=None):
+        DragScrollMixin.__init__(self)
+        QListWidget.__init__(self, parent)
         self.setVerticalScrollMode(self.ScrollPerPixel)
         self.setDelegateOfTheme()
 
         self.setUniformItemSizes(True)
-        self.currentItemChanged.connect(self.emitCurrentTagChanged)
+        self.currentItemChanged.connect(self.onCurrentItemChanged)
         nextFunc = lambda: self.setCurrentRow(
             0 if self.currentRow() == self.count() - 1 else self.currentRow() + 1)
         preFunc = lambda: self.setCurrentRow((self.currentRow() or self.count()) - 1)
         self.nextSc = QShortcut(QKeySequence('Ctrl+Tab'), self, activated=nextFunc)
         self.preSc = QShortcut(QKeySequence('Ctrl+Shift+Tab'), self, activated=preFunc)
-
-    def setDelegateOfTheme(self):
-        theme = settings['Main']['theme']
-        d = {'colorful': TagListDelegateColorful}.get(theme, TagListDelegate)
-        self.setItemDelegate(d())  # do not pass parent under PySide...
-        # force items to be laid again
-        self.setSpacing(self.spacing())
 
     def contextMenuEvent(self, event):
         # ignore "All" item. cursor must over the item
@@ -408,32 +401,19 @@ class TagList(QListWidget):
                     item = self.item(0)
                 self.setCurrentItem(item)
 
-    def emitCurrentTagChanged(self, currentItem):
+    def setDelegateOfTheme(self):
+        theme = settings['Main']['theme']
+        d = {'colorful': TagListDelegateColorful}.get(theme, TagListDelegate)
+        self.setItemDelegate(d())  # do not pass parent under PySide...
+        # force items to be laid again
+        self.setSpacing(self.spacing())
+
+    def onCurrentItemChanged(self, currentItem):
         try:
             text = currentItem.data(Qt.DisplayRole)
         except AttributeError:  # no selection
             return
         self.currentTagChanged.emit('' if currentItem is self.item(0) else text)
-
-    # all three events below for drag scroll
-    def mousePressEvent(self, event):
-        self.trackList = []
-
-    def mouseMoveEvent(self, event):
-        if self.trackList is not None:
-            self.trackList.append(event.pos().y())
-            if len(self.trackList) > 4:
-                change = self.trackList[-1] - self.trackList[-2]
-                scrollbar = self.verticalScrollBar()
-                scrollbar.setValue(scrollbar.value() - change)
-
-    def mouseReleaseEvent(self, event):
-        if self.trackList is not None and len(self.trackList) <= 4:  # haven't moved
-            pEvent = QMouseEvent(QEvent.MouseButtonPress, event.pos(),
-                                 event.globalPos(), Qt.LeftButton,
-                                 Qt.LeftButton, Qt.NoModifier)
-            QListWidget.mousePressEvent(self, pEvent)
-        self.trackList = None
 
 
 class DiaryList(QListView):
@@ -557,8 +537,7 @@ class DiaryList(QListView):
         msg.deleteLater()
 
         if msg.clickedButton() == okBtn:
-            indexes = [self.modelProxy.mapToSource(i)
-                       for i in self.selectedIndexes()]
+            indexes = list(map(self.modelProxy.mapToSource, self.selectedIndexes()))
             for i in indexes: db.delete(i.data())
             for i in sorted([i.row() for i in indexes], reverse=True):
                 self.originModel.removeRow(i)
@@ -585,11 +564,11 @@ class DiaryList(QListView):
 
     def _editorMove(self, step):
         if len(self.editors) > 1: return
-        _id = list(self.editors.keys())[0]
-        editor = self.editors[_id]
+        id_ = list(self.editors.keys())[0]
+        editor = self.editors[id_]
         if editor.needSave(): return
         idx = self.modelProxy.match(
-            self.modelProxy.index(0, 0), 0, _id, flags=Qt.MatchExactly)
+            self.modelProxy.index(0, 0), 0, id_, flags=Qt.MatchExactly)
         if len(idx) != 1: return
         row = idx[0].row()  # the row of the caller (Editor) 's diary in proxy model
 
@@ -600,8 +579,8 @@ class DiaryList(QListView):
         self.clearSelection()
         self.setCurrentIndex(newIdx)
         dic = self._getDiaryDict(newIdx)
-        editor.fromDiary(dic)
-        self.editors[dic['id']] = self.editors.pop(_id)
+        editor.fromDiaryDict(dic)
+        self.editors[dic['id']] = self.editors.pop(id_)
 
     def setFilterBySearchString(self, s):
         self.modelProxy.setFilterPattern(1, s)

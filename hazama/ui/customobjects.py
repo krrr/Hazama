@@ -187,15 +187,15 @@ class MultiSortFilterProxyModel(QSortFilterProxyModel):
                 return False
         return True
 
-    def setFilterPattern(self, id, pattern):
+    def setFilterPattern(self, id_, pattern):
         """Set the filter's pattern specified by filter id"""
-        self._filters[id].regExp.setPattern(pattern)
+        self._filters[id_].regExp.setPattern(pattern)
         # let filter model update
         super().setFilterFixedString('')
 
-    def filterPattern(self, id):
+    def filterPattern(self, id_):
         """Return the filter's pattern specified by filter id"""
-        return self._filters[id].regExp.pattern()
+        return self._filters[id_].regExp.pattern()
 
     def addFilter(self, cols, patternSyntax=QRegExp.FixedString, cs=None):
         """Add new filter into proxy model.
@@ -211,6 +211,37 @@ class MultiSortFilterProxyModel(QSortFilterProxyModel):
         self._filters.append(f)
         return len(self._filters) - 1
 
-    def removeFilter(self, id):
-        """Remove the filter specified by its id"""
-        del self._filters[id]
+    def removeFilter(self, id_):
+        """Remove the filter specified by its id."""
+        del self._filters[id_]
+
+
+class DragScrollMixin:
+    """Drag & Scroll, like on touchscreens. Implemented only vertical direction."""
+    def __init__(self):
+        self.__lastPos = None
+        self.__disToStart = None  # None --> 10 --> 0 -> None
+
+    def mousePressEvent(self, __):
+        self.__disToStart = 5
+
+    def mouseMoveEvent(self, event):
+        if self.__lastPos is None:
+            self.__lastPos = event.pos()
+            return
+
+        delta = event.pos() - self.__lastPos
+        if self.__disToStart == 0:
+            barV = self.verticalScrollBar()
+            barV.setValue(barV.value() - delta.y())
+        else:
+            self.__disToStart = max(self.__disToStart-abs(delta.y()), 0)
+        self.__lastPos = event.pos()
+
+    def mouseReleaseEvent(self, event):
+        if self.__disToStart is not None and self.__disToStart > 0:
+            ev = QMouseEvent(QEvent.MouseButtonPress, event.pos(),
+                             event.globalPos(), Qt.LeftButton,
+                             Qt.LeftButton, Qt.NoModifier)
+            super().mousePressEvent(ev)
+        self.__lastPos = self.__disToStart = None
