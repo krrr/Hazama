@@ -145,7 +145,8 @@ class DiaryBook:
     def get_tags(self, count=False):
         """Get all tags from database. If count is True then
         return two-tuples (name, count) generator."""
-        return tuple(self._exe(sql_tag_with_count if count else 'SELECT name FROM Tags'))
+        return tuple(self._exe(sql_tag_with_count) if count else
+                     (r[0] for r in self._exe('SELECT name FROM Tags')))
 
     def _get_tag_id(self, name):
         """Get tag-id by name"""
