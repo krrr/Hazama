@@ -164,56 +164,55 @@ class NSplitter(QSplitter):
 
 
 class MultiSortFilterProxyModel(QSortFilterProxyModel):
-    """Multi-filter ProxyModel, every filter may associated with multiple columns,
+    """Multi-filter ProxyModel. Every filter may be associated with multiple columns,
     if any of columns match then it will pass that filter."""
-    class Filter:
-        cols = regExp = None
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._filters = []
+        self._filters = []  # list of 2-tuple (cols, QRegExp)
 
     def filterAcceptsRow(self, sourceRow, sourceParent):
-        model = self.sourceModel()
+        return all(self._checkOneFilter(self.sourceModel(), sourceRow, f)
+                   for f in self._filters)
 
-        def checkOneFilter(f):
-            for c in f.cols:
-                if f.regExp.indexIn(model.data(model.index(sourceRow, c))) != -1:
-                    return True
-            return False
+    def _checkOneFilter(self, model, sourceRow, f):
+        if f is None:
+            return True
 
-        for f in self._filters:
-            if not checkOneFilter(f):
-                return False
-        return True
+        for c in f[0]:
+            if f[1].indexIn(model.data(model.index(sourceRow, c))) != -1:
+                return True
+        return False
 
     def setFilterPattern(self, id_, pattern):
         """Set the filter's pattern specified by filter id"""
-        self._filters[id_].regExp.setPattern(pattern)
-        # let filter model update
-        super().setFilterFixedString('')
+        self._filters[id_][1].setPattern(pattern)
+        super().setFilterFixedString('')  # let filter model update
 
     def filterPattern(self, id_):
         """Return the filter's pattern specified by filter id"""
-        return self._filters[id_].regExp.pattern()
+        return self._filters[id_][1].pattern()
 
     def addFilter(self, cols, patternSyntax=QRegExp.FixedString, cs=None):
         """Add new filter into proxy model.
         :param cols: a list contains columns to be filtered
-        :param cs: Qt::CaseSensitivity, if None then use model's setting
-        :return: the id of new filter, id starts from zero"""
+        :param cs: Qt.CaseSensitivity, if None then use model's setting
+        :return: the id of new filter; id starts from zero"""
         assert patternSyntax in [QRegExp.FixedString, QRegExp.Wildcard,
                                  QRegExp.WildcardUnix, QRegExp.RegExp], 'wrong pattern syntax'
-        f = MultiSortFilterProxyModel.Filter()
-        f.cols = tuple(cols)
-        f.regExp = QRegExp('', self.filterCaseSensitivity() if cs is None else cs,
-                           patternSyntax)
-        self._filters.append(f)
-        return len(self._filters) - 1
+        f = (tuple(cols), QRegExp('', self.filterCaseSensitivity() if cs is None else cs,
+                                  patternSyntax))
+        try:
+            idx = self._filters.index(None)
+            self._filters[idx] = f
+        except ValueError:
+            idx = len(self._filters)
+            self._filters.append(f)
+        return idx
 
     def removeFilter(self, id_):
         """Remove the filter specified by its id."""
-        del self._filters[id_]
+        assert self._filters[id_]
+        self._filters[id_] = None
 
 
 class DragScrollMixin:
