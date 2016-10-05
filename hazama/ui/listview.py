@@ -314,9 +314,7 @@ class TagListDelegateColorful(QItemDelegate):
         self._itemW.setFixedWidth(option.rect.width())
 
         painter.translate(option.rect.topLeft())
-        self._itemW.render(
-            painter, QPoint(),
-            renderFlags=QWidget.DrawChildren)
+        self._itemW.render(painter, QPoint(), renderFlags=QWidget.DrawChildren)
         painter.resetTransform()
 
     def sizeHint(self, option, index):
@@ -438,8 +436,8 @@ class DiaryList(QListView):
         self.modelProxy.setSourceModel(self.originModel)
         self.modelProxy.setDynamicSortFilter(True)
         self.modelProxy.addFilter([db.TAGS], cs=Qt.CaseSensitive)
-        self.modelProxy.addFilter([db.DATETIME, db.TITLE, db.TEXT],
-                                  cs=Qt.CaseInsensitive)
+        self.modelProxy.addFilter([db.TITLE, db.TEXT], cs=Qt.CaseInsensitive)
+        self.modelProxy.addFilter([db.DATETIME])
         self.setModel(self.modelProxy)
         self.sort()
         # setup actions
@@ -582,13 +580,18 @@ class DiaryList(QListView):
         editor.fromDiaryDict(dic)
         self.editors[dic['id']] = self.editors.pop(id_)
 
-    def setFilterBySearchString(self, s):
-        self.modelProxy.setFilterPattern(1, s)
+    def _setFilter(self, filterKey, s):
+        self.modelProxy.setFilterPattern(filterKey, s)
         self.countChanged.emit()
 
+    def setFilterBySearchString(self, s):
+        self._setFilter(1, s)
+
     def setFilterByTag(self, s):
-        self.modelProxy.setFilterPattern(0, s)
-        self.countChanged.emit()
+        self._setFilter(0, s)
+
+    def setFilterByDatetime(self, s):
+        self._setFilter(2, s)
 
     @Slot(str)
     def refreshFilteredTags(self, newTagName):

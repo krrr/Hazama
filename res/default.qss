@@ -14,20 +14,17 @@ QMainWindow QToolBar[titleBarBgType="other"] {
     background: none;
 }
 
-QLabel#countLabel {color: #909090}
-QMainWindow QToolBar[extendTitleBar="true"] #countLabel {color: #111111}
+QLabel#countLabel { color: #909090 }
+QMainWindow QToolBar[extendTitleBar="true"] #countLabel { color: #111111 }
 
-QLineEdit#searchBox QToolButton {border: 0px}
-QLineEdit#searchBox QToolButton:pressed {
-    padding: 0px;  /* disable press shifting */
-}
+QPushButton#searchBoxBtn { border: 0px }
 
 QWidget#editor {background-color: #e8f5ff}
 QWidget#editor #textEditor {
     selection-color: black;
     selection-background-color: #BEBEBE;
 }
-QWidget#editor #dtLabel {color: #505050}
+QWidget#editor #dtLabel { color: #505050 }
 
 QListView#diaryList {
     background-color: #f2f1e7;
@@ -43,7 +40,7 @@ QLineEdit#tagListEdit {
     border: none;
 }
 
-QMainWindow QSplitter::handle {background: #b53d00;}
+QMainWindow QSplitter::handle { background: #b53d00; }
 
 /* HeatMap part */
 QWidget#heatMap {background: #e8f6ff;}
@@ -63,7 +60,7 @@ QPushButton#heatMapBtn {
     color: #367ab2;
     border: none;
 }
-QPushButton#heatMapBtn:hover {color: #92bcde}
+QPushButton#heatMapBtn:hover { color: #92bcde }
 
 QWidget#heatMap QToolButton {
     border: 1px solid gray;
