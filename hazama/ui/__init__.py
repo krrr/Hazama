@@ -4,8 +4,8 @@ import time
 import logging
 import PySide
 import hazama.ui.res_rc  # load resources
-from PySide.QtGui import QApplication, QIcon, QFont, QFontMetrics, QMessageBox, QPixmap
-from PySide.QtCore import QLocale, QTranslator, QLibraryInfo, QDateTime, QFile, QByteArray
+from PySide.QtGui import *
+from PySide.QtCore import *
 from hazama.config import (settings, appPath, isWin, isWin7OrLater,
                            isWinVistaOrLater, isWin8OrLater)
 
@@ -228,6 +228,15 @@ def makeQIcon(*filenames, scaled2x=False):
         for i in filenames:
             ico.addFile(i)
     return ico
+
+
+def markIcon(ico, size, markFName):
+    sz = size * scaleRatio
+    origin = ico.pixmap(sz)
+    painter = QPainter(origin)
+    painter.drawPixmap(0, 0, QPixmap(markFName).scaled(sz))
+    painter.end()  # this should be called at destruction, but... critical error everywhere?
+    ico.addPixmap(origin)
 
 
 class Fonts:

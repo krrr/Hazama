@@ -2,7 +2,7 @@ import logging
 from PySide.QtGui import *
 from PySide.QtCore import *
 from hazama.ui import (font, setTranslationLocale, winDwmExtendWindowFrame, scaleRatio,
-                       makeQIcon, saveWidgetGeo, restoreWidgetGeo)
+                       makeQIcon, saveWidgetGeo, restoreWidgetGeo, markIcon)
 from hazama.ui.customwidgets import QLineEditWithMenuIcon
 from hazama.ui.configdialog import ConfigDialog
 from hazama.ui.mainwindow_ui import Ui_mainWindow
@@ -26,9 +26,38 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         tListW = tListW * scaleRatio if tListW else int(self.width() * 0.2)
         if not self.isMaximized():
             self.splitter.setSizes([tListW, self.width()-tListW])
+
         # setup sort menu
-        self.createSortMenu()
+        menu = QMenu(self)
+        group = QActionGroup(menu)
+        datetime = QAction(self.tr('Date'), group)
+        datetime.name = 'datetime'
+        title = QAction(self.tr('Title'), group)
+        title.name = 'title'
+        length = QAction(self.tr('Length'), group)
+        length.name = 'length'
+        ascDescGroup = QActionGroup(menu)
+        asc = QAction(self.tr('Ascending'), ascDescGroup)
+        asc.name = 'asc'
+        desc = QAction(self.tr('Descending'), ascDescGroup)
+        desc.name = 'desc'
+        for i in [datetime, title, length, None, asc, desc]:
+            if i is None:
+                menu.addSeparator()
+                continue
+            i.setCheckable(True)
+            menu.addAction(i)
+            i.triggered[bool].connect(self.onSortOrderChanged)
+        # restore from settings
+        order = settings['Main']['listSortBy']
+        locals()[order].setChecked(True)
+        if settings['Main'].getboolean('listReverse'):
+            desc.setChecked(True)
+        else:
+            asc.setChecked(True)
+        self.sorAct.setMenu(menu)
         self.toolBar.widgetForAction(self.sorAct).setPopupMode(QToolButton.InstantPopup)
+
         # Qt Designer doesn't allow us to add widget in toolbar
         # setup count label
         countLabel = self.countLabel = QLabel(self.toolBar)
@@ -41,13 +70,15 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         self.toolBar.addWidget(countLabel)
 
         # setup search box
-        box = self.searchBox = SearchBox(self.toolBar)
+        box = self.searchBox = SearchBox(self)
         p = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
         p.setHorizontalStretch(5)
         box.setSizePolicy(p)
         box.setMinimumHeight(22 * scaleRatio)
         box.setMinimumWidth(box.minimumHeight() * 7.5)
-        box.contentChanged.connect(self.diaryList.setFilterBySearchString)
+        box.byTitleTextAct.triggered.connect(self._setSearchBy)
+        box.byDatetimeAct.triggered.connect(self._setSearchBy)
+        self._setSearchBy()
         self.toolBar.addWidget(box)
         spacerWidget = QWidget(self.toolBar)
         spacerWidget.setFixedSize(2.5 * scaleRatio, 1)
@@ -88,37 +119,6 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         if tListVisible:
             settings['Main']['tagListWidth'] = str(int(self.splitter.sizes()[0] / scaleRatio))
         event.accept()
-
-    def createSortMenu(self):
-        """Add sort order menu to sorAct."""
-        menu = QMenu(self)
-        group = QActionGroup(menu)
-        datetime = QAction(self.tr('Date'), group)
-        datetime.name = 'datetime'
-        title = QAction(self.tr('Title'), group)
-        title.name = 'title'
-        length = QAction(self.tr('Length'), group)
-        length.name = 'length'
-        ascDescGroup = QActionGroup(menu)
-        asc = QAction(self.tr('Ascending'), ascDescGroup)
-        asc.name = 'asc'
-        desc = QAction(self.tr('Descending'), ascDescGroup)
-        desc.name = 'desc'
-        for i in [datetime, title, length, None, asc, desc]:
-            if i is None:
-                menu.addSeparator()
-                continue
-            i.setCheckable(True)
-            menu.addAction(i)
-            i.triggered[bool].connect(self.onSortOrderChanged)
-        # restore from settings
-        order = settings['Main']['listSortBy']
-        locals()[order].setChecked(True)
-        if settings['Main'].getboolean('listReverse'):
-            desc.setChecked(True)
-        else:
-            asc.setChecked(True)
-        self.sorAct.setMenu(menu)
 
     def retranslate(self):
         """Set translation after language changed in ConfigDialog"""
@@ -180,16 +180,19 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         if enabled:
             ico = self.cfgAct.icon()
             self.cfgAct.originIcon = QIcon(ico)  # save copy
-            sz = QSize(24, 24) * scaleRatio
-            origin = ico.pixmap(sz)
-            painter = QPainter(origin)
-            painter.drawPixmap(0, 0, QPixmap(':/toolbar/update-mark.png').scaled(sz))
-            painter.end()  # this should be called at destruction, but... critical error everywhere?
-            ico.addPixmap(origin)
-            self.cfgAct.setIcon(ico)
+            self.cfgAct.setIcon(markIcon(ico, QSize(24, 24)), ':/toolbar/update-mark.png')
         elif hasattr(self.cfgAct, 'originIcon'):
             self.cfgAct.setIcon(self.cfgAct.originIcon)
             del self.cfgAct.originIcon
+
+    def _setSearchBy(self):
+        sen = self.sender()
+        if sen:
+            self.searchBox.contentChanged.disconnect()
+        if sen == self.searchBox.byTitleTextAct or sen is None:
+            self.searchBox.contentChanged.connect(self.diaryList.setFilterBySearchString)
+        else:
+            self.searchBox.contentChanged.connect(self.diaryList.setFilterByDatetime)
 
     @Slot()
     def on_cfgAct_triggered(self):
@@ -260,18 +263,30 @@ class SearchBox(QLineEditWithMenuIcon):
     def __init__(self, parent=None):
         super().__init__(parent, objectName='searchBox')
 
-        self.button = QToolButton(self, objectName='searchBoxBtn')
+        self.btn = QToolButton(self, objectName='searchBoxBtn')
         sz = QSize(16, 16) * scaleRatio
-        self.button.setFocusPolicy(Qt.NoFocus)
-        self.button.setFixedSize(sz)
-        self.button.setIconSize(sz)
-        self.button.setCursor(Qt.ArrowCursor)
-        self.button.clicked.connect(self.clear)
+        self.btn.setFocusPolicy(Qt.NoFocus)
+        self.btn.setFixedSize(sz)
+        self.btn.setIconSize(sz)
+        self.btn.setCursor(Qt.ArrowCursor)
+        self.btn.clicked.connect(self.clear)
+        self.btn.setPopupMode(QToolButton.InstantPopup)
+
+        self._byMenu = menu = QMenu(self)
+        group = QActionGroup(menu)
+        self.byTitleTextAct = QAction('Title && Text', group)
+        self.byDatetimeAct = QAction('Date (YYYY-MM-DD)', group)
+        for i in (self.byTitleTextAct, self.byDatetimeAct):
+            i.setCheckable(True)
+            menu.addAction(i)
+        self.byTitleTextAct.setChecked(True)
+        self.btn.setMenu(menu)
+
         clearSc = QShortcut(QKeySequence(Qt.Key_Escape), self)
         clearSc.activated.connect(self.clear)
         self.textChanged.connect(self._updateIco)
         self.retranslate()
-        self.setMinimumHeight(int(self.button.height() * 1.2))
+        self.setMinimumHeight(int(self.btn.height() * 1.2))
         self.setTextMargins(QMargins(2, 0, sz.width(), 0))
 
         self._isTextBefore = True
@@ -279,29 +294,28 @@ class SearchBox(QLineEditWithMenuIcon):
         self._clrIco = makeQIcon(':/search-clr.png', scaled2x=True)
         self._updateIco('')  # initialize the icon
 
-        self._delay = QTimer(self)
-        self._delay.setSingleShot(True)
-        self._delay.setInterval(310)
-        self._delay.timeout.connect(lambda: self.contentChanged.emit(self.text()))
-        self.textChanged.connect(self._updateDelayTimer)
+        self._delayed = QTimer(self)
+        self._delayed.setSingleShot(True)
+        self._delayed.setInterval(310)
+        self._delayed.timeout.connect(lambda: self.contentChanged.emit(self.text()))
+        self.textChanged.connect(self._updateDelayedTimer)
 
     def resizeEvent(self, event):
         w, h = event.size().toTuple()
-        pos_y = (h - self.button.height()) / 2
-        self.button.move(w - self.button.width() - pos_y, pos_y)
-
-    def _updateDelayTimer(self, s):
-        if s == '':  # fast clear
-            self._delay.stop()
-            self.contentChanged.emit(self.text())
-        else:
-            self._delay.start()  # restart if already started
+        pos_y = (h - self.btn.height()) / 2
+        self.btn.move(w - self.btn.width() - pos_y, pos_y)
 
     def _updateIco(self, text):
-        """Update button icon"""
         if self._isTextBefore == bool(text): return
-        self.button.setIcon(self._clrIco if text else self._searchIco)
+        self.btn.setIcon(self._clrIco if text else self._searchIco)
         self._isTextBefore = bool(text)
 
     def retranslate(self):
         self.setPlaceholderText(self.tr('Search'))
+
+    def _updateDelayedTimer(self, s):
+        if s == '':  # fast clear
+            self._delayed.stop()
+            QTimer.singleShot(10, self._delayed.timeout.emit)
+        else:
+            self._delayed.start()  # restart if already started
