@@ -3,8 +3,9 @@
 import logging
 import random
 from collections import OrderedDict
-from PySide.QtGui import *
-from PySide.QtCore import *
+from PyQt5.QtWidgets import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 from hazama.ui import font, datetimeTrans, scaleRatio, makeQIcon
 from hazama.ui.editor import Editor
 from hazama.ui.customobjects import NTextDocument, MultiSortFilterProxyModel, DragScrollMixin
@@ -33,7 +34,6 @@ class DiaryListDelegate(QStyledItemDelegate):
         self.doc.setDefaultFont(font.text)
         self.doc.setUndoRedoEnabled(False)
         self.doc.setDocumentMargin(0)
-        self.doc.documentLayout().setPaintDevice(QWidget())  # refer actual list will cause segfault
         # setup colors
         self.c_text = Qt.black
         self.c_bg = QColor(255, 236, 176)
@@ -206,7 +206,7 @@ class DiaryListDelegateColorful(QItemDelegate):
 
         # don't use offset argument of QWidget.render
         painter.translate(option.rect.topLeft())
-        self._itemW.render(painter, QPoint(), renderFlags=QWidget.DrawChildren)
+        self._itemW.render(painter, QPoint(), QRegion(), QWidget.DrawChildren)
         painter.resetTransform()
 
     def sizeHint(self, option, index):
@@ -314,9 +314,7 @@ class TagListDelegateColorful(QItemDelegate):
         self._itemW.setFixedWidth(option.rect.width())
 
         painter.translate(option.rect.topLeft())
-        self._itemW.render(
-            painter, QPoint(),
-            renderFlags=QWidget.DrawChildren)
+        self._itemW.render(painter, QPoint(), QRegion(), QWidget.DrawChildren)
         painter.resetTransform()
 
     def sizeHint(self, option, index):
@@ -333,8 +331,8 @@ class TagListDelegateColorful(QItemDelegate):
 
 
 class TagList(DragScrollMixin, QListWidget):
-    currentTagChanged = Signal(str)  # str is tag-name or ''
-    tagNameModified = Signal(str)  # arg: newTagName
+    currentTagChanged = pyqtSignal(str)  # str is tag-name or ''
+    tagNameModified = pyqtSignal(str)  # arg: newTagName
 
     def __init__(self, parent=None):
         DragScrollMixin.__init__(self)
@@ -418,9 +416,9 @@ class TagList(DragScrollMixin, QListWidget):
 
 class DiaryList(QListView):
     """Main List that display preview of diaries"""
-    startLoading = Signal()
-    countChanged = Signal()
-    tagsChanged = Signal()
+    startLoading = pyqtSignal()
+    countChanged = pyqtSignal()
+    tagsChanged = pyqtSignal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -438,8 +436,8 @@ class DiaryList(QListView):
         self.modelProxy.setSourceModel(self.originModel)
         self.modelProxy.setDynamicSortFilter(True)
         self.modelProxy.addFilter([db.TAGS], cs=Qt.CaseSensitive)
-        self.modelProxy.addFilter([db.DATETIME, db.TITLE, db.TEXT],
-                                  cs=Qt.CaseInsensitive)
+        self.modelProxy.addFilter([db.TITLE, db.TEXT], cs=Qt.CaseInsensitive)
+        self.modelProxy.addFilter([db.DATETIME])
         self.setModel(self.modelProxy)
         self.sort()
         # setup actions
@@ -582,15 +580,19 @@ class DiaryList(QListView):
         editor.fromDiaryDict(dic)
         self.editors[dic['id']] = self.editors.pop(id_)
 
-    def setFilterBySearchString(self, s):
-        self.modelProxy.setFilterPattern(1, s)
+    def _setFilter(self, filterKey, s):
+        self.modelProxy.setFilterPattern(filterKey, s)
         self.countChanged.emit()
+
+    def setFilterBySearchString(self, s):
+        self._setFilter(1, s)
 
     def setFilterByTag(self, s):
-        self.modelProxy.setFilterPattern(0, s)
-        self.countChanged.emit()
+        self._setFilter(0, s)
 
-    @Slot(str)
+    def setFilterByDatetime(self, s):
+        self._setFilter(2, s)
+
     def refreshFilteredTags(self, newTagName):
         """Refresh items with old tag in current modelProxy after a tag's name
         changed, and replace old tag name in filter"""

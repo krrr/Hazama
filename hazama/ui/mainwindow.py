@@ -1,6 +1,7 @@
 import logging
-from PySide.QtGui import *
-from PySide.QtCore import *
+from PyQt5.QtWidgets import *
+from PyQt5.QtGui import QKeySequence, QIcon
+from PyQt5.QtCore import *
 from hazama.ui import (font, setTranslationLocale, winDwmExtendWindowFrame, scaleRatio,
                        makeQIcon, saveWidgetGeo, restoreWidgetGeo, markIcon)
 from hazama.ui.customwidgets import QLineEditWithMenuIcon
@@ -118,7 +119,6 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         settings['Main']['tagListVisible'] = str(tListVisible)
         if tListVisible:
             settings['Main']['tagListWidth'] = str(int(self.splitter.sizes()[0] / scaleRatio))
-        event.accept()
 
     def retranslate(self):
         """Set translation after language changed in ConfigDialog"""
@@ -194,7 +194,6 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         else:
             self.searchBox.contentChanged.connect(self.diaryList.setFilterByDatetime)
 
-    @Slot()
     def on_cfgAct_triggered(self):
         """Start config dialog"""
         try:
@@ -208,7 +207,6 @@ class MainWindow(QMainWindow, Ui_mainWindow):
             self.cfgDialog.extendBgChanged.connect(self.onExtendTitleBarBgChanged)
             self.cfgDialog.show()
 
-    @Slot()
     def on_mapAct_triggered(self):
         # ratios are from http://www.sonasphere.com/blog/?p=1319
         ratio = {QLocale.Chinese: 1, QLocale.English: 4, QLocale.Japanese: 1.5,
@@ -248,7 +246,7 @@ class MainWindow(QMainWindow, Ui_mainWindow):
             self.heatMap.setAttribute(Qt.WA_DeleteOnClose)
             self.heatMap.resize(self.size())
             self.heatMap.move(self.pos())
-            self.heatMap.setWindowFlags(Qt.Window | Qt.WindowTitleHint)
+            self.heatMap.setWindowFlags(Qt.Window | Qt.WindowCloseButtonHint)
             self.heatMap.setWindowTitle('HeatMap')
             self.heatMap.move(self.pos() + QPoint(12, 12)*scaleRatio)
             self.heatMap.show()
@@ -258,7 +256,7 @@ class SearchBox(QLineEditWithMenuIcon):
     """The real-time search box in toolbar. contentChanged signal will be
     delayed after textChanged, it prevent lagging when text changing quickly
     and the amount of data is large."""
-    contentChanged = Signal(str)  # replace textChanged
+    contentChanged = pyqtSignal(str)  # replace textChanged
 
     def __init__(self, parent=None):
         super().__init__(parent, objectName='searchBox')
@@ -301,9 +299,9 @@ class SearchBox(QLineEditWithMenuIcon):
         self.textChanged.connect(self._updateDelayedTimer)
 
     def resizeEvent(self, event):
-        w, h = event.size().toTuple()
-        pos_y = (h - self.btn.height()) / 2
-        self.btn.move(w - self.btn.width() - pos_y, pos_y)
+        sz = event.size()
+        pos_y = (sz.height() - self.btn.height()) / 2
+        self.btn.move(sz.width() - self.btn.width() - pos_y, pos_y)
 
     def _updateIco(self, text):
         if self._isTextBefore == bool(text): return

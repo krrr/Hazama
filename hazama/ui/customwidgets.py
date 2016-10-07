@@ -1,5 +1,6 @@
-from PySide.QtCore import *
-from PySide.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
+from PyQt5.QtGui import *
 from hazama.ui import setStdEditMenuIcons, makeQIcon
 from hazama.ui.customobjects import TextFormatter, NTextDocument
 
@@ -24,7 +25,6 @@ class NDocumentLabel(QFrame):
         self.doc.setDocumentMargin(0)
         self.doc.setUndoRedoEnabled(False)
         self.setLines(lines if lines else 4)
-        self.doc.documentLayout().setPaintDevice(self)  # make difference on high DPI
 
     def setFont(self, f):
         self.doc.setDefaultFont(f)

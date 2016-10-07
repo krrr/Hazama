@@ -1,7 +1,8 @@
 import sys
 import logging
-from PySide.QtGui import *
-from PySide.QtCore import *
+from PyQt5.QtWidgets import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import QIcon, QDesktopServices, QFontInfo
 from hazama import __version__, diarybook
 from hazama.ui import (font, setStyleSheet, scaleRatio, fixWidgetSizeOnHiDpi, isDwmUsable,
                        dbDatetimeFmtQt, makeQIcon)
@@ -64,13 +65,13 @@ aboutError = '''
 
 
 class ConfigDialog(QDialog, Ui_configDialog):
-    langChanged = Signal()
-    bkRestored = Signal()
-    accepted = Signal()
-    extendBgChanged = Signal()
+    langChanged = pyqtSignal()
+    bkRestored = pyqtSignal()
+    accepted = pyqtSignal()
+    extendBgChanged = pyqtSignal()
 
     def __init__(self, parent):
-        super().__init__(parent, Qt.WindowTitleHint)
+        super().__init__(parent, Qt.WindowCloseButtonHint)
         self._checkUpdateTask = self._installUpdateTask = None
         self._dlProgressBlocks = None
         self.setAttribute(Qt.WA_DeleteOnClose)
@@ -383,7 +384,6 @@ class ConfigDialog(QDialog, Ui_configDialog):
         family = font_.family() if font_.exactMatch() else QFontInfo(font_).family()
         btn.setText('%s %spt' % (family, font_.pointSize()))
 
-    @Slot()
     def on_exportBtn_clicked(self):
         export_all = self.exportOption.currentIndex() == 0
 
@@ -406,7 +406,6 @@ class ConfigDialog(QDialog, Ui_configDialog):
         self.openOutBtn.clicked.connect(
             lambda: QDesktopServices.openUrl('file:///' + path))
 
-    @Slot(str)
     def on_rstCombo_activated(self, filename):
         """Restore database backup"""
         msg = QMessageBox(self)

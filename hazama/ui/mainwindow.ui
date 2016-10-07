@@ -27,11 +27,20 @@
     <property name="spacing">
      <number>0</number>
     </property>
-    <property name="margin">
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
      <number>0</number>
     </property>
     <item>
-     <widget class="NSplitter" name="splitter">
+     <widget class="QSplitter" name="splitter">
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
       </property>
@@ -128,7 +137,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="../../res/res.qrc">
+    <iconset>
      <normaloff>:/toolbar/tlist.png</normaloff>:/toolbar/tlist.png</iconset>
    </property>
    <property name="text">
@@ -227,12 +236,6 @@
     <signal>tagNameModified(QString)</signal>
     <slot>reload()</slot>
    </slots>
-  </customwidget>
-  <customwidget>
-   <class>NSplitter</class>
-   <extends>QSplitter</extends>
-   <header>hazama.ui.customobjects</header>
-   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources>

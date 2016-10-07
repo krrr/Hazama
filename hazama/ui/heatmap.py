@@ -1,5 +1,6 @@
-from PySide.QtGui import *
-from PySide.QtCore import *
+from PyQt5.QtWidgets import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 from itertools import chain
 from hazama.ui import scaleRatio, makeQIcon
 
@@ -139,6 +140,9 @@ class HeatMapView(QGraphicsView):
         locale, date, font, nameH = QLocale(), QDate(), self.font(), self.nameH
         cellDis, monthDisX, monthDisY = self._cd, self._mdx, self._mdy
         cellColors = tuple(getattr(self, 'cellColor%d' % i) for i in range(4))
+        monthNamePen = QPen(self.palette().color(QPalette.WindowText))
+        monthNamePen.setCosmetic(True)
+
         for m in range(12):
             date.setDate(self.year, m+1, 1)
             # cells. 7 days per row, index of row: (d//7)
@@ -147,20 +151,24 @@ class HeatMapView(QGraphicsView):
                           for d in range(date.daysInMonth())]
             for (d, item) in enumerate(monthItems, 1):
                 date.setDate(self.year, m+1, d)
+                pen = QPen()
+                pen.setWidth(1 if scaleRatio <= 1.5 else 2)
+                pen.setCosmetic(True)
                 if date <= QDate.currentDate():
-                    item.setPen(QPen(self.cellBorderColor))
+                    pen.setColor(self.cellBorderColor)
+                    item.setPen(pen)
                     item.setBrush(self.cellColorFunc(self.year, m+1, d, cellColors))
-                else:
-                    p = QPen(Qt.gray)
-                    p.setStyle(Qt.DotLine)
-                    item.setPen(p)
+                else:  # future
+                    pen.setColor(self.cellBorderColor)
+                    pen.setStyle(Qt.DotLine)
+                    item.setPen(pen)
             monthGroup = self.scene.createItemGroup(monthItems)
             # 3 months per line
             x, y = monthDisX*m-(m//3)*monthDisX*3, monthDisY*(m//3)
             monthGroup.setPos(x, y+nameH)
             # month name
             monthText = self.scene.addSimpleText(locale.toString(date, 'MMM'), font)
-            monthText.setPen(self.palette().color(QPalette.WindowText))
+            monthText.setPen(monthNamePen)
             nameW = monthText.boundingRect().width()
             monthText.setPos(x+(monthDisX-self.monthSpacingX-nameW)/2, y)
 
@@ -198,19 +206,18 @@ class HeatMapView(QGraphicsView):
     def setCellColor3(self, c): self._cellColor3 = c
 
     year = property(getYear, setYear)
-    cellBorderColor = Property(QColor, getCellBorderColor, setCellBorderColor)
-    cellColor0 = Property(QColor, getCellColor0, setCellColor0)
-    cellColor1 = Property(QColor, getCellColor1, setCellColor1)
-    cellColor2 = Property(QColor, getCellColor2, setCellColor2)
-    cellColor3 = Property(QColor, getCellColor3, setCellColor3)
+    cellBorderColor = pyqtProperty(QColor, getCellBorderColor, setCellBorderColor)
+    cellColor0 = pyqtProperty(QColor, getCellColor0, setCellColor0)
+    cellColor1 = pyqtProperty(QColor, getCellColor1, setCellColor1)
+    cellColor2 = pyqtProperty(QColor, getCellColor2, setCellColor2)
+    cellColor3 = pyqtProperty(QColor, getCellColor3, setCellColor3)
 
 
 class ColorSampleView(QGraphicsView):
     def __init__(self, parent=None, cellLen=None):
-        super().__init__(parent, objectName='heatMapSample',
-                                              alignment=Qt.AlignRight)
+        super().__init__(parent, objectName='heatMapSample', alignment=Qt.AlignRight)
         self._colors = defCellColors
-        self.cellLen = cellLen if cellLen else 9
+        self.cellLen = cellLen or 9
         self._descriptions = ('',) * 4
 
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -220,10 +227,13 @@ class ColorSampleView(QGraphicsView):
         self.setScene(self.scene)
 
     def setupMap(self):
-        for index, c in enumerate(self._colors):
-            item = QGraphicsRectItem(self.cellLen*index, 0, self.cellLen, self.cellLen)
-            item.setToolTip(self._descriptions[index])
-            item.setPen(QPen(Qt.darkGray))
+        borderPen = QPen(Qt.darkGray)
+        borderPen.setWidth(1 if scaleRatio <= 1.5 else 2)
+        borderPen.setCosmetic(True)
+        for idx, c in enumerate(self._colors):
+            item = QGraphicsRectItem(self.cellLen*idx, 0, self.cellLen, self.cellLen)
+            item.setToolTip(self._descriptions[idx])
+            item.setPen(borderPen)
             item.setBrush(c)
             self.scene.addItem(item)
 
@@ -236,7 +246,7 @@ class ColorSampleView(QGraphicsView):
 
     def setDescriptions(self, seq):
         if len(seq) != len(self._colors):
-            raise Exception("The amount of description doesn't match color's")
+            raise ValueError("The amount of description doesn't match color's")
         self._descriptions = tuple(seq)
 
 

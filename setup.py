@@ -28,29 +28,34 @@ class BuildQt(Command):
                     ('rc', 'r', 'compile rc files only')]
 
     def initialize_options(self):
-        self.ts, self.ui, self.rc = 0, 0, 0
+        self.ts = self.ui = self.rc = False
+        self.force = False
 
     def finalize_options(self): pass
 
     def run(self):
-        methods = [self.compile_ts, self.compile_ui, self.compile_rc]
-        for opt, m in zip([self.ts, self.ui, self.rc], methods):
-            if opt:
-                m()
-                break
+        methods = ('ts', 'ui', 'rc')
+        opts = tuple(filter(lambda x: getattr(self, x), methods))
+        if opts:
+            self.force = True
         else:
-            for i in methods: i()
+            opts = methods  # run all methods if no options passed
 
-    @staticmethod
-    def compile_ui():
+        for i in opts:
+            getattr(self, 'compile_'+i)()
+
+    def compile_ui(self):
         for src in glob(pjoin('hazama', 'ui', '*.ui')):
             dst = src.replace('.ui', '_ui.py')
-            if not os.path.isfile(dst) or os.path.getmtime(src) > os.path.getmtime(dst):
-                spawn(['pyside-uic', '--from-imports', '-o', dst, '-x', src])
+            if not self.force and (os.path.isfile(dst) or
+                                   os.path.getmtime(src) <= os.path.getmtime(dst)):
+                print('skipping ' + dst)
+            else:
+                spawn(['pyuic5', '--from-imports', '-o', dst, '-x', src])
 
     @staticmethod
     def compile_rc():
-        spawn(['pyside-rcc', '-py3', pjoin('res', 'res.qrc'), '-o',
+        spawn(['pyrcc5', pjoin('res', 'res.qrc'), '-o',
                pjoin('hazama', 'ui', 'res_rc.py')])
 
     @staticmethod
@@ -59,7 +64,7 @@ class BuildQt(Command):
         if not os.path.isdir(lang_dir):
             os.mkdir(lang_dir)
 
-        lres = find_executable('lrelease-qt4') or find_executable('lrelease')
+        lres = find_executable('lrelease-qt5') or find_executable('lrelease')
         if not lres:
             raise DistutilsExecError('lrelease not found')
 
@@ -77,7 +82,7 @@ class UpdateTranslations(Command):
     def finalize_options(self): pass
 
     def run(self):
-        spawn(['pyside-lupdate', pjoin('translation', 'lupdateguide')])
+        spawn(['pylupdate5', pjoin('translation', 'lupdateguide')])
 
 
 class BuildExe(Command):
@@ -139,10 +144,6 @@ Terminal=false
             print('program don\'t know where to put application icon')
             return
         shutil.copy('res/appicon-64.png', ico_dir + 'hazama.png')
-
-
-if sys.platform == 'win32':  # fix env variables for PySide tools
-    os.environ['PATH'] += ';' + pjoin(sys.exec_prefix, 'lib', 'site-packages', 'PySide')
 
 
 # PySide installed by linux package manager will not recognized by setuptools, so requires not added.

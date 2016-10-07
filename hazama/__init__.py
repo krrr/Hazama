@@ -19,7 +19,6 @@ __author__ = 'krrr'
 # 2. Class definition order: __init__, Qt's methods, methods, slots
 
 # ---- Notes ----
-# 1. Only slots methods which is auto connected need Slot decorator
 
 
 def main_entry():
@@ -35,7 +34,7 @@ def main_entry():
     level = logging.DEBUG if config.settings['Main'].getboolean('debug') else logging.INFO
     logging.basicConfig(format='%(levelname)s: %(message)s', level=level)
     logging.info('Hazama v%s  (%s, Py%d.%d.%d)', __version__, sys.platform, *sys.version_info[:3])
-    logging.info(str(config.db))
+    logging.info('Diary book path: ' + config.db.path)
 
     from hazama import ui, diarybook, updater
     from hazama import updater

@@ -12,7 +12,7 @@ import time
 from datetime import date, timedelta
 from urllib.request import urlopen, Request
 from collections import namedtuple
-from PySide.QtCore import QThread, Signal
+from PyQt5.QtCore import QThread, pyqtSignal
 from hazama.config import appPath, settings, SOCKET_TIMEOUT
 
 
@@ -94,8 +94,8 @@ class CheckUpdate(QThread):
     DummyResult = UpdateInfo('9.9.9', DummyNote,
                              'https://github.com/krrr/krrr.github.io/releases/download/v1.0.2/a.zip',
                              _note2html(DummyNote))
-    failed = Signal(str)
-    succeeded = Signal()
+    failed = pyqtSignal(str)
+    succeeded = pyqtSignal()
 
     def __init__(self):
         super().__init__()
@@ -151,10 +151,10 @@ class CheckUpdate(QThread):
 
 class InstallUpdate(QThread):
     """Download and install update."""
-    progress = Signal(int, int)  # received, total
-    downloadFinished = Signal()
-    failed = Signal(str)
-    succeeded = Signal()
+    progress = pyqtSignal(int, int)  # received, total
+    downloadFinished = pyqtSignal()
+    failed = pyqtSignal(str)
+    succeeded = pyqtSignal()
 
     def __init__(self, updateInfo):
         super().__init__()

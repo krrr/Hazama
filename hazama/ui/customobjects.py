@@ -1,5 +1,6 @@
-from PySide.QtCore import *
-from PySide.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import QCompleter
+from PyQt5.QtGui import *
 
 
 class TagCompleter(QCompleter):
@@ -121,14 +122,15 @@ class NTextDocument(QTextDocument, TextFormatter):
 
         out = []
         block = self.begin()
-        while block.isValid():
+        while block != self.end():
             fragIter = block.begin()
-            for i in fragIter:
-                frag = i.fragment()
+            while not fragIter.atEnd():
+                frag = fragIter.fragment()
                 charFmt = frag.charFormat()
                 fmts = [f for f, qF in qFmtToFmt if charFmt.hasProperty(qF)]
                 for f in fmts:
                     out.append((frag.position(), frag.length(), f))
+                fragIter += 1
             block = block.next()
         return out
 
@@ -139,7 +141,7 @@ class NTextDocument(QTextDocument, TextFormatter):
         ctx.palette.setColor(QPalette.Text, color)
         if rect.isValid():
             painter.setClipRect(rect)
-            ctx.clip = rect
+            ctx.clip = QRectF(rect)
         self.documentLayout().draw(painter, ctx)
         painter.restore()
 
@@ -150,17 +152,9 @@ class NTextDocument(QTextDocument, TextFormatter):
         ctx.palette = palette
         if rect.isValid():
             painter.setClipRect(rect)
-            ctx.clip = rect
+            ctx.clip = QRectF(rect)
         self.documentLayout().draw(painter, ctx)
         painter.restore()
-
-
-class NSplitter(QSplitter):
-    """Fix default "Split Horizontal" old cursor on split handle"""
-    def createHandle(self):
-        handle = QSplitterHandle(Qt.Horizontal, self)
-        handle.setCursor(Qt.SizeHorCursor)
-        return handle
 
 
 class MultiSortFilterProxyModel(QSortFilterProxyModel):

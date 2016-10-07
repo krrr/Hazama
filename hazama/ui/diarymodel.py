@@ -1,5 +1,6 @@
-from PySide.QtCore import QAbstractTableModel, QModelIndex, Qt
-from PySide.QtGui import qApp
+import logging
+from PyQt5.QtCore import QAbstractTableModel, QModelIndex, Qt
+from PyQt5.QtWidgets import qApp
 from hazama.config import db, settings
 from hazama.diarybook import diary2dict, dict2diary
 
@@ -33,6 +34,7 @@ class DiaryModel(QAbstractTableModel):
             seq = [firstChunkSz] + [chunkSz] * (rest // chunkSz)
             return seq + [rest % chunkSz] if rest % chunkSz != 0 else seq
 
+        logging.debug("loading diary model")
         iterator = db.sorted(settings['Main']['listSortBy'],
                              settings['Main'].getboolean('listReverse'))
         for times in makeTimesSeq():
@@ -43,6 +45,7 @@ class DiaryModel(QAbstractTableModel):
                 self._lst.append(list(next(iterator)))
                 if i & 15 == 0: qApp.processEvents()  # equals "row % 16 == 0"
             self.endInsertRows()
+        logging.debug("diary model loaded (total %s)" % self.rowCount())
 
     def getRowById(self, id_):
         # user tends to modify newer diaries?

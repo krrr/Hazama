@@ -2,10 +2,10 @@ import sys
 import os
 import time
 import logging
-import PySide
 import hazama.ui.res_rc  # load resources
-from PySide.QtGui import *
-from PySide.QtCore import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import QIcon, QPixmap, QFont, QFontMetrics, QPainter
+from PyQt5.QtWidgets import *
 from hazama.config import (settings, appPath, isWin, isWin7OrLater,
                            isWinVistaOrLater, isWin8OrLater)
 
@@ -43,7 +43,7 @@ def readRcTextFile(path):
     f = QFile(path)
     if not f.open(QFile.ReadOnly | QFile.Text):
         raise FileNotFoundError('failed to read rc text %s' % path)
-    text = str(f.readAll())
+    text = f.readAll().data().decode('utf-8')
     f.close()
     return text
 
@@ -194,7 +194,7 @@ def fixWidgetSizeOnHiDpi(widget):
 
 
 def saveWidgetGeo(widget):
-    return '%s,%s' % (widget.saveGeometry().toHex(), scaleRatio)
+    return '%s,%s' % (widget.saveGeometry().toHex().data().decode(), scaleRatio)
 
 
 def restoreWidgetGeo(widget, geoStr):
@@ -202,7 +202,7 @@ def restoreWidgetGeo(widget, geoStr):
         return fixWidgetSizeOnHiDpi(widget)
 
     a, b = geoStr.split(',')
-    success = widget.restoreGeometry(QByteArray.fromHex(a))
+    success = widget.restoreGeometry(QByteArray.fromHex(a.encode()))
     geoRatio = float(b)
     if success and abs(scaleRatio - geoRatio) > 0.01:
         widget.resize(widget.size() / geoRatio * scaleRatio)
@@ -277,10 +277,17 @@ class Fonts:
         return None
 
 
+def logTraceback(type_, MsgCtx, msg):
+    """PyQt5.5 force users to make this, otherwise the app will exit silently.
+    (traceback sent to debugger)"""
+    logging.error(msg)
+
+
 def init():
-    logging.debug('PySide ver: %s  (lib path: %s)', PySide.__version__,
+    logging.debug('PyQt ver: %s  (lib path: %s)', 'wwwwwwwwww',
                   QLibraryInfo.location(QLibraryInfo.LibrariesPath))
     app = QApplication(sys.argv)
+    qInstallMessageHandler(logTraceback)
     app.setWindowIcon(makeQIcon(':/appicon-24.png', ':/appicon-48.png'))
 
     global scaleRatio

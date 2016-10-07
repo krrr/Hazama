@@ -1,5 +1,6 @@
-from PySide.QtGui import *
-from PySide.QtCore import *
+from PyQt5.QtWidgets import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 from hazama.ui.editor_ui import Ui_editor
 from hazama.ui.customobjects import TagCompleter
 from hazama.ui.customwidgets import DateTimeDialog
@@ -12,7 +13,7 @@ class Editor(QWidget, Ui_editor):
     """The widget that used to edit diary's body, title, tag and datetime.
     Signal closed: (diaryId, needSave)
     """
-    closed = Signal(int, bool)
+    closed = pyqtSignal(int, bool)
 
     def __init__(self, diaryDict, parent=None):
         super().__init__(parent)
@@ -128,12 +129,10 @@ class Editor(QWidget, Ui_editor):
                     text=text, formats=formats, title=self.titleEditor.text(),
                     tags=tags)
 
-    @Slot()
     def on_tagEditor_textEdited(self):
         # tagEditor.isModified() will be reset by completer. So this instead.
         self.tagModified = True
 
-    @Slot()
     def on_dtBtn_clicked(self):
         """Show datetime edit dialog"""
         if self.readOnly: return
