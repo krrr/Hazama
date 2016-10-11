@@ -249,7 +249,7 @@ class MainWindow(QMainWindow, Ui_mainWindow):
             self.heatMap.resize(self.size())
             self.heatMap.move(self.pos())
             self.heatMap.setWindowFlags(Qt.Window | Qt.WindowTitleHint)
-            self.heatMap.setWindowTitle('HeatMap')
+            self.heatMap.setWindowTitle(self.tr('Heat Map'))
             self.heatMap.move(self.pos() + QPoint(12, 12)*scaleRatio)
             self.heatMap.show()
 
@@ -273,8 +273,8 @@ class SearchBox(QLineEditWithMenuIcon):
 
         self._byMenu = menu = QMenu(self)
         group = QActionGroup(menu)
-        self.byTitleTextAct = QAction('Title && Text', group)
-        self.byDatetimeAct = QAction('Date (YYYY-MM-DD)', group)
+        self.byTitleTextAct = QAction(self.tr('Title && Text'), group)
+        self.byDatetimeAct = QAction(self.tr('Date (YYYY-MM-DD)'), group)
         for i in (self.byTitleTextAct, self.byDatetimeAct):
             i.setCheckable(True)
             menu.addAction(i)

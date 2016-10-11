@@ -165,12 +165,12 @@
         <translation>復元</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/listview.py" line="533"/>
+        <location filename="../hazama/ui/listview.py" line="531"/>
         <source>Cancel</source>
         <translation>キャンセル</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/listview.py" line="531"/>
+        <location filename="../hazama/ui/listview.py" line="529"/>
         <source>Delete</source>
         <translation>削除</translation>
     </message>
@@ -178,27 +178,27 @@
 <context>
     <name>DiaryList</name>
     <message>
-        <location filename="../hazama/ui/listview.py" line="446"/>
+        <location filename="../hazama/ui/listview.py" line="444"/>
         <source>Edit</source>
         <translation>編集</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/listview.py" line="449"/>
+        <location filename="../hazama/ui/listview.py" line="447"/>
         <source>Delete</source>
         <translation>削除</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/listview.py" line="452"/>
+        <location filename="../hazama/ui/listview.py" line="450"/>
         <source>Random</source>
         <translation>ランダム</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/listview.py" line="534"/>
+        <location filename="../hazama/ui/listview.py" line="532"/>
         <source>Delete diaries</source>
         <translation>日記の削除</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/listview.py" line="535"/>
+        <location filename="../hazama/ui/listview.py" line="533"/>
         <source>Selected diaries will be deleted permanently!</source>
         <translation>選択した日記は完全に削除されます！</translation>
     </message>
@@ -290,7 +290,7 @@ SQLite3: %s</translation>
 <context>
     <name>HeatMap</name>
     <message>
-        <location filename="../hazama/ui/mainwindow.py" line="216"/>
+        <location filename="../hazama/ui/mainwindow.py" line="219"/>
         <source>(characters)</source>
         <translation>（文字）</translation>
     </message>
@@ -303,17 +303,17 @@ SQLite3: %s</translation>
         <translation>%i件の日記</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/mainwindow.py" line="96"/>
+        <location filename="../hazama/ui/mainwindow.py" line="33"/>
         <source>Date</source>
         <translation>日時</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/mainwindow.py" line="98"/>
+        <location filename="../hazama/ui/mainwindow.py" line="35"/>
         <source>Title</source>
         <translation>表題</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/mainwindow.py" line="100"/>
+        <location filename="../hazama/ui/mainwindow.py" line="37"/>
         <source>Length</source>
         <translation>長さ</translation>
     </message>
@@ -323,12 +323,12 @@ SQLite3: %s</translation>
         <translation type="obsolete">降順</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/mainwindow.py" line="103"/>
+        <location filename="../hazama/ui/mainwindow.py" line="40"/>
         <source>Ascending</source>
         <translation>昇順</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/mainwindow.py" line="105"/>
+        <location filename="../hazama/ui/mainwindow.py" line="42"/>
         <source>Descending</source>
         <translation>降順</translation>
     </message>
@@ -336,6 +336,11 @@ SQLite3: %s</translation>
         <location filename="../hazama/ui/mainwindow.py" line="174"/>
         <source>loading...</source>
         <translation>読み込み中…</translation>
+    </message>
+    <message>
+        <location filename="../hazama/ui/mainwindow.py" line="252"/>
+        <source>Heat Map</source>
+        <translation>ヒートマップ</translation>
     </message>
 </context>
 <context>
@@ -426,16 +431,26 @@ SQLite3: %s</translation>
         <source>Search</source>
         <translation>検索</translation>
     </message>
+    <message>
+        <location filename="../hazama/ui/mainwindow.py" line="276"/>
+        <source>Title &amp;&amp; Text</source>
+        <translation>表題と本文</translation>
+    </message>
+    <message>
+        <location filename="../hazama/ui/mainwindow.py" line="277"/>
+        <source>Date (YYYY-MM-DD)</source>
+        <translation>日付（YYYY-MM-DD）</translation>
+    </message>
 </context>
 <context>
     <name>TagList</name>
     <message>
-        <location filename="../hazama/ui/listview.py" line="374"/>
+        <location filename="../hazama/ui/listview.py" line="372"/>
         <source>All</source>
         <translation>全て</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/listview.py" line="358"/>
+        <location filename="../hazama/ui/listview.py" line="356"/>
         <source>Rename</source>
         <translation>名前の変更</translation>
     </message>
