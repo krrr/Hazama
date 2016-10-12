@@ -270,6 +270,7 @@ class SearchBox(QLineEditWithMenuIcon):
         self.btn.setIconSize(sz)
         self.btn.setCursor(Qt.PointingHandCursor)
         self.btn.clicked.connect(self.onBtnClicked)
+        self._searchByTip = self.tr('Click to change search option')
 
         self._byMenu = menu = QMenu(self)
         group = QActionGroup(menu)
@@ -316,6 +317,7 @@ class SearchBox(QLineEditWithMenuIcon):
     def onTextChanged(self, text):
         if self._hasText == bool(text): return
         self.btn.setIcon(self._clrIco if text else self._searchIco)
+        self.btn.setToolTip('' if text else self._searchByTip )
         self._hasText = bool(text)
 
     def onBtnClicked(self):

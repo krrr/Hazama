@@ -632,19 +632,24 @@ SQLite3: %s</translation>
 <context>
     <name>SearchBox</name>
     <message>
-        <location filename="../hazama/ui/mainwindow.py" line="307"/>
+        <location filename="../hazama/ui/mainwindow.py" line="308"/>
         <source>Search</source>
         <translation>搜索</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/mainwindow.py" line="276"/>
+        <location filename="../hazama/ui/mainwindow.py" line="277"/>
         <source>Title &amp;&amp; Text</source>
         <translation>标题与正文</translation>
     </message>
     <message>
-        <location filename="../hazama/ui/mainwindow.py" line="277"/>
+        <location filename="../hazama/ui/mainwindow.py" line="278"/>
         <source>Date (YYYY-MM-DD)</source>
         <translation>日期（YYYY-MM-DD）</translation>
+    </message>
+    <message>
+        <location filename="../hazama/ui/mainwindow.py" line="275"/>
+        <source>Click to change search option</source>
+        <translation>点击以变更搜索设置</translation>
     </message>
 </context>
 <context>
