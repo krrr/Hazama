@@ -57,11 +57,9 @@ def main_entry():
         updater.cleanBackup()
         config.settings['Update']['needClean'] = str(False)
 
+    app.aboutToQuit.connect(onAboutToQuit)
     ret = app.exec_()
     del w  # force close all child window of MainWindow
-
-    diarybook.DiaryBook.instance.disconnect()
-    config.saveSettings()
 
     # segfault might happen if not wait for them
     for i in [updater.checkUpdateTask, updater.installUpdateTask]:
@@ -69,3 +67,11 @@ def main_entry():
             logging.debug('waiting for %s to exit', i)
             i.wait()
     return ret
+
+
+def onAboutToQuit():
+    """Save settings before being terminated by OS (such as logging off on
+    Windows)."""
+    from hazama import config
+    config.db.disconnect()
+    config.saveSettings()
