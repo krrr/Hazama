@@ -385,19 +385,21 @@ class TagList(DragScrollMixin, QListWidget):
                 item.setFlags(itemFlag)
 
     def reload(self):
-        if self.isVisible():
+        if not self.isVisible():
+            return
+
+        try:
+            currentTag = self.currentItem().data(Qt.DisplayRole)
+        except AttributeError:  # no selection
+            currentTag = None
+        self.clear()
+        self.load()
+        if currentTag:
             try:
-                currentTag = self.currentItem().data(Qt.DisplayRole)
-            except AttributeError:  # no selection
-                currentTag = None
-            self.clear()
-            self.load()
-            if currentTag:
-                try:
-                    item = self.findItems(currentTag, Qt.MatchFixedString)[0]
-                except IndexError:
-                    item = self.item(0)
-                self.setCurrentItem(item)
+                item = self.findItems(currentTag, Qt.MatchFixedString)[0]
+            except IndexError:
+                item = self.item(0)
+            self.setCurrentItem(item)
 
     def setDelegateOfTheme(self):
         theme = settings['Main']['theme']
@@ -407,11 +409,9 @@ class TagList(DragScrollMixin, QListWidget):
         self.setSpacing(self.spacing())
 
     def onCurrentItemChanged(self, currentItem):
-        try:
-            text = currentItem.data(Qt.DisplayRole)
-        except AttributeError:  # no selection
-            return
-        self.currentTagChanged.emit('' if currentItem is self.item(0) else text)
+        tag = currentItem.data(Qt.DisplayRole) if currentItem else ''
+        # tag is '' if no selection
+        self.currentTagChanged.emit('' if currentItem is self.item(0) else tag)
 
 
 class DiaryList(QListView):
@@ -449,7 +449,9 @@ class DiaryList(QListView):
         self.randAct = QAction(makeQIcon(':/menu/random-big.png', scaled2x=True),
                                self.tr('Random'), self,
                                shortcut=QKeySequence(Qt.Key_F7), triggered=self.selectRandomly)
-        for i in [self.editAct, self.delAct, self.randAct]: self.addAction(i)
+        self.gotoAct = QAction(self.tr('Go to location'), self)
+        for i in (self.editAct, self.delAct, self.randAct, self.gotoAct):
+            self.addAction(i)
         # setup editors
         self.editors = OrderedDict()  # diaryId => Editor, id of new diary is -1
         self.doubleClicked.connect(self.startEditor)
@@ -461,9 +463,11 @@ class DiaryList(QListView):
         menu.addAction(self.delAct)
         menu.addSeparator()
         menu.addAction(self.randAct)
-        selectionCount = len(self.selectedIndexes())
-        self.editAct.setDisabled(selectionCount != 1)
-        self.delAct.setDisabled(selectionCount == 0)
+        selCount = len(self.selectedIndexes())
+        if selCount == 1 and any(self.modelProxy.filterPattern(i) for i in range(3)):  # filtered
+            menu.addAction(self.gotoAct)
+        self.editAct.setDisabled(selCount != 1)
+        self.delAct.setDisabled(selCount == 0)
         self.randAct.setDisabled(self.modelProxy.rowCount() == 0)
         menu.exec_(event.globalPos())
 

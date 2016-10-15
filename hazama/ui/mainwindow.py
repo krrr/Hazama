@@ -16,11 +16,13 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         super().__init__()
         self.setupUi(self)
         self.cfgDialog = self.heatMap = None  # create on on_cfgAct_triggered
+
         restoreWidgetGeo(self, settings['Main'].get('windowGeo'))
         # setup toolbar bg properties; the second stage is in showEvent
         self.onExtendTitleBarBgChanged(init=True)
         self.toolBar.setIconSize(QSize(24, 24) * scaleRatio)
 
+        self.diaryList.gotoAct.triggered.connect(self.onGotoActTriggered)
         # setup TagList width
         tListW = settings['Main'].getint('tagListWidth')
         tListW = tListW * scaleRatio if tListW else int(self.width() * 0.2)
@@ -158,17 +160,14 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         if checked:
             self.tagList.load()
         else:
-            self.diaryList.setFilterByTag('')
             self.tagList.clear()
             settings['Main']['tagListWidth'] = str(int(self.splitter.sizes()[0] / scaleRatio))
 
     def updateCountLabel(self):
         """Update label that display count of diaries in Main List.
         'XX diaries' format is just fine, don't use 'XX diaries,XX results'."""
-        filtered = (self.diaryList.modelProxy.filterPattern(0) or
-                    self.diaryList.modelProxy.filterPattern(1))
-        m = self.diaryList.modelProxy if filtered else self.diaryList.originModel
-        self.countLabel.setText(self.tr('%i diaries') % m.rowCount())
+        self.countLabel.setText(self.tr('%i diaries') %
+                                self.diaryList.modelProxy.rowCount())
 
     def updateCountLabelOnLoad(self):
         self.countLabel.setText(self.tr('loading...'))
@@ -193,6 +192,14 @@ class MainWindow(QMainWindow, Ui_mainWindow):
             self.searchBox.contentChanged.connect(self.diaryList.setFilterBySearchString)
         else:
             self.searchBox.contentChanged.connect(self.diaryList.setFilterByDatetime)
+
+    def onGotoActTriggered(self):
+        """Scroll the list to the original position (unfiltered) of an entry."""
+        if self.searchBox.text():
+            self.searchBox.clear()
+        if self.tagList.selectedIndexes():
+            self.tagList.setCurrentRow(0)
+        self.diaryList.scrollTo(self.diaryList.currentIndex(), QListView.PositionAtCenter)
 
     @Slot()
     def on_cfgAct_triggered(self):
