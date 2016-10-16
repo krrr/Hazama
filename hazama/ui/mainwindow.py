@@ -1,7 +1,7 @@
 import logging
 from PySide.QtGui import *
 from PySide.QtCore import *
-from hazama.ui import (font, setTranslationLocale, winDwmExtendWindowFrame, scaleRatio,
+from hazama.ui import (font, winDwmExtendWindowFrame, scaleRatio,
                        makeQIcon, saveWidgetGeo, restoreWidgetGeo, markIcon)
 from hazama.ui.customwidgets import QLineEditWithMenuIcon
 from hazama.ui.configdialog import ConfigDialog
@@ -122,12 +122,14 @@ class MainWindow(QMainWindow, Ui_mainWindow):
             settings['Main']['tagListWidth'] = str(int(self.splitter.sizes()[0] / scaleRatio))
         event.accept()
 
-    def retranslate(self):
-        """Set translation after language changed in ConfigDialog"""
-        setTranslationLocale()
+    def changeEvent(self, event):
+        if event.type() != QEvent.LanguageChange:
+            return super().changeEvent(event)
+
         self.retranslateUi(self)
         self.searchBox.retranslate()
         self.updateCountLabel()
+        self.tagList.reload()  # "All" item
 
     def onExtendTitleBarBgChanged(self, init=False):
         # it's being called by __init__ when init is True
@@ -208,7 +210,6 @@ class MainWindow(QMainWindow, Ui_mainWindow):
             self.cfgDialog.activateWindow()
         except (AttributeError, RuntimeError):
             self.cfgDialog = ConfigDialog(self)
-            self.cfgDialog.langChanged.connect(self.retranslate)
             self.cfgDialog.bkRestored.connect(self.diaryList.reload)
             self.cfgDialog.accepted.connect(self.diaryList.setDelegateOfTheme)
             self.cfgDialog.accepted.connect(self.tagList.setDelegateOfTheme)
@@ -269,6 +270,7 @@ class SearchBox(QLineEditWithMenuIcon):
 
     def __init__(self, parent=None):
         super().__init__(parent, objectName='searchBox')
+        self._searchByTip = None
 
         self.btn = QPushButton(self, objectName='searchBoxBtn')
         sz = QSize(16, 16) * scaleRatio
@@ -277,7 +279,6 @@ class SearchBox(QLineEditWithMenuIcon):
         self.btn.setIconSize(sz)
         self.btn.setCursor(Qt.PointingHandCursor)
         self.btn.clicked.connect(self.onBtnClicked)
-        self._searchByTip = self.tr('Click to change search option')
 
         self._byMenu = menu = QMenu(self)
         group = QActionGroup(menu)
@@ -312,6 +313,7 @@ class SearchBox(QLineEditWithMenuIcon):
         self.btn.move(w - self.btn.width() - pos_y, pos_y)
 
     def retranslate(self):
+        self._searchByTip = self.tr('Click to change search option')
         self.setPlaceholderText(self.tr('Search'))
 
     def _updateDelayedTimer(self, s):
@@ -324,7 +326,7 @@ class SearchBox(QLineEditWithMenuIcon):
     def onTextChanged(self, text):
         if self._hasText == bool(text): return
         self.btn.setIcon(self._clrIco if text else self._searchIco)
-        self.btn.setToolTip('' if text else self._searchByTip )
+        self.btn.setToolTip('' if text else self._searchByTip)
         self._hasText = bool(text)
 
     def onBtnClicked(self):

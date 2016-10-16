@@ -17,6 +17,7 @@ locale = None
 dateFmt = datetimeFmt = fullDatetimeFmt = None
 font = None
 scaleRatio = None
+_trans = _transQt = None  # Translator, just used to keep reference
 
 
 dbDatetimeFmtQt = 'yyyy-MM-dd HH:mm'
@@ -49,7 +50,7 @@ def readRcTextFile(path):
 
 
 def setTranslationLocale():
-    global locale
+    global locale, _trans, _transQt
     lang = settings['Main'].get('lang')
     sysLocale = QLocale.system()
     if lang and lang == sysLocale.name():
@@ -63,7 +64,7 @@ def setTranslationLocale():
         lang = settings['Main']['lang'] = locale.name()
     langPath = os.path.join(appPath, 'lang')
     logging.info('set translation(%s)', lang)
-    global _trans, _transQt  # avoid being collected
+
     _trans = QTranslator()
     _trans.load(lang, langPath)
     _transQt = QTranslator()
@@ -267,8 +268,8 @@ class Fonts:
     def getPreferredFont():
         """Return family of preferred font according to language and platform."""
         if isWin and settings['Main']['theme'] == '1px-rect' and scaleRatio == 1:
-            # old theme looks well with default bitmap fonts only in normal DPI, and
-            # text of radio button will be cropped in ConfigDialog
+            # old theme looks fine with default bitmap fonts only in normal DPI;
+            # text of radio button will be cropped in HiDPI
             return None
         if isWin7OrLater:
             return {'zh_CN': 'Microsoft YaHei UI', 'ja_JP': 'Meiryo UI'}.get(locale.name())

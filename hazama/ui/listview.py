@@ -18,7 +18,7 @@ class DiaryListDelegate(QStyledItemDelegate):
     painting method compared to colorful theme."""
     def __init__(self):
         super().__init__()  # don't pass parent because of mem problem
-        # To avoid some font has much more space at top and bottom, we use ascent instead
+        # Because some font has much more space at top and bottom, we use ascent instead
         # of height, and add it with a small number.
         magic = int(4 * scaleRatio)
         self.title_h = max(font.title_m.ascent(), font.datetime_m.ascent()) + magic
@@ -33,7 +33,7 @@ class DiaryListDelegate(QStyledItemDelegate):
         self.doc.setDefaultFont(font.text)
         self.doc.setUndoRedoEnabled(False)
         self.doc.setDocumentMargin(0)
-        self.doc.documentLayout().setPaintDevice(QWidget())  # refer actual list will cause segfault
+        self.doc.documentLayout().setPaintDevice(qApp.desktop())  # refer actual list will cause segfault
         # setup colors
         self.c_text = Qt.black
         self.c_bg = QColor(255, 236, 176)

@@ -4,7 +4,7 @@ from PySide.QtGui import *
 from PySide.QtCore import *
 from hazama import __version__, diarybook
 from hazama.ui import (font, setStyleSheet, scaleRatio, fixWidgetSizeOnHiDpi, isDwmUsable,
-                       dbDatetimeFmtQt, makeQIcon)
+                       dbDatetimeFmtQt, makeQIcon, setTranslationLocale)
 from hazama.ui.configdialog_ui import Ui_configDialog
 from hazama.config import settings, db, isWin7OrLater, isWin
 from hazama import updater
@@ -64,9 +64,7 @@ aboutError = '''
 
 
 class ConfigDialog(QDialog, Ui_configDialog):
-    langChanged = Signal()
     bkRestored = Signal()
-    accepted = Signal()
     extendBgChanged = Signal()
 
     def __init__(self, parent):
@@ -176,15 +174,8 @@ class ConfigDialog(QDialog, Ui_configDialog):
         # call to adjust has no effect before showing
         self._adjustAboutAreaHeight()
 
-    def closeEvent(self, event):
-        if self._checkUpdateTask:
-            self._checkUpdateTask.disConn()
-        if self._installUpdateTask:
-            self._installUpdateTask.canceled = True
-            self._installUpdateTask.disConn()
-
     def reject(self):
-        self.closeEvent(None)  # when Esc key pressed closeEvent will not be called
+        self._cleanUp()
         super().reject()
 
     def accept(self):
@@ -217,19 +208,26 @@ class ConfigDialog(QDialog, Ui_configDialog):
 
         if not self.defFontGBox.isChecked() and 'default' in settings['Font']:
             del settings['Font']['default']
-        font.load()
-
         if langChanged:
-            self.langChanged.emit()
+            setTranslationLocale()
+            font.load()
         if extendChanged:
-            # this change dynamic property, so emit it before setStyleSheet
+            # this changes dynamic property, so emit it before setStyleSheet
             self.extendBgChanged.emit()
         if themeChanged or schemeChanged or extendChanged:
             setStyleSheet()
 
-        logging.info('settings changed')
-        self.accepted.emit()
+        logging.info('settings saved')
+        self._cleanUp()
+        super().accept()
         self.close()
+
+    def _cleanUp(self):
+        if self._checkUpdateTask:
+            self._checkUpdateTask.disConn()
+        if self._installUpdateTask:
+            self._installUpdateTask.canceled = True
+            self._installUpdateTask.disConn()
 
     def _disableThemeSpe(self):
         for i in [self.schemeCombo, self.schemeLabel]:
