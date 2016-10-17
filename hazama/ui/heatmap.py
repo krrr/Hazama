@@ -16,7 +16,7 @@ class HeatMap(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         self.bar = QFrame(self, objectName='heatMapBar')
         barLayout = QHBoxLayout(self.bar)
-        barLayout.setContentsMargins(0, 0, 0, 0)
+        barLayout.setContentsMargins(0, 0, scaleRatio, 0)
         barLayout.setSpacing(3)
         # setup buttons and menu
         self.view = HeatMapView(self, font=self.font(), objectName='heatMapView')
@@ -36,17 +36,16 @@ class HeatMap(QWidget):
         nextBtn = QToolButton(self, icon=ico, clicked=self.yearNext, iconSize=sz)
         # setup color sample
         self.sample = ColorSampleView(self, cellLen=11)
-        # always bigger than sizeHint even policy is Maximum, so painful. use fixed
+        # without following size will be bigger than fixed, why?
         self.sample.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        self.sample.setFixedSize(preBtn.sizeHint().width()*2 + barLayout.spacing(),
-                                 preBtn.sizeHint().height())
-        barLayout.addWidget(preBtn, Qt.AlignVCenter)
-        barLayout.addWidget(nextBtn, Qt.AlignVCenter)
-        barLayout.addSpacerItem(QSpacerItem(30, 1, QSizePolicy.Expanding, QSizePolicy.Fixed))
+        self.sample.setFixedSize(200, 14*scaleRatio)
+        barLayout.addWidget(preBtn)
+        barLayout.addWidget(nextBtn)
+        barLayout.addSpacing(200 - preBtn.sizeHint().width()*2 - barLayout.spacing())
+        barLayout.addStretch()
         barLayout.addWidget(self.yearBtn)
-        barLayout.addSpacerItem(QSpacerItem(30, 1, QSizePolicy.Expanding, QSizePolicy.Fixed))
+        barLayout.addStretch()
         barLayout.addWidget(self.sample)
-        barLayout.addSpacerItem(QSpacerItem(3, 1, QSizePolicy.Fixed, QSizePolicy.Fixed))
         layout.addWidget(self.bar)
         layout.addWidget(self.view)
         # setup shortcuts
@@ -54,6 +53,12 @@ class HeatMap(QWidget):
         self.nextSc = QShortcut(QKeySequence(Qt.Key_Right), self, self.yearNext)
         self.pre5Sc = QShortcut(QKeySequence(Qt.Key_Up), self, self.yearPre5)
         self.next5Sc = QShortcut(QKeySequence(Qt.Key_Down), self, self.yearNext5)
+
+    def showEvent(self, event):
+        # must call setupMap after style polished
+        self.view.setupMap()
+        self.sample.setColors([getattr(self.view, 'cellColor%d' % i) for i in range(4)])
+        self.sample.setupMap()
 
     def setupYearMenu(self):
         group, menu, curtYear = self._yearActGroup, self.yearMenu, self.view.year
@@ -97,14 +102,6 @@ class HeatMap(QWidget):
         """Popup menu manually to avoid indicator in YearButton"""
         self.yearMenu.exec_(self.yearBtn.mapToGlobal(
             QPoint(0, self.yearBtn.height())))
-
-    def showEvent(self, event):
-        # must call setupMap after style polished
-        self.view.setupMap()
-        cs = tuple(getattr(self.view, 'cellColor%d' % i) for i in range(4))
-        self.sample.setColors(cs)
-        self.sample.setupMap()
-        event.accept()
 
 
 class HeatMapView(QGraphicsView):
@@ -207,8 +204,7 @@ class HeatMapView(QGraphicsView):
 
 class ColorSampleView(QGraphicsView):
     def __init__(self, parent=None, cellLen=None):
-        super().__init__(parent, objectName='heatMapSample',
-                                              alignment=Qt.AlignRight)
+        super().__init__(parent, objectName='heatMapSample', alignment=Qt.AlignRight)
         self._colors = defCellColors
         self.cellLen = cellLen if cellLen else 9
         self._descriptions = ('',) * 4
@@ -232,16 +228,18 @@ class ColorSampleView(QGraphicsView):
 
     def setColors(self, colors):
         """Set colors to display, arg colors is a list of QColor"""
-        self._colors = colors
+        self._colors = tuple(colors)
 
     def setDescriptions(self, seq):
         if len(seq) != len(self._colors):
-            raise Exception("The amount of description doesn't match color's")
+            raise ValueError("The amount of description doesn't match color's")
         self._descriptions = tuple(seq)
 
 
 if __name__ == '__main__':
-    app = QApplication([])
+    from hazama.ui import init
+    app = init()
+    scaleRatio = 1
     v = HeatMap()
     v.resize(500, 600)
     v.show()
