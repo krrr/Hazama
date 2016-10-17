@@ -319,7 +319,7 @@ class SearchBox(QLineEditWithMenuIcon):
     def _updateDelayedTimer(self, s):
         if s == '':  # fast clear
             self._delayed.stop()
-            QTimer.singleShot(10, self._delayed.timeout.emit)
+            self._delayed.timeout.emit()  # delay this call is not a good idea
         else:
             self._delayed.start()  # restart if already started
 
