@@ -55,7 +55,9 @@ class DiaryModel(QAbstractTableModel):
         return diary2dict(self._lst[row])
 
     def clear(self):
-        self.removeRows(0, self.rowCount())
+        self.beginRemoveRows(QModelIndex(), 0, self.rowCount())
+        self._lst.clear()
+        self.endRemoveRows()
 
     def rowCount(self, *__):
         return len(self._lst)
@@ -84,18 +86,12 @@ class DiaryModel(QAbstractTableModel):
         self.endRemoveRows()
         return True
 
-    def removeRow(self, row, *__):
-        return self.removeRows(row, 1)
-
     def insertRows(self, row, count, *__):
         self.beginInsertRows(QModelIndex(), row, row+count-1)
         for i in range(row, row+count):
             self._lst.insert(i, list(db.EMPTY_DIARY))
         self.endInsertRows()
         return True
-
-    def insertRow(self, row, *__):
-        return self.insertRows(row, 1)
 
     def saveDiary(self, dic):
         assert isinstance(dic, dict)

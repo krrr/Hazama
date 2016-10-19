@@ -471,6 +471,12 @@ class DiaryList(QListView):
         self.randAct.setDisabled(self.modelProxy.rowCount() == 0)
         menu.exec_(event.globalPos())
 
+    def selectAll(self):
+        """Prevent original implement to select invisible columns."""
+        sel = QItemSelection(self.model().index(0, 0),
+                             self.model().index(self.model().rowCount()-1, 0))
+        self.selectionModel().select(sel, QItemSelectionModel.ClearAndSelect)
+
     def selectRandomly(self):
         randRow = random.randrange(0, self.modelProxy.rowCount())
         self.setCurrentIndex(self.modelProxy.index(randRow, 0))
@@ -527,7 +533,8 @@ class DiaryList(QListView):
         self.load()
 
     def deleteDiary(self):
-        if len(self.selectedIndexes()) == 0:
+        indexes = self.selectedIndexes()
+        if not indexes:
             return
         msg = QMessageBox(self)
         okBtn = msg.addButton(qApp.translate('Dialog', 'Delete'), QMessageBox.AcceptRole)
@@ -539,10 +546,9 @@ class DiaryList(QListView):
         msg.deleteLater()
 
         if msg.clickedButton() == okBtn:
-            indexes = list(map(self.modelProxy.mapToSource, self.selectedIndexes()))
             for i in indexes: db.delete(i.data())
-            for i in sorted([i.row() for i in indexes], reverse=True):
-                self.originModel.removeRow(i)
+            for r in reversed(sorted(i.row() for i in indexes)):
+                self.originModel.removeRow(r)
             self.countChanged.emit()
             self.tagsChanged.emit()  # tags might changed
 
