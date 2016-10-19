@@ -121,9 +121,8 @@ class NTextDocument(QTextDocument, TextFormatter):
 
         out = []
         block = self.begin()
-        while block.isValid():
-            fragIter = block.begin()
-            for i in fragIter:
+        while block != self.end():
+            for i in block.begin():
                 frag = i.fragment()
                 charFmt = frag.charFormat()
                 fmts = [f for f, qF in qFmtToFmt if charFmt.hasProperty(qF)]
@@ -178,10 +177,8 @@ class MultiSortFilterProxyModel(QSortFilterProxyModel):
         if f is None:
             return True
 
-        for c in f[0]:
-            if f[1].indexIn(model.data(model.index(sourceRow, c))) != -1:
-                return True
-        return False
+        cols, regex = f
+        return any(regex.indexIn(model.data(model.index(sourceRow, c))) != -1 for c in cols)
 
     def setFilterPattern(self, id_, pattern):
         """Set the filter's pattern specified by filter id"""

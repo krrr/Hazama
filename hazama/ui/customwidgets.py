@@ -23,23 +23,8 @@ class NDocumentLabel(QFrame):
         self.doc = NTextDocument(self)
         self.doc.setDocumentMargin(0)
         self.doc.setUndoRedoEnabled(False)
-        self.setLines(lines if lines else 4)
+        self.setLines(lines or 4)
         self.doc.documentLayout().setPaintDevice(self)  # make difference on high DPI
-
-    def setFont(self, f):
-        self.doc.setDefaultFont(f)
-        super().setFont(f)
-        self.setLines(self._lines)  # refresh size hint
-
-    def setText(self, text, formats):
-        self.doc.setText(text, formats)
-        # delete exceed lines here using QTextCursor will slow down
-
-    def setLines(self, lines):
-        self._lines = lines
-        self.doc.setText('\n' * (lines - 1), None)
-        self._heightHint = int(self.doc.size().height())
-        self.updateGeometry()
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -55,6 +40,21 @@ class NDocumentLabel(QFrame):
     def sizeHint(self):
         __, top, __, bottom = self.getContentsMargins()
         return QSize(-1, self._heightHint + top + bottom)
+
+    def setFont(self, f):
+        self.doc.setDefaultFont(f)
+        super().setFont(f)
+        self.setLines(self._lines)  # refresh size hint
+
+    def setText(self, text, formats):
+        self.doc.setText(text, formats)
+        # delete exceed lines here using QTextCursor will slow down
+
+    def setLines(self, lines):
+        self._lines = lines
+        self.doc.setText('\n' * (lines - 1), None)
+        self._heightHint = int(self.doc.size().height())
+        self.updateGeometry()
 
 
 class NTextEdit(QTextEdit, TextFormatter):
@@ -115,14 +115,6 @@ class NTextEdit(QTextEdit, TextFormatter):
             Qt.Key_H: self.hlAct, Qt.Key_B: self.bdAct, Qt.Key_T: self.soAct,
             Qt.Key_U: self.ulAct, Qt.Key_I: self.itaAct}
 
-    def setRichText(self, text, formats):
-        self._doc.setHlColor(self.HlColor)
-        self._doc.setText(text, formats)
-
-    def setAutoIndent(self, enabled):
-        assert isinstance(enabled, (bool, int))
-        self.autoIndent = enabled
-
     def contextMenuEvent(self, event):
         menu = self.createStandardContextMenu()
         setStdEditMenuIcons(menu)
@@ -139,6 +131,41 @@ class NTextEdit(QTextEdit, TextFormatter):
 
         menu.exec_(event.globalPos())
         menu.deleteLater()
+
+    def keyPressEvent(self, event):
+        if (event.modifiers() == Qt.ControlModifier and not self.isReadOnly() and
+           event.key() in self.key2act):
+            # set actions before calling format methods
+            self._setFmtActs()
+            self.key2act[event.key()].trigger()
+            event.accept()
+        elif event.key() == Qt.Key_Return and self.autoIndent:
+            # auto-indent support
+            para = self.textCursor().block().text()
+            if len(para) > 0 and para[0] in NTextEdit.SPACE_KINDS:
+                space, spaceCount = para[0], 1
+                for c in para[1:]:
+                    if c != space: break
+                    spaceCount += 1
+                super().keyPressEvent(event)
+                self.textCursor().insertText(space * spaceCount)
+            else:
+                super().keyPressEvent(event)
+            event.accept()
+        else:
+            super().keyPressEvent(event)
+
+    def insertFromMimeData(self, source):
+        """Disable some unsupported types"""
+        self.insertHtml(source.html() or source.text())
+
+    def setRichText(self, text, formats):
+        self._doc.setHlColor(self.HlColor)
+        self._doc.setText(text, formats)
+
+    def setAutoIndent(self, enabled):
+        assert isinstance(enabled, (bool, int))
+        self.autoIndent = enabled
 
     def getRichText(self):
         # self.document() will return QTextDocument, not NTextDocument
@@ -168,33 +195,6 @@ class NTextEdit(QTextEdit, TextFormatter):
     def clearFormat(self):
         fmt = QTextCharFormat()
         self.textCursor().setCharFormat(fmt)
-
-    def keyPressEvent(self, event):
-        if (event.modifiers() == Qt.ControlModifier and not self.isReadOnly() and
-           event.key() in self.key2act):
-            # set actions before calling format methods
-            self._setFmtActs()
-            self.key2act[event.key()].trigger()
-            event.accept()
-        elif event.key() == Qt.Key_Return and self.autoIndent:
-            # auto-indent support
-            para = self.textCursor().block().text()
-            if len(para) > 0 and para[0] in NTextEdit.SPACE_KINDS:
-                space, spaceCount = para[0], 1
-                for c in para[1:]:
-                    if c != space: break
-                    spaceCount += 1
-                super().keyPressEvent(event)
-                self.textCursor().insertText(space * spaceCount)
-            else:
-                super().keyPressEvent(event)
-            event.accept()
-        else:
-            super().keyPressEvent(event)
-
-    def insertFromMimeData(self, source):
-        """Disable some unsupported types"""
-        self.insertHtml(source.html() or source.text())
 
 
 class NLineEditMouse(QLineEditWithMenuIcon):
@@ -239,14 +239,14 @@ class DateTimeDialog(QDialog):
         self.btnBox.accepted.connect(self.accept)
         self.btnBox.rejected.connect(self.reject)
 
-    @staticmethod
-    def getDateTime(dt, displayFmt, parent):
+    @classmethod
+    def getDateTime(cls, dt, displayFmt, parent):
         """Show a model datetime dialog, let user change it.
         :param parent: parent widget
         :param dt: datetime to change
         :param displayFmt: the Qt datetime format that used to display
         :return: None if canceled else datetime"""
-        dialog = DateTimeDialog(dt, displayFmt, parent)
+        dialog = cls(dt, displayFmt, parent)
         ret = dialog.exec_()
         dialog.deleteLater()
         return dialog.dtEdit.dateTime() if ret else None

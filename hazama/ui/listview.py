@@ -206,7 +206,7 @@ class DiaryListDelegateColorful(QItemDelegate):
 
         # don't use offset argument of QWidget.render
         painter.translate(option.rect.topLeft())
-        self._itemW.render(painter, QPoint(), renderFlags=QWidget.DrawChildren)
+        self._itemW.render(painter, QPoint())
         painter.resetTransform()
 
     def sizeHint(self, option, index):
@@ -314,7 +314,7 @@ class TagListDelegateColorful(QItemDelegate):
         self._itemW.setFixedWidth(option.rect.width())
 
         painter.translate(option.rect.topLeft())
-        self._itemW.render(painter, QPoint(), renderFlags=QWidget.DrawChildren)
+        self._itemW.render(painter, QPoint())
         painter.resetTransform()
 
     def sizeHint(self, option, index):
