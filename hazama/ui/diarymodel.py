@@ -21,28 +21,25 @@ class DiaryModel(QAbstractTableModel):
         while loading data, making UI still responsive if the amount of data
         is big. It also delay informing views to update, this avoid unnecessary
         layout operation."""
-        def makeTimesSeq():
-            # e.g. len(db)==10: [10]; len(db)==450: [35, 300, 80]
-            # let first chunk be smallest to decreasing the time of blank-list
-            chunkSz, firstChunkSz = 300, 35
-            l = len(db)
-            if l <= firstChunkSz:
-                return [l]
-
-            rest = l - firstChunkSz
-            seq = [firstChunkSz] + [chunkSz] * (rest // chunkSz)
-            return seq + [rest % chunkSz] if rest % chunkSz != 0 else seq
-
         iterator = db.sorted(settings['Main']['listSortBy'],
                              settings['Main'].getboolean('listReverse'))
-        for times in makeTimesSeq():
-            # informing view every TIMES iterations
+        firstChunk = True
+        rest = len(db)
+        while rest > 0:  # process COUNT items and inform the view in every iteration
+            if firstChunk:
+                firstChunk = False
+                count = min(35, rest)
+            else:
+                count = min(300, rest)
+
             nextRow = len(self._lst)
-            self.beginInsertRows(QModelIndex(), nextRow, nextRow+times-1)
-            for i in range(times):
+            self.beginInsertRows(QModelIndex(), nextRow, nextRow+count-1)
+            for i in range(count):
                 self._lst.append(list(next(iterator)))
-                if i & 15 == 0: qApp.processEvents()  # equals "row % 16 == 0"
+                if i % 15 == 0: qApp.processEvents()
             self.endInsertRows()
+
+            rest -= count  # count may become minus
 
     def getRowById(self, id_):
         # user tends to modify newer diaries?
