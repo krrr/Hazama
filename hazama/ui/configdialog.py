@@ -102,6 +102,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
         self.aindCheck.setChecked(settings['Editor'].getboolean('autoIndent'))
         self.autoRoCheck.setChecked(settings['Editor'].getboolean('autoReadOnly'))
         self.tListCountCheck.setChecked(settings['Main'].getboolean('tagListCount'))
+        self.annotateCheck.setChecked(settings['Main'].getboolean('listAnnotated'))
         if settings['Editor'].getboolean('titleFocus'):
             self.focusTitleRadio.setChecked(True)
         else:
@@ -194,6 +195,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
         settings['Editor']['autoIndent'] = str(self.aindCheck.isChecked())
         settings['Editor']['autoReadOnly'] = str(self.autoRoCheck.isChecked())
         settings['Main']['tagListCount'] = str(self.tListCountCheck.isChecked())
+        settings['Main']['listAnnotated'] = str(self.annotateCheck.isChecked())
         settings['Editor']['titleFocus'] = str(self.focusTitleRadio.isChecked())
         settings['Main']['backup'] = str(self.bkCheck.isChecked())
         settings['Main']['previewLines'] = str(self.preLinesBox.value())

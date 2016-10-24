@@ -21,7 +21,7 @@ settings = ConfigParser()
 settings.update({
     'Main': {'debug': False, 'backup': True, 'dbPath': 'nikkichou.db',
              'tagListCount': True, 'previewLines': 4, 'listSortBy': 'datetime',
-             'listReverse': True, 'tagListVisible': False,
+             'listReverse': True, 'listAnnotated': True, 'tagListVisible': False,
              'extendTitleBarBg': isWin8OrLater,  # Win8 has no aero glass
              'theme': 'colorful' if isWinVistaOrLater else '1px-rect'},
     'Editor': {'autoIndent': True, 'titleFocus': False, 'autoReadOnly': True},

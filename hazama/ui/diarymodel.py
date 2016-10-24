@@ -15,16 +15,23 @@ class DiaryModel(QAbstractTableModel):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._lst = []
+        self._yearFirstsArgs = None
+        self._yearFirsts = None
 
     def loadFromDb(self):
         """Load diaries from database. It will repeatedly call qApp.processEvents
         while loading data, making UI still responsive if the amount of data
         is big. It also delay informing views to update, this avoid unnecessary
         layout operation."""
-        iterator = db.sorted(settings['Main']['listSortBy'],
-                             settings['Main'].getboolean('listReverse'))
+        sortBy = settings['Main']['listSortBy']
+        reverse = settings['Main'].getboolean('listReverse')
+        self._yearFirstsArgs = (sortBy, reverse)
+        iterator = db.sorted(sortBy, reverse)
+
         firstChunk = True
         rest = len(db)
+        yearFirsts = {}
+        yearBefore = None
         while rest > 0:  # process COUNT items and inform the view in every iteration
             if firstChunk:
                 firstChunk = False
@@ -35,11 +42,29 @@ class DiaryModel(QAbstractTableModel):
             nextRow = len(self._lst)
             self.beginInsertRows(QModelIndex(), nextRow, nextRow+count-1)
             for i in range(count):
-                self._lst.append(list(next(iterator)))
-                if i % 15 == 0: qApp.processEvents()
-            self.endInsertRows()
+                d = list(next(iterator))
 
+                # save year firsts
+                year = d[1][:4]
+                if year != yearBefore and nextRow+i > 0:
+                    yearFirsts[int(year)] = nextRow+i-1 if reverse else nextRow+i
+                yearBefore = year
+
+                self._lst.append(d)
+                if i % 15 == 0:
+                    qApp.processEvents()
+            self.endInsertRows()
             rest -= count  # count may become minus
+
+        self._yearFirsts = tuple(yearFirsts.values()) if sortBy == 'datetime' else ()
+
+    def getYearFirsts(self):
+        """Get row of the first diary of each year. Data is calculated in loadFromDb."""
+        # access model using QModelIndex is slow, and user rarely changes
+        # sortBy, so only calculate it when loading
+        sortBy = settings['Main']['listSortBy']
+        reverse = settings['Main'].getboolean('listReverse')
+        return self._yearFirsts if (sortBy, reverse) == self._yearFirstsArgs else ()
 
     def getRowById(self, id_):
         # user tends to modify newer diaries?

@@ -10,6 +10,7 @@ QListView#diaryList {
     padding: 0px;
     background: #FAFAFA;
 }
+QScrollBar#diaryListSB { qproperty-annotateColor: #7092be; }
 QLineEdit#tagListEdit {
     border: none;
     margin: 1px;

@@ -98,6 +98,13 @@
             </property>
            </widget>
           </item>
+          <item>
+           <widget class="QCheckBox" name="annotateCheck">
+            <property name="text">
+             <string>Show year marks in scrollbar</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </widget>
        </item>

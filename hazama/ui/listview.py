@@ -1,5 +1,4 @@
-"""Main List and TagList, and their delegates.
-"""
+"""Main List and TagList, and their delegates."""
 import logging
 import random
 from collections import OrderedDict
@@ -420,6 +419,53 @@ class DiaryList(QListView):
     countChanged = Signal()
     tagsChanged = Signal()
 
+    class ScrollBar(QScrollBar):
+        """Annotated scrollbar."""
+        def __init__(self, parent):
+            super().__init__(parent, objectName='diaryListSB')
+            self._poses = ()
+            self._color = QColor('gold')
+
+        def paintEvent(self, event):
+            super().paintEvent(event)
+            if not self._poses:
+                return
+            p = QPainter(self)
+            # avoid painting on slider handle
+            opt = QStyleOptionSlider()
+            self.initStyleOption(opt)
+            groove = self.style().subControlRect(QStyle.CC_ScrollBar, opt,
+                                                 QStyle.SC_ScrollBarGroove, self)
+            slider = self.style().subControlRect(QStyle.CC_ScrollBar, opt,
+                                                 QStyle.SC_ScrollBarSlider, self)
+            p.setClipRegion(QRegion(groove) - QRegion(slider), Qt.IntersectClip)
+
+            x, y, w, h = groove.getRect()
+            x += 1
+            w -= 2
+            c = self.getAnnotateColor()
+            c.setAlpha(70)
+            p.setBrush(c)
+            c.setAlpha(145)
+            p.setPen(QPen(c, scaleRatio))
+            p.drawRects([QRect(x, y+h*i, w, 3*scaleRatio) for i in self._poses])
+
+        def setAnnotatedPoses(self, model):
+            if settings['Main'].getboolean('listAnnotated'):
+                l = model.rowCount()
+                self._poses = tuple(i / l for i in model.getYearFirsts())
+                self.update()
+            else:
+                self._poses = ()
+
+        def getAnnotateColor(self):
+            return self._color
+
+        def setAnnotateColor(self, color):
+            self._color = color
+
+        annotateColor = Property(QColor, getAnnotateColor, setAnnotateColor)
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self._delegate = None
@@ -427,10 +473,13 @@ class DiaryList(QListView):
         # but mouse wheel still scroll item by item (the number of items scrolled depends on
         # qApp.wheelScrollLines)
         self.setVerticalScrollMode(self.ScrollPerPixel)
+        self.scrollbar = DiaryList.ScrollBar(self)
+        self.setVerticalScrollBar(self.scrollbar)
+
         self.setDelegateOfTheme()
         # disable default editor. Editor is implemented in the View
         self.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        # setup models
+
         self.originModel = DiaryModel(self)
         self.modelProxy = MultiSortFilterProxyModel(self)
         self.modelProxy.setSourceModel(self.originModel)
@@ -440,7 +489,7 @@ class DiaryList(QListView):
         self.modelProxy.addFilter([db.DATETIME])
         self.setModel(self.modelProxy)
         self.sort()
-        # setup actions
+
         self.editAct = QAction(self.tr('Edit'), self,
                                triggered=self.startEditor)
         self.delAct = QAction(makeQIcon(':/menu/list-delete.png', scaled2x=True),
@@ -452,7 +501,7 @@ class DiaryList(QListView):
         self.gotoAct = QAction(self.tr('Go to location'), self)
         for i in (self.editAct, self.delAct, self.randAct, self.gotoAct):
             self.addAction(i)
-        # setup editors
+
         self.editors = OrderedDict()  # diaryId => Editor, id of new diary is -1
         self.doubleClicked.connect(self.startEditor)
         self.activated.connect(self.startEditor)
@@ -519,6 +568,7 @@ class DiaryList(QListView):
     def load(self):
         self.startLoading.emit()
         self.originModel.loadFromDb()
+        self.scrollbar.setAnnotatedPoses(self.originModel)
         self.countChanged.emit()
 
     def setDelegateOfTheme(self):
@@ -569,6 +619,8 @@ class DiaryList(QListView):
         reverse = settings['Main'].getboolean('listReverse')
         self.modelProxy.sort(sortByCol,
                              Qt.DescendingOrder if reverse else Qt.AscendingOrder)
+        if self.isVisible():
+            self.scrollbar.setAnnotatedPoses(self.originModel)
 
     def _editorMove(self, step):
         if len(self.editors) > 1: return
