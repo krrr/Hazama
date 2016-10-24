@@ -337,7 +337,7 @@ class TagList(DragScrollMixin, QListWidget):
         DragScrollMixin.__init__(self)
         QListWidget.__init__(self, parent)
         self.setVerticalScrollMode(self.ScrollPerPixel)
-        self.setDelegateOfTheme()
+        self.setupTheme()
 
         self.setUniformItemSizes(True)
         self.currentItemChanged.connect(self.onCurrentItemChanged)
@@ -400,7 +400,7 @@ class TagList(DragScrollMixin, QListWidget):
                 item = self.item(0)
             self.setCurrentItem(item)
 
-    def setDelegateOfTheme(self):
+    def setupTheme(self):
         theme = settings['Main']['theme']
         d = {'colorful': TagListDelegateColorful}.get(theme, TagListDelegate)
         self.setItemDelegate(d())  # do not pass parent under PySide...
@@ -476,7 +476,7 @@ class DiaryList(QListView):
         self.scrollbar = DiaryList.ScrollBar(self)
         self.setVerticalScrollBar(self.scrollbar)
 
-        self.setDelegateOfTheme()
+        self.setupTheme()
         # disable default editor. Editor is implemented in the View
         self.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
@@ -571,12 +571,14 @@ class DiaryList(QListView):
         self.scrollbar.setAnnotatedPoses(self.originModel)
         self.countChanged.emit()
 
-    def setDelegateOfTheme(self):
+    def setupTheme(self):
         theme = settings['Main']['theme']
         self._delegate = {'colorful': DiaryListDelegateColorful}.get(theme, DiaryListDelegate)()
         self.setItemDelegate(self._delegate)
-        # force items to be laid again
-        self.setSpacing(self.spacing())
+        if self.isVisible():
+            # force items to be laid again
+            self.setSpacing(self.spacing())
+            self.scrollbar.setAnnotatedPoses(self.originModel)
 
     def reload(self):
         self.originModel.clear()

@@ -64,8 +64,8 @@ aboutError = '''
 
 
 class ConfigDialog(QDialog, Ui_configDialog):
-    bkRestored = Signal()
-    extendBgChanged = Signal()
+    diaryChanged = Signal()
+    appearanceChanged = Signal()
 
     def __init__(self, parent):
         super().__init__(parent, Qt.WindowTitleHint)
@@ -180,22 +180,24 @@ class ConfigDialog(QDialog, Ui_configDialog):
         super().reject()
 
     def accept(self):
-        # special pairs that may trigger signal or call functions
+        # these settings may trigger signals
         lang = languagesR[self.langCombo.currentText()]
         langChanged = lang != settings['Main'].get('lang', 'en')
         theme = self.themeCombo.currentText()
         themeChanged = theme != settings['Main']['theme']
         extend = self.extendBgCheck.isChecked()
         extendChanged = extend != settings['Main'].getboolean('extendTitleBarBg')
+        annotated = self.annotateCheck.isChecked()
+        annotatedChanged = annotated != settings['Main'].getboolean('listAnnotated')
 
         settings['Main']['lang'] = lang
         settings['Main']['theme'] = theme
         settings['Main']['extendTitleBarBg'] = str(extend)
+        settings['Main']['listAnnotated'] = str(annotated)
         settings['Update']['autoCheck'] = str(self.updateCheck.isChecked())
         settings['Editor']['autoIndent'] = str(self.aindCheck.isChecked())
         settings['Editor']['autoReadOnly'] = str(self.autoRoCheck.isChecked())
         settings['Main']['tagListCount'] = str(self.tListCountCheck.isChecked())
-        settings['Main']['listAnnotated'] = str(self.annotateCheck.isChecked())
         settings['Editor']['titleFocus'] = str(self.focusTitleRadio.isChecked())
         settings['Main']['backup'] = str(self.bkCheck.isChecked())
         settings['Main']['previewLines'] = str(self.preLinesBox.value())
@@ -213,11 +215,9 @@ class ConfigDialog(QDialog, Ui_configDialog):
         if langChanged:
             setTranslationLocale()
             font.load()
-        if extendChanged:
-            # this changes dynamic property, so emit it before setStyleSheet
-            self.extendBgChanged.emit()
-        if themeChanged or schemeChanged or extendChanged:
+        if themeChanged or schemeChanged or extendChanged or annotatedChanged:
             setStyleSheet()
+            self.appearanceChanged.emit()
 
         logging.info('settings saved')
         self._cleanUp()
@@ -421,7 +421,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
         if msg.clickedButton() == okBtn:
             diarybook.restore_backup(filename)
             self.close()
-            self.bkRestored.emit()
+            self.diaryChanged.emit()
         else:
             self.rstCombo.setCurrentIndex(0)
 

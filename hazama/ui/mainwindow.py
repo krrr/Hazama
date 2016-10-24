@@ -19,7 +19,7 @@ class MainWindow(QMainWindow, Ui_mainWindow):
 
         restoreWidgetGeo(self, settings['Main'].get('windowGeo'))
         # setup toolbar bg properties; the second stage is in showEvent
-        self.onExtendTitleBarBgChanged(init=True)
+        self.onExtendTitleBarBgChanged()
         self.toolBar.setIconSize(QSize(24, 24) * scaleRatio)
 
         self.diaryList.gotoAct.triggered.connect(self.onGotoActTriggered)
@@ -131,15 +131,14 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         self.updateCountLabel()
         self.tagList.reload()  # "All" item
 
-    def onExtendTitleBarBgChanged(self, init=False):
-        # it's being called by __init__ when init is True
+    def onExtendTitleBarBgChanged(self):
         ex = settings['Main'].getboolean('extendTitleBarBg')
         self.toolBar.setProperty('extendTitleBar', ex)
         type_ = ''
         if ex:
             type_ = 'win' if isWin else 'other'
         self.toolBar.setProperty('titleBarBgType', type_)
-        if not init:
+        if self.isVisible():  # not being called by __init__
             self.style().unpolish(self)
             self.style().polish(self)
             self._applyExtendTitleBarBg()
@@ -210,10 +209,10 @@ class MainWindow(QMainWindow, Ui_mainWindow):
             self.cfgDialog.activateWindow()
         except (AttributeError, RuntimeError):
             self.cfgDialog = ConfigDialog(self)
-            self.cfgDialog.bkRestored.connect(self.diaryList.reload)
-            self.cfgDialog.accepted.connect(self.diaryList.setDelegateOfTheme)
-            self.cfgDialog.accepted.connect(self.tagList.setDelegateOfTheme)
-            self.cfgDialog.extendBgChanged.connect(self.onExtendTitleBarBgChanged)
+            self.cfgDialog.diaryChanged.connect(self.diaryList.reload)
+            self.cfgDialog.appearanceChanged.connect(self.diaryList.setupTheme)
+            self.cfgDialog.appearanceChanged.connect(self.tagList.setupTheme)
+            self.cfgDialog.appearanceChanged.connect(self.onExtendTitleBarBgChanged)
             self.cfgDialog.show()
 
     @Slot()
