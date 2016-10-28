@@ -2,7 +2,7 @@ import sys
 import logging
 from PySide.QtGui import *
 from PySide.QtCore import *
-from hazama import __version__, diarybook
+from hazama import __version__, diarybook, mactype
 from hazama.ui import (font, setStyleSheet, scaleRatio, fixWidgetSizeOnHiDpi, isDwmUsable,
                        dbDatetimeFmtQt, makeQIcon, setTranslationLocale)
 from hazama.ui.configdialog_ui import Ui_configDialog
@@ -132,6 +132,10 @@ class ConfigDialog(QDialog, Ui_configDialog):
         self.themeCombo.currentIndexChanged.connect(
             lambda idx: self._enableThemeSpe() if idx != 0 else self._disableThemeSpe())
         # setup font buttons & load settings(fonts)
+        self.enRenderCheck.setChecked(mactype.isUsable() and
+                                      settings['Font'].getboolean('enhanceRender'))
+        self.enRenderCheck.setVisible(isWin)
+        self.enRenderCheck.setEnabled(mactype.isUsable() and scaleRatio >= 1.4)
         self.defFontGBox.setChecked('default' in settings['Font'])
         self.dtFontBtn.configName = 'datetime'
         self.titleFontBtn.configName = 'title'
@@ -189,6 +193,8 @@ class ConfigDialog(QDialog, Ui_configDialog):
         extendChanged = extend != settings['Main'].getboolean('extendTitleBarBg')
         annotated = self.annotateCheck.isChecked()
         annotatedChanged = annotated != settings['Main'].getboolean('listAnnotated')
+        enRender = self.enRenderCheck.isChecked()
+        enRenderChanged = self.enRenderCheck.isChecked() != settings['Main'].getboolean('enhanceRender')
 
         settings['Main']['lang'] = lang
         settings['Main']['theme'] = theme
@@ -201,12 +207,18 @@ class ConfigDialog(QDialog, Ui_configDialog):
         settings['Editor']['titleFocus'] = str(self.focusTitleRadio.isChecked())
         settings['Main']['backup'] = str(self.bkCheck.isChecked())
         settings['Main']['previewLines'] = str(self.preLinesBox.value())
+        settings['Font']['enhanceRender'] = str(enRender)
+
         oldFonts = tuple(sorted(settings['Font'].items()))
         for i in self.buttons:
             settings['Font'][i.configName] = i.font().toString() if i.font().family() else ''
         if not self.defFontGBox.isChecked() and 'default' in settings['Font']:
             del settings['Font']['default']
         fontsChanged = oldFonts != tuple(sorted(settings['Font'].items()))
+
+        if enRenderChanged:
+            (mactype.enable if self.enRenderCheck.isChecked() else mactype.disable)()
+            fontsChanged = True
 
         schemeChanged = False
         scheme = self.schemeCombo.currentText()

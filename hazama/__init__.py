@@ -9,7 +9,7 @@
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU General Public License for more details.
-__version__ = '1.0.1'
+__version__ = '1.0.3'
 __desc__ = 'A simple cross-platform diary application'
 __author__ = 'krrr'
 
@@ -38,13 +38,16 @@ def main_entry():
     logging.info(str(config.db))
 
     from hazama import ui, diarybook, updater
-    from hazama import updater
     app = ui.init()
     from hazama.ui.mainwindow import MainWindow
 
     w = MainWindow()
     w.show()
     logging.debug('startup took %.2f sec', time.clock()-start_time)
+
+    if config.settings['Font'].getboolean('enhanceRender') and ui.scaleRatio >= 1.4:
+        from hazama import mactype
+        mactype.enable()
 
     if config.settings['Main'].getboolean('backup'):
         try:

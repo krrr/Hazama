@@ -25,7 +25,7 @@ settings.update({
              'extendTitleBarBg': isWin8OrLater,  # Win8 has no aero glass
              'theme': 'colorful' if isWinVistaOrLater else '1px-rect'},
     'Editor': {'autoIndent': True, 'titleFocus': False, 'autoReadOnly': True},
-    'Font': {},
+    'Font': {'enhanceRender': False},
     'Update': {'autoCheck': False, 'newestIgnoredVer': '0.0.0', 'needClean': False},
     'ThemeColorful': {'colorScheme': 'green'}
 })
