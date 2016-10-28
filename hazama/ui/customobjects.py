@@ -189,6 +189,9 @@ class MultiSortFilterProxyModel(QSortFilterProxyModel):
         """Return the filter's pattern specified by filter id"""
         return self._filters[id_][1].pattern()
 
+    def isFiltered(self):
+        return any(i[1].pattern() for i in self._filters)
+
     def addFilter(self, cols, patternSyntax=QRegExp.FixedString, cs=None):
         """Add new filter into proxy model.
         :param cols: a list contains columns to be filtered
@@ -198,7 +201,7 @@ class MultiSortFilterProxyModel(QSortFilterProxyModel):
                                  QRegExp.WildcardUnix, QRegExp.RegExp], 'wrong pattern syntax'
         f = (tuple(cols), QRegExp('', self.filterCaseSensitivity() if cs is None else cs,
                                   patternSyntax))
-        try:
+        try:  # use empty slots first (caused by removeFilter)
             idx = self._filters.index(None)
             self._filters[idx] = f
         except ValueError:

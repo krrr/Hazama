@@ -201,8 +201,12 @@ class ConfigDialog(QDialog, Ui_configDialog):
         settings['Editor']['titleFocus'] = str(self.focusTitleRadio.isChecked())
         settings['Main']['backup'] = str(self.bkCheck.isChecked())
         settings['Main']['previewLines'] = str(self.preLinesBox.value())
+        oldFonts = tuple(sorted(settings['Font'].items()))
         for i in self.buttons:
-            settings['Font'][i.configName] = i.font().toString()
+            settings['Font'][i.configName] = i.font().toString() if i.font().family() else ''
+        if not self.defFontGBox.isChecked() and 'default' in settings['Font']:
+            del settings['Font']['default']
+        fontsChanged = oldFonts != tuple(sorted(settings['Font'].items()))
 
         schemeChanged = False
         scheme = self.schemeCombo.currentText()
@@ -210,12 +214,11 @@ class ConfigDialog(QDialog, Ui_configDialog):
             schemeChanged = scheme != settings['ThemeColorful']['colorScheme']
             settings['ThemeColorful']['colorScheme'] = scheme
 
-        if not self.defFontGBox.isChecked() and 'default' in settings['Font']:
-            del settings['Font']['default']
         if langChanged:
             setTranslationLocale()
+        if fontsChanged:
             font.load()
-        if themeChanged or schemeChanged or extendChanged or annotatedChanged:
+        if fontsChanged or themeChanged or schemeChanged or extendChanged or annotatedChanged:
             setStyleSheet()
             self.appearanceChanged.emit()
 

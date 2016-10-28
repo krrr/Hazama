@@ -423,12 +423,12 @@ class DiaryList(QListView):
         """Annotated scrollbar."""
         def __init__(self, parent):
             super().__init__(parent, objectName='diaryListSB')
-            self._poses = ()
+            self.poses = ()
             self._color = QColor('gold')
 
         def paintEvent(self, event):
             super().paintEvent(event)
-            if not self._poses:
+            if not self.poses:
                 return
             p = QPainter(self)
             # avoid painting on slider handle
@@ -448,15 +448,7 @@ class DiaryList(QListView):
             p.setBrush(c)
             c.setAlpha(145)
             p.setPen(QPen(c, scaleRatio))
-            p.drawRects([QRect(x, y+h*i, w, 3*scaleRatio) for i in self._poses])
-
-        def setAnnotatedPoses(self, model):
-            if settings['Main'].getboolean('listAnnotated'):
-                l = model.rowCount()
-                self._poses = tuple(i / l for i in model.getYearFirsts())
-                self.update()
-            else:
-                self._poses = ()
+            p.drawRects([QRect(x, y+h*i, w, 3*scaleRatio) for i in self.poses])
 
         def getAnnotateColor(self):
             return self._color
@@ -513,7 +505,7 @@ class DiaryList(QListView):
         menu.addSeparator()
         menu.addAction(self.randAct)
         selCount = len(self.selectedIndexes())
-        if selCount == 1 and any(self.modelProxy.filterPattern(i) for i in range(3)):  # filtered
+        if selCount == 1 and self.modelProxy.isFiltered():
             menu.addAction(self.gotoAct)
         self.editAct.setDisabled(selCount != 1)
         self.delAct.setDisabled(selCount == 0)
@@ -568,7 +560,7 @@ class DiaryList(QListView):
     def load(self):
         self.startLoading.emit()
         self.originModel.loadFromDb()
-        self.scrollbar.setAnnotatedPoses(self.originModel)
+        self.setAnnotatedScrollbar()
         self.countChanged.emit()
 
     def setupTheme(self):
@@ -578,7 +570,7 @@ class DiaryList(QListView):
         if self.isVisible():
             # force items to be laid again
             self.setSpacing(self.spacing())
-            self.scrollbar.setAnnotatedPoses(self.originModel)
+            self.setAnnotatedScrollbar()
 
     def reload(self):
         self.originModel.clear()
@@ -622,7 +614,15 @@ class DiaryList(QListView):
         self.modelProxy.sort(sortByCol,
                              Qt.DescendingOrder if reverse else Qt.AscendingOrder)
         if self.isVisible():
-            self.scrollbar.setAnnotatedPoses(self.originModel)
+            self.setAnnotatedScrollbar()
+
+    def setAnnotatedScrollbar(self, show=None):
+        if show is not False and settings['Main'].getboolean('listAnnotated'):
+            l = self.originModel.rowCount()
+            self.scrollbar.poses = tuple(i / l for i in self.originModel.getYearFirsts())
+            self.scrollbar.update()
+        else:
+            self.scrollbar.poses = ()
 
     def _editorMove(self, step):
         if len(self.editors) > 1: return
@@ -646,6 +646,7 @@ class DiaryList(QListView):
 
     def _setFilter(self, filterKey, s):
         self.modelProxy.setFilterPattern(filterKey, s)
+        self.setAnnotatedScrollbar(False if s else not self.modelProxy.isFiltered())
         self.countChanged.emit()
 
     def setFilterBySearchString(self, s):
