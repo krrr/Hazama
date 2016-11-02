@@ -3,16 +3,15 @@ import os
 import time
 import logging
 import PySide
-import hazama.ui.res_rc  # load resources
+import hazama.ui.res_rc  # load resources, let showErrors have icons
 from PySide.QtGui import *
 from PySide.QtCore import *
-from hazama.config import (settings, appPath, isWin, isWin7OrLater,
-                           isWinVistaOrLater, isWin8OrLater)
+from hazama.config import settings, appPath, isWin, isWinVistaOrLater, isWin8OrLater
 
 
 # qApp global var is None before entering event loop, use QApplication.instance() instead
 
-locale = None
+locale = sysLocale = None
 # datetimeFmt may not contain time part (by default)
 dateFmt = datetimeFmt = fullDatetimeFmt = None
 font = None
@@ -50,33 +49,31 @@ def readRcTextFile(path):
 
 
 def setTranslationLocale():
-    global locale, _trans, _transQt
+    global locale, sysLocale, _trans, _transQt
     lang = settings['Main'].get('lang')
     sysLocale = QLocale.system()
-    if lang and lang == sysLocale.name():
+    if not lang:
+        lang = settings['Main']['lang'] = locale.name()
+    if lang == sysLocale.name():
         locale = sysLocale
-    elif lang and lang != sysLocale.name():
-        # special case: application language is different from system's
+    else:  # special case: application language is different from system's
         locale = QLocale(lang)
         QLocale.setDefault(locale)
-    else:
-        locale = sysLocale
-        lang = settings['Main']['lang'] = locale.name()
     langPath = os.path.join(appPath, 'lang')
-    logging.info('set translation(%s)', lang)
+    logging.info('set translation ' + lang)
 
     _trans = QTranslator()
     _trans.load(lang, langPath)
     _transQt = QTranslator()
-    ret = _transQt.load('qt_' + lang,
-                        QLibraryInfo.location(QLibraryInfo.TranslationsPath))
-    if not ret:  # frozen
+    if hasattr(sys, 'frozen'):
         _transQt.load('qt_' + lang, langPath)
+    else:
+        _transQt.load('qt_' + lang, QLibraryInfo.location(QLibraryInfo.TranslationsPath))
     for i in [_trans, _transQt]: QApplication.instance().installTranslator(i)
 
     global dateFmt, datetimeFmt, fullDatetimeFmt
     timeFmt = settings['Main'].get('timeFormat')
-    dateFmt = settings['Main'].get('dateFormat', locale.dateFormat())
+    dateFmt = settings['Main'].get('dateFormat') or locale.dateFormat()
     datetimeFmt = (dateFmt + ' ' + timeFmt) if timeFmt else dateFmt
     # use hh:mm because locale.timeFormat will include seconds
     fullDatetimeFmt = dateFmt + ' ' + (timeFmt or 'hh:mm')
@@ -246,9 +243,8 @@ class Fonts:
         self.title = QFont()
         self.datetime = QFont()
         self.text = QFont()
-        self.default = QApplication.instance().font()
-        self.default_m = QFontMetrics(self.default, None)
-        self.title_m = self.datetime_m = self.text_m = None
+        self.default = None
+        self.default_m = self.title_m = self.datetime_m = self.text_m = None
 
     def load(self):
         # passing None as 2nd arg to QFontMetrics make difference on high DPI
@@ -258,23 +254,30 @@ class Fonts:
         self.datetime_m = QFontMetrics(self.datetime, None)
         self.text.fromString(settings['Font'].get('text'))
         self.text_m = QFontMetrics(self.text, None)
-        defaultFont = settings['Font'].get('default') or self.getPreferredFont()
-        if defaultFont:
-            self.default.fromString(defaultFont)
-            self.default_m = QFontMetrics(self.default, None)
-            QApplication.instance().setFont(self.default)
+
+        saved = settings['Font'].get('default')
+        self.default = QApplication.instance().font()
+        self.default.fromString(saved or self.getPreferredFont() or self.default.family())
+        logging.debug('system font %s' % self.default)
+        QApplication.instance().setFont(self.default)
+        self.default_m = QFontMetrics(self.default, None)
 
     @staticmethod
     def getPreferredFont():
         """Return family of preferred font according to language and platform."""
-        if isWin and settings['Main']['theme'] == '1px-rect' and scaleRatio == 1:
-            # old theme looks fine with default bitmap fonts only in normal DPI;
-            # text of radio button will be cropped in HiDPI
-            return None
-        if isWin7OrLater:
-            return {'zh_CN': 'Microsoft YaHei UI', 'ja_JP': 'Meiryo UI'}.get(locale.name())
-        elif isWinVistaOrLater:
-            return {'zh_CN': 'Microsoft YaHei', 'ja_JP': 'Meiryo'}.get(locale.name())
+        if isWin:
+            if scaleRatio > 1:
+                # 1. get sans-serif CJ fonts that looks good on HiDPI
+                # 2. fix system default font
+                return {'zh_CN': 'Microsoft YaHei [UI]', 'ja_JP': 'Meiryo [UI]',
+                        'zh_TW': 'Microsoft JhengHei [UI]'
+                        }.get(locale.name() if locale.language() != sysLocale.language() else
+                              sysLocale.name())
+            if scaleRatio == 1 and settings['Main']['theme'] == '1px-rect':
+                # old theme looks fine with default bitmap fonts only on normal DPI;
+                # text of radio button will be cropped in HiDPI
+                return QApplication.instance().font().family()
+
         return None
 
 
