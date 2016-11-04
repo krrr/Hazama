@@ -206,7 +206,7 @@
   <customwidget>
    <class>DiaryList</class>
    <extends>QListView</extends>
-   <header>hazama.ui.listview</header>
+   <header>hazama.ui.diarylist</header>
    <slots>
     <signal>countChanged()</signal>
     <signal>tagsChanged()</signal>
@@ -221,7 +221,7 @@
   <customwidget>
    <class>TagList</class>
    <extends>QListWidget</extends>
-   <header>hazama.ui.listview</header>
+   <header>hazama.ui.taglist</header>
    <slots>
     <signal>currentTagChanged(QString)</signal>
     <signal>tagNameModified(QString)</signal>
