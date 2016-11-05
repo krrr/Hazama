@@ -45,7 +45,7 @@ def main_entry():
     w.show()
     logging.debug('startup took %.2f sec', time.clock()-start_time)
 
-    if config.settings['Font'].getboolean('enhanceRender') and ui.scaleRatio >= 1.4:
+    if config.settings['Font'].getboolean('enhanceRender'):
         from hazama import mactype
         mactype.enable()
 

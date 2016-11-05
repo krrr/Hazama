@@ -133,7 +133,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
         # fonts
         self.enRenderCheck.setChecked(settings['Font'].getboolean('enhanceRender'))
         self.enRenderCheck.setVisible(isWin)
-        self.enRenderCheck.setEnabled(mactype.isUsable() and scaleRatio >= 1.4)
+        self.enRenderCheck.setEnabled(mactype.isUsable())
         self.defFontGBox.setChecked('default' in settings['Font'])
         self.dtFontBtn.configName = 'datetime'
         self.titleFontBtn.configName = 'title'
