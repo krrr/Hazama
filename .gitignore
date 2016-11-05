@@ -1,12 +1,11 @@
 *.pyc
 *.qm
-*.db
-*.ini
-custom.qss
-xmlsample
+hazama/nikkichou.db
+hazama/custom.qss
+hazama/config.ini
 build
 .idea
-*.iml
+Hazama.iml
 hazama/test.py
 hazama/ui/*_ui.py
 hazama/ui/res_rc.py

@@ -8,6 +8,7 @@ from hazama import diarybook
 
 # constants
 SOCKET_TIMEOUT = 8
+CUSTOM_STYLESHEET_DELIMIT = '/**** BEGIN CUSTOM STYLESHEET ****/'
 
 # for default settings
 isWin = hasattr(sys, 'getwindowsversion')

@@ -1,10 +1,12 @@
-"""Qt4 has no FreeType for Windows, so use this hack."""
+"""Qt4's FreeType plugin is unusable on Windows, so use this hack. MacType will hook
+Windows text rendering functions and use FreeType to render them."""
 import ctypes
 from hazama import config
 from os import path
 
 
-dllPath = path.join(config.appPath, r'lib\mactype\MacType.dll')
+dllPath = path.join(config.appPath, r'lib\MacType.dll')
+configPath = path.join(config.appPath, r'lib\mactype.ini')
 _handle = _dll = None
 
 
@@ -24,8 +26,17 @@ def enable():
     return True
 
 
-def reloadConfig():
-    _dll.ReloadConfig()
+def isEnabled():
+    return bool(_dll)
+
+
+def fromConfig(s):
+    # Qt will cache many glyphs, I don't know how to clear the cache.
+    # So this function is actually useless
+    try:
+        _dll.ReloadConfigStr(s)
+    except AttributeError:  # this function is unofficial
+        pass
 
 
 def disable():

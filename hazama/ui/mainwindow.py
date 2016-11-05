@@ -1,13 +1,14 @@
+import os
 import logging
 from PySide.QtGui import *
 from PySide.QtCore import *
 from hazama.ui import (font, winDwmExtendWindowFrame, scaleRatio,
                        makeQIcon, saveWidgetGeo, restoreWidgetGeo, markIcon)
 from hazama.ui.customwidgets import QLineEditWithMenuIcon
-from hazama.ui.configdialog import ConfigDialog
+from hazama.ui.configdialog import ConfigDialog, StyleSheetEditor
 from hazama.ui.mainwindow_ui import Ui_mainWindow
 from hazama.ui.heatmap import HeatMap
-from hazama import updater
+from hazama import updater, mactype
 from hazama.config import settings, isWin
 
 
@@ -15,7 +16,7 @@ class MainWindow(QMainWindow, Ui_mainWindow):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
-        self.cfgDialog = self.heatMap = None  # create on on_cfgAct_triggered
+        self.cfgDialog = self.heatMap = self.ssEditor = None  # create on action triggered
 
         restoreWidgetGeo(self, settings['Main'].get('windowGeo'))
         # setup toolbar bg properties; the second stage is in showEvent
@@ -131,6 +132,28 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         self.updateCountLabel()
         self.tagList.reload()  # "All" item
 
+    def contextMenuEvent(self, event):
+        """Hidden menu."""
+        menu = QMenu()
+        menu.addAction(QAction(self.tr('Edit Style Sheet'), menu, triggered=self.startStyleSheetEditor))
+        menu.addAction(QAction(self.tr('Open Data Directory'), menu,
+                               triggered=lambda: QDesktopServices.openUrl('file:///' + os.getcwd())))
+        if mactype.isEnabled():
+            menu.addAction(QAction(self.tr('Open MacType Config'), menu,
+                                   triggered=lambda: QDesktopServices.openUrl('file:///' + mactype.configPath)))
+
+        menu.exec_(event.globalPos())
+        menu.deleteLater()
+
+    def startStyleSheetEditor(self):
+        try:
+            self.ssEditor.activateWindow()
+        except (AttributeError, RuntimeError):
+            self.ssEditor = StyleSheetEditor(self)
+            self.ssEditor.appearanceChanged.connect(self.onAppearanceChanged)
+            self.ssEditor.resize(QSize(600, 550) * scaleRatio)
+            self.ssEditor.show()
+
     def onExtendTitleBarBgChanged(self):
         ex = settings['Main'].getboolean('extendTitleBarBg')
         self.toolBar.setProperty('extendTitleBar', ex)
@@ -194,6 +217,11 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         else:
             self.searchBox.contentChanged.connect(self.diaryList.setFilterByDatetime)
 
+    def onAppearanceChanged(self):
+        self.diaryList.setupTheme()
+        self.tagList.setupTheme()
+        self.onExtendTitleBarBgChanged()
+
     def onGotoActTriggered(self):
         """Scroll the list to the original position (unfiltered) of an entry."""
         if self.searchBox.text():
@@ -210,9 +238,7 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         except (AttributeError, RuntimeError):
             self.cfgDialog = ConfigDialog(self)
             self.cfgDialog.diaryChanged.connect(self.diaryList.reload)
-            self.cfgDialog.appearanceChanged.connect(self.diaryList.setupTheme)
-            self.cfgDialog.appearanceChanged.connect(self.tagList.setupTheme)
-            self.cfgDialog.appearanceChanged.connect(self.onExtendTitleBarBgChanged)
+            self.cfgDialog.appearanceChanged.connect(self.onAppearanceChanged)
             self.cfgDialog.show()
 
     @Slot()
@@ -254,7 +280,6 @@ class MainWindow(QMainWindow, Ui_mainWindow):
             self.heatMap.sample.setDescriptions(descriptions)
             self.heatMap.setAttribute(Qt.WA_DeleteOnClose)
             self.heatMap.resize(self.size())
-            self.heatMap.move(self.pos())
             self.heatMap.setWindowFlags(Qt.Window | Qt.WindowTitleHint)
             self.heatMap.setWindowTitle(self.tr('Heat Map'))
             self.heatMap.move(self.pos() + QPoint(12, 12)*scaleRatio)

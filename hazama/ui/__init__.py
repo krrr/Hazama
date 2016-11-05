@@ -6,7 +6,8 @@ import PySide
 import hazama.ui.res_rc  # load resources, let showErrors have icons
 from PySide.QtGui import *
 from PySide.QtCore import *
-from hazama.config import settings, appPath, isWin, isWinVistaOrLater, isWin8OrLater
+from hazama.config import (settings, appPath, isWin, isWinVistaOrLater, isWin8OrLater,
+                           CUSTOM_STYLESHEET_DELIMIT)
 
 
 # qApp global var is None before entering event loop, use QApplication.instance() instead
@@ -137,6 +138,7 @@ def setStyleSheet():
             if scheme != 'green':
                 ss.append(readRcTextFile(':/colorful-%s.qss' % scheme))
         # load custom
+        ss.append(CUSTOM_STYLESHEET_DELIMIT)
         if os.path.isfile('custom.qss'):
             logging.info('set custom StyleSheet')
             with open('custom.qss', encoding='utf-8') as f:
@@ -258,7 +260,7 @@ class Fonts:
         saved = settings['Font'].get('default')
         self.default = QApplication.instance().font()
         self.default.fromString(saved or self.getPreferredFont() or self.default.family())
-        logging.debug('system font %s' % self.default)
+        logging.debug('app font %s' % self.default)
         QApplication.instance().setFont(self.default)
         self.default_m = QFontMetrics(self.default, None)
 

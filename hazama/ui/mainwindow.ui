@@ -16,9 +16,6 @@
     <height>450</height>
    </size>
   </property>
-  <property name="contextMenuPolicy">
-   <enum>Qt::NoContextMenu</enum>
-  </property>
   <property name="windowTitle">
    <string>Hazama</string>
   </property>

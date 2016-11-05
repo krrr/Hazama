@@ -6,7 +6,7 @@ from hazama import __version__, diarybook, mactype
 from hazama.ui import (font, setStyleSheet, scaleRatio, fixWidgetSizeOnHiDpi, isDwmUsable,
                        dbDatetimeFmtQt, makeQIcon, setTranslationLocale)
 from hazama.ui.configdialog_ui import Ui_configDialog
-from hazama.config import settings, db, isWin7OrLater, isWin
+from hazama.config import settings, db, isWin7OrLater, isWin, CUSTOM_STYLESHEET_DELIMIT
 from hazama import updater
 
 
@@ -448,3 +448,43 @@ class ConfigDialog(QDialog, Ui_configDialog):
 
     def _onDownloadFinished(self):
         self._setAboutArea(self.tr('Installing...'))
+
+
+class StyleSheetEditor(QDialog):
+    appearanceChanged = Signal()
+
+    def __init__(self, parent):
+        super().__init__(parent, Qt.WindowTitleHint)
+        self.setAttribute(Qt.WA_DeleteOnClose)
+        self.setWindowTitle('Style Sheet Editor')
+
+        self._buttonBox = QDialogButtonBox(self)
+        self._applyBtn = self._buttonBox.addButton('Apply (till restart)',
+                                                   QDialogButtonBox.ApplyRole)
+        self._saveBtn = self._buttonBox.addButton('Save', QDialogButtonBox.AcceptRole)
+        self._cancelBtn = self._buttonBox.addButton('Cancel', QDialogButtonBox.RejectRole)
+        self._buttonBox.clicked.connect(self.onButtonBoxClicked)
+
+        codeFont = QFont('Consolas' if isWin else 'monospace')
+        self.styleSheetEdit = QPlainTextEdit(self)
+        self.styleSheetEdit.setFont(codeFont)
+        self.styleSheetEdit.setStyleSheet('''
+        QPlainTextEdit { border: none; }
+        ''')
+        self.styleSheetEdit.setPlainText(qApp.styleSheet())
+        layout = QVBoxLayout(self)
+        layout.addWidget(self.styleSheetEdit)
+        layout.addWidget(self._buttonBox)
+
+    def onButtonBoxClicked(self, btn):
+        if btn == self._cancelBtn:
+            return self.close()
+
+        qApp.setStyleSheet(self.styleSheetEdit.toPlainText())
+        if btn == self._saveBtn:
+            ss = self.styleSheetEdit.toPlainText().partition(CUSTOM_STYLESHEET_DELIMIT)[2]
+            with open('custom.qss', 'w', encoding='utf-8') as f:
+                f.write(ss)
+            self.close()
+
+        self.appearanceChanged.emit()
