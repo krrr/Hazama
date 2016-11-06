@@ -126,7 +126,7 @@
    </property>
    <property name="icon">
     <iconset resource="../../res/res.qrc">
-     <normaloff>:/toolbar/tlist.png</normaloff>:/toolbar/tlist.png</iconset>
+     <normaloff>:/toolbar/tag-list.png</normaloff>:/toolbar/tag-list.png</iconset>
    </property>
    <property name="text">
     <string>Tag List</string>
