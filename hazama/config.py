@@ -20,14 +20,25 @@ isWin8OrLater = isWin and _winVer >= (6, 2)
 settings = ConfigParser()
 # set default values. some values have no defaults, such as windowGeo and tagListWidth
 settings.update({
-    'Main': {'debug': False, 'backup': True, 'dbPath': 'nikkichou.db',
-             'tagListCount': True, 'previewLines': 4, 'listSortBy': 'datetime',
-             'listReverse': True, 'listAnnotated': True, 'tagListVisible': False,
+    'Main': {'debug': False,
+             'backup': True,
+             'dbPath': 'nikkichou.db',
+             'tagListCount': True,
+             'previewLines': 4,
+             'listSortBy': 'datetime',
+             'listReverse': True,
+             'listAnnotated': True,
+             'tagListVisible': False,
              'extendTitleBarBg': isWin8OrLater,  # Win8 has no aero glass
              'theme': 'colorful' if isWinVistaOrLater else '1px-rect'},
-    'Editor': {'autoIndent': True, 'titleFocus': False, 'autoReadOnly': True},
-    'Font': {'enhanceRender': False},
-    'Update': {'autoCheck': False, 'newestIgnoredVer': '0.0.0', 'needClean': False},
+    'Editor': {'autoIndent': False,
+               'titleFocus': False,
+               'autoReadOnly': True,
+               'tabIndent': True},
+    'Font': {'enhanceRender': False},  # for default fonts, see Font.load
+    'Update': {'autoCheck': False,
+               'newestIgnoredVer': '0.0.0',
+               'needClean': False},
     'ThemeColorful': {'colorScheme': 'green'}
 })
 

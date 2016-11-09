@@ -100,6 +100,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
 
         self.updateCheck.setChecked(settings['Update'].getboolean('autoCheck'))
         self.aindCheck.setChecked(settings['Editor'].getboolean('autoIndent'))
+        self.tabIndentCheck.setChecked(settings['Editor'].getboolean('tabIndent'))
         self.autoRoCheck.setChecked(settings['Editor'].getboolean('autoReadOnly'))
         self.tListCountCheck.setChecked(settings['Main'].getboolean('tagListCount'))
         self.annotateCheck.setChecked(settings['Main'].getboolean('listAnnotated'))
@@ -198,6 +199,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
         settings['Main']['listAnnotated'] = str(annotated)
         settings['Update']['autoCheck'] = str(self.updateCheck.isChecked())
         settings['Editor']['autoIndent'] = str(self.aindCheck.isChecked())
+        settings['Editor']['tabIndent'] = str(self.tabIndentCheck.isChecked())
         settings['Editor']['autoReadOnly'] = str(self.autoRoCheck.isChecked())
         settings['Main']['tagListCount'] = str(self.tListCountCheck.isChecked())
         settings['Editor']['titleFocus'] = str(self.focusTitleRadio.isChecked())

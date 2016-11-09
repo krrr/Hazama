@@ -75,7 +75,11 @@ class NTextEdit(QTextEdit, TextFormatter):
                               round(hl.blue()*fac + bg.blue()*(1-fac)))
 
         self.autoIndent = False
-        self.setTabChangesFocus(True)
+        # used by tab indent shortcut
+        if QLocale().language() in (QLocale.Chinese, QLocale.Japanese):
+            self._indent = '　　'   # 2 full width spaces
+        else:
+            self._indent = '    '  # 4 spaces
         # setup format menu
         onHLAct = lambda: super(NTextEdit, self).setHL(self.hlAct.isChecked())
         onBDAct = lambda: super(NTextEdit, self).setBD(self.bdAct.isChecked())
@@ -133,12 +137,16 @@ class NTextEdit(QTextEdit, TextFormatter):
         menu.deleteLater()
 
     def keyPressEvent(self, event):
-        if (event.modifiers() == Qt.ControlModifier and not self.isReadOnly() and
-           event.key() in self.key2act):
+        if self.isReadOnly():
+            return super().keyPressEvent(event)
+
+        if event.modifiers() == Qt.ControlModifier and event.key() in self.key2act:
             # set actions before calling format methods
             self._setFmtActs()
             self.key2act[event.key()].trigger()
-            event.accept()
+        elif event.key() == Qt.Key_Tab:
+            # will not receive event if tabChangesFocus is True
+            self.textCursor().insertText(self._indent)
         elif event.key() == Qt.Key_Return and self.autoIndent:
             # auto-indent support
             para = self.textCursor().block().text()
@@ -151,7 +159,6 @@ class NTextEdit(QTextEdit, TextFormatter):
                 self.textCursor().insertText(space * spaceCount)
             else:
                 super().keyPressEvent(event)
-            event.accept()
         else:
             super().keyPressEvent(event)
 

@@ -26,6 +26,7 @@ class Editor(QWidget, Ui_editor):
             lambda: None if self.readOnly else self.textEditor.setFocus())
         self.textEditor.setFont(font.text)
         self.textEditor.setAutoIndent(settings['Editor'].getboolean('autoIndent'))
+        self.textEditor.setTabChangesFocus(not settings['Editor'].getboolean('tabIndent'))
 
         self.dtBtn.setFont(font.datetime)
         sz = max(font.datetime_m.ascent(), 12)
