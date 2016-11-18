@@ -7,6 +7,7 @@ from hazama.ui import (font, setStyleSheet, scaleRatio, fixWidgetSizeOnHiDpi, is
                        dbDatetimeFmtQt, makeQIcon, setTranslationLocale)
 from hazama.ui.configdialog_ui import Ui_configDialog
 from hazama.config import settings, db, isWin7OrLater, isWin, CUSTOM_STYLESHEET_DELIMIT
+from hazama.ui.customobjects import QSSHighlighter
 from hazama import updater
 
 
@@ -473,6 +474,7 @@ class StyleSheetEditor(QDialog):
         self.styleSheetEdit.setStyleSheet('''
         QPlainTextEdit { border: none; }
         ''')
+        self._highlighter = QSSHighlighter(self.styleSheetEdit.document())
         self.styleSheetEdit.setPlainText(qApp.styleSheet())
         layout = QVBoxLayout(self)
         layout.addWidget(self.styleSheetEdit)

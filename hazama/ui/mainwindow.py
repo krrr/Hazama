@@ -141,6 +141,7 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         if mactype.isEnabled():
             menu.addAction(QAction(self.tr('Open MacType Config'), menu,
                                    triggered=lambda: QDesktopServices.openUrl('file:///' + mactype.configPath)))
+        menu.addAction(QAction(self.tr('About Qt'), menu, triggered=qApp.aboutQt))
 
         menu.exec_(event.globalPos())
         menu.deleteLater()

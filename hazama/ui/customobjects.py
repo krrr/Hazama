@@ -1,3 +1,4 @@
+import re
 from PySide.QtCore import *
 from PySide.QtGui import *
 
@@ -244,3 +245,71 @@ class DragScrollMixin:
                              Qt.LeftButton, Qt.NoModifier)
             super().mousePressEvent(ev)
         self.__lastPos = self.__disToStart = None
+
+
+class QSSHighlighter(QSyntaxHighlighter):
+    ID = r'(?P<ID>(\.|#)?[_a-zA-Z][a-zA-Z0-9_-]*)'
+    DIGIT = r'(?P<DIGIT>#[0-9a-fA-F]{3,6}|\d+(\.\d+)?(pt|px|em)?)'
+    COMM_START = r'(?P<COMM_START>/\*)'
+    COMM_END = r'(?P<COMM_END>\*/)'
+    BLOCK_START = r'(?P<BLOCK_START>{)'
+    BLOCK_END = r'(?P<BLOCK_END>})'
+    SKIP = r'(?P<SKIP>\[[^\[]*\]|\s+|.)'  # skip property selector
+
+    REGEXP = '|'.join([ID, DIGIT, COMM_START, COMM_END, BLOCK_START, BLOCK_END, SKIP])
+    # id may conflict with digit
+
+    NORMAL, IN_BLOCK, IN_COMMENT, IN_BLOCK_COMMENT = range(4)
+
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.commentFmt = QTextCharFormat()
+        self.commentFmt.setForeground(Qt.darkGray)
+        self.selectorFmt = QTextCharFormat()
+        self.selectorFmt.setForeground(QColor('#0e3c76'))
+        self.propertyFmt = QTextCharFormat()
+        self.propertyFmt.setForeground(QColor('#4370a7'))
+        self.digitFmt = QTextCharFormat()
+        self.digitFmt.setForeground(QColor('#d02424'))
+        self.defaultFmt = QTextCharFormat()
+        self._regex = re.compile(self.REGEXP)
+
+    def highlightBlock(self, text):
+        p = self.previousBlockState()
+        self.setCurrentBlockState(self.NORMAL if p == -1 else p)
+        comm_start = 0
+        prev_match = None
+
+        scanner = self._regex.scanner(text)
+        for i in iter(scanner.match, None):
+            if self.currentBlockState() == self.NORMAL:
+                if i.lastgroup == 'ID':
+                    self.setFormat(i.start(), i.end()-i.start(), self.selectorFmt)
+                elif i.lastgroup == 'COMM_START':
+                    comm_start = i.start()
+                    self.setCurrentBlockState(self.IN_COMMENT)
+                elif i.lastgroup == 'BLOCK_START':
+                    self.setCurrentBlockState(self.IN_BLOCK)
+            elif self.currentBlockState() in (self.IN_COMMENT, self.IN_BLOCK_COMMENT):
+                if i.lastgroup == 'COMM_END':
+                    self.setFormat(comm_start, i.end()-comm_start, self.commentFmt)
+                    if self.currentBlockState() == self.IN_BLOCK_COMMENT:
+                        self.setCurrentBlockState(self.IN_BLOCK)
+                    else:
+                        self.setCurrentBlockState(self.NORMAL)
+            elif self.currentBlockState() == self.IN_BLOCK:
+                if i.lastgroup == 'BLOCK_END':
+                    self.setCurrentBlockState(self.NORMAL)
+                elif i.lastgroup == 'COMM_START':
+                    comm_start = i.start()
+                    self.setCurrentBlockState(self.IN_BLOCK_COMMENT)
+                elif i.lastgroup in ('ID', 'DIGIT'):
+                    self.setFormat(i.start(), i.end()-i.start(), self.digitFmt)
+
+                if i.group() == ':' and prev_match and prev_match.lastgroup == 'ID':
+                    self.setFormat(prev_match.start(), prev_match.end()-prev_match.start(),
+                                   self.propertyFmt)
+            prev_match = i
+
+        if self.currentBlockState() == self.IN_COMMENT:
+            self.setFormat(comm_start, len(text)-comm_start, self.commentFmt)
