@@ -116,7 +116,7 @@ class DiaryBook:
         return map(self._joined, self._exe(cmd))
 
     def _joined(self, r):
-        tags = ' '.join(self._exe(sql_tag_names, (r[0],)).fetchone() or '')
+        tags = ' '.join(i[0] for i in self._exe(sql_tag_names, (r[0],)))
         formats = tuple(self._exe(sql_diary_formats, (r[0],))) or None
         return r + (tags, formats)
 
@@ -149,7 +149,7 @@ class DiaryBook:
                      (r[0] for r in self._exe('SELECT name FROM Tags')))
 
     def _get_tag_id(self, name):
-        """Get tag-id by name"""
+        """Get tag-id by name, because TagList doesn't store id (lazy)."""
         return self._exe('SELECT id FROM Tags WHERE name=?', (name,)).fetchone()[0]
 
     def change_tag_name(self, old, new):
