@@ -458,14 +458,14 @@ class DiaryList(QListView):
 
     @Slot(str)
     def refreshFilteredTags(self, newTagName):
-        """Refresh items with old tag in current modelProxy after a tag's name
-        changed, and replace old tag name in filter"""
+        """Update items with old tag after a tag's name changed, and update filter (
+        Right click tag item and rename it will always set filter)."""
         model, modelP = self.originModel, self.modelProxy
         needRefresh = [modelP.mapToSource(modelP.index(i, 0))
                        for i in range(modelP.rowCount())]
         for i in needRefresh:
-            diary = db[i.data()]
-            model.setData(i.sibling(i.row(), DiaryModel.TAGS), diary['tags'])
+            diary = db[i.data()]  # lazy
+            model.setData(i.sibling(i.row(), DiaryModel.TAGS), diary[DiaryModel.TAGS])
         self.setFilterByTag(newTagName)
 
     def onEditorClose(self, id_, needSave):
