@@ -20,7 +20,7 @@ __author__ = 'krrr'
 
 # ---- Notes ----
 # 1. Only slots methods which is auto connected need Slot decorator
-
+# 2. StyleSheets using dynamic property require (un)polish to take effect
 
 def main_entry():
     import time

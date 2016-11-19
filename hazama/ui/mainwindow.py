@@ -163,8 +163,8 @@ class MainWindow(QMainWindow, Ui_mainWindow):
             type_ = 'win' if isWin else 'other'
         self.toolBar.setProperty('titleBarBgType', type_)
         if self.isVisible():  # not being called by __init__
-            self.style().unpolish(self)
-            self.style().polish(self)
+            self.toolBar.style().unpolish(self.toolBar)
+            self.toolBar.style().polish(self.toolBar)
             self._applyExtendTitleBarBg()
 
     def _applyExtendTitleBarBg(self):

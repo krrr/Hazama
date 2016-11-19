@@ -184,6 +184,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
         super().reject()
 
     def accept(self):
+        """Save settings here."""
         # these settings may trigger signals
         lang = languagesR[self.langCombo.currentText()]
         langChanged = lang != settings['Main'].get('lang', 'en')
@@ -225,11 +226,12 @@ class ConfigDialog(QDialog, Ui_configDialog):
         if langChanged:
             setTranslationLocale()
         if fontsChanged:
-            (mactype.enable if self.enRenderCheck.isChecked() else mactype.disable)()
             font.load()
         if fontsChanged or themeChanged or schemeChanged or extendChanged or annotatedChanged:
-            self.appearanceChanged.emit()
+            # Load style sheet first because many size calculation rely on it.
+            # But some style sheet used dynamic properties, manual refresh is needed.
             setStyleSheet()
+            self.appearanceChanged.emit()
 
         logging.info('settings saved')
         self._cleanUp()
