@@ -2,7 +2,7 @@ import random
 from collections import OrderedDict
 from PySide.QtGui import *
 from PySide.QtCore import *
-from hazama.ui import font, datetimeTrans, scaleRatio, makeQIcon
+from hazama.ui import font, datetimeTrans, scaleRatio, makeQIcon, refreshStyle
 from hazama.ui.editor import Editor
 from hazama.ui.diarymodel import DiaryModel
 from hazama.ui.customobjects import NTextDocument, MultiSortFilterProxyModel
@@ -163,8 +163,7 @@ class DiaryListDelegateColorful(QItemDelegate):
 
         def refreshStyle(self):
             """Must be called after dynamic property changed"""
-            self.style().unpolish(self)
-            self.style().polish(self)
+            refreshStyle(self)
             # no need to call self.update here
 
         def setTexts(self, dt, text, title, tags, formats):

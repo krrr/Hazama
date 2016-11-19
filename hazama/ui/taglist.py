@@ -1,7 +1,7 @@
 import logging
 from PySide.QtGui import *
 from PySide.QtCore import *
-from hazama.ui import font
+from hazama.ui import font, refreshStyle
 from hazama.ui.customobjects import DragScrollMixin
 from hazama.ui.customwidgets import NElideLabel
 from hazama.config import settings, db
@@ -78,10 +78,6 @@ class TagListDelegateColorful(QItemDelegate):
             self._hLayout.addWidget(self.count)
             self._hLayout.addWidget(self.name)
 
-        def refreshStyle(self):
-            self.style().unpolish(self)
-            self.style().polish(self)
-
         def setFixedWidth(self, w):
             if w != self.width():
                 super().setFixedWidth(w)
@@ -103,7 +99,7 @@ class TagListDelegateColorful(QItemDelegate):
             self._itemW.count.setText(str(countData) if countData else '')
         self._itemW.setProperty('selected', selected)
         self._itemW.setProperty('active', active)
-        self._itemW.refreshStyle()
+        refreshStyle(self._itemW)
         self._itemW.setFixedWidth(option.rect.width())
 
         painter.translate(option.rect.topLeft())

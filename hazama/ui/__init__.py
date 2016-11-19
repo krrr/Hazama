@@ -239,6 +239,11 @@ def markIcon(ico, size, markFName):
     ico.addPixmap(origin)
 
 
+def refreshStyle(widget):
+    widget.style().unpolish(widget)
+    widget.ensurePolished()
+
+
 class Fonts:
     """Manage all fonts used in application"""
     def __init__(self):

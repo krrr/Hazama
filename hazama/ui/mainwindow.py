@@ -2,7 +2,7 @@ import os
 import logging
 from PySide.QtGui import *
 from PySide.QtCore import *
-from hazama.ui import (font, winDwmExtendWindowFrame, scaleRatio,
+from hazama.ui import (font, winDwmExtendWindowFrame, scaleRatio, refreshStyle,
                        makeQIcon, saveWidgetGeo, restoreWidgetGeo, markIcon)
 from hazama.ui.customwidgets import QLineEditWithMenuIcon
 from hazama.ui.configdialog import ConfigDialog, StyleSheetEditor
@@ -20,7 +20,7 @@ class MainWindow(QMainWindow, Ui_mainWindow):
 
         restoreWidgetGeo(self, settings['Main'].get('windowGeo'))
         # setup toolbar bg properties; the second stage is in showEvent
-        self.onExtendTitleBarBgChanged()
+        self.setToolbarProperty()
         self.toolBar.setIconSize(QSize(24, 24) * scaleRatio)
 
         self.diaryList.gotoAct.triggered.connect(self.onGotoActTriggered)
@@ -155,7 +155,7 @@ class MainWindow(QMainWindow, Ui_mainWindow):
             self.ssEditor.resize(QSize(600, 550) * scaleRatio)
             self.ssEditor.show()
 
-    def onExtendTitleBarBgChanged(self):
+    def setToolbarProperty(self):
         ex = settings['Main'].getboolean('extendTitleBarBg')
         self.toolBar.setProperty('extendTitleBar', ex)
         type_ = ''
@@ -163,8 +163,8 @@ class MainWindow(QMainWindow, Ui_mainWindow):
             type_ = 'win' if isWin else 'other'
         self.toolBar.setProperty('titleBarBgType', type_)
         if self.isVisible():  # not being called by __init__
-            self.toolBar.style().unpolish(self.toolBar)
-            self.toolBar.style().polish(self.toolBar)
+            refreshStyle(self.toolBar)
+            refreshStyle(self.countLabel)  # why is this necessary?
             self._applyExtendTitleBarBg()
 
     def _applyExtendTitleBarBg(self):
@@ -221,7 +221,7 @@ class MainWindow(QMainWindow, Ui_mainWindow):
     def onAppearanceChanged(self):
         self.diaryList.setupTheme()
         self.tagList.setupTheme()
-        self.onExtendTitleBarBgChanged()
+        self.setToolbarProperty()
 
     def onGotoActTriggered(self):
         """Scroll the list to the original position (unfiltered) of an entry."""
