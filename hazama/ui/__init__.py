@@ -241,7 +241,7 @@ def markIcon(ico, size, markFName):
 
 def refreshStyle(widget):
     widget.style().unpolish(widget)
-    widget.ensurePolished()
+    widget.style().polish(widget)
 
 
 class Fonts:
