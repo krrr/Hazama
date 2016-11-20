@@ -246,7 +246,14 @@ def refreshStyle(widget):
 
 class Fonts:
     """Manage all fonts used in application"""
+    preferredFonts = {
+        'zh_CN': ('Microsoft YaHei', 'WenQuanYi Micro Hei', 'WenQuanYi Zen Hei', 'Noto Sans CJK SC',
+                  'Source Han Sans CN Normal'),
+        'ja_JP': ('Meiryo', 'Noto Sans CJK JP', '游ゴシック Medium'),
+        'zh_TW': ('Microsoft JhengHei', 'Noto Sans CJK TC')}
+
     def __init__(self):
+        # all fonts have userSet attribute
         self.title = QFont()
         self.datetime = QFont()
         self.text = QFont()
@@ -254,36 +261,48 @@ class Fonts:
         self.default_m = self.title_m = self.datetime_m = self.text_m = None
 
     def load(self):
-        # passing None as 2nd arg to QFontMetrics make difference on high DPI
-        self.title.fromString(settings['Font'].get('title'))
-        self.title_m = QFontMetrics(self.title, None)
-        self.datetime.fromString(settings['Font'].get('datetime'))
-        self.datetime_m = QFontMetrics(self.datetime, None)
-        self.text.fromString(settings['Font'].get('text'))
-        self.text_m = QFontMetrics(self.text, None)
-
-        saved = settings['Font'].get('default')
         self.default = QApplication.instance().font()
-        self.default.fromString(saved or self.getPreferredFont() or self.default.family())
+        saved = settings['Font'].get('default')
+        preferred = None if saved else self.getPreferredFont()
+        self.default.userSet = bool(saved)
+        if saved:
+            self.default.fromString(saved)
+        elif preferred:
+            self.default = preferred
         logging.debug('app font %s' % self.default)
         QApplication.instance().setFont(self.default)
-        self.default_m = QFontMetrics(self.default, None)
 
-    @staticmethod
-    def getPreferredFont():
-        """Return family of preferred font according to language and platform."""
-        if isWin:
-            if scaleRatio > 1:
-                # 1. get sans-serif CJ fonts that looks good on HiDPI
-                # 2. fix system default font
-                return {'zh_CN': 'Microsoft YaHei [UI]', 'ja_JP': 'Meiryo [UI]',
-                        'zh_TW': 'Microsoft JhengHei [UI]'
-                        }.get(locale.name() if locale.language() != sysLocale.language() else
-                              sysLocale.name())
-            if scaleRatio == 1 and settings['Main']['theme'] == '1px-rect':
-                # old theme looks fine with default bitmap fonts only on normal DPI;
-                # text of radio button will be cropped in HiDPI
-                return QApplication.instance().font().family()
+        for i in ('title', 'datetime', 'text'):
+            f = getattr(self, i)
+            f.fromString(settings['Font'].get(i))
+            f.userSet = True
+            if not f.exactMatch():
+                # document says f.family() == '' will use app font, but it not work on Linux
+                # userSet attr is for this
+                f.setFamily(self.default.family())
+                f.userSet = False
+
+        for i in ('title', 'datetime', 'text', 'default'):
+            # passing None as 2nd arg to QFontMetrics make difference on high DPI
+            setattr(self, i+'_m', QFontMetrics(getattr(self, i), None))
+
+    @classmethod
+    def getPreferredFont(cls):
+        """Return preferred font according to language and platform."""
+        # 1. get sans-serif CJ fonts that looks good on HiDPI
+        # 2. fix when app font doesn't match system's, this will cause incorrect lineSpacing (
+        # an attempt to use QFontDatabase to auto get right font was failed)
+        if isWin and scaleRatio == 1 and settings['Main']['theme'] == '1px-rect':
+            # old theme looks fine with default bitmap fonts only on normal DPI (SimSun)
+            return None
+
+        lst = cls.preferredFonts.get(locale.name() if locale.language() != sysLocale.language() else
+                                     sysLocale.name())
+        f = QApplication.instance().font()
+        for i in lst:
+            f.setFamily(i)
+            if f.exactMatch():
+                return f
 
         return None
 

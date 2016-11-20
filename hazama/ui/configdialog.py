@@ -211,7 +211,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
 
         oldFonts = tuple(sorted(settings['Font'].items()))
         for i in self.buttons:
-            settings['Font'][i.configName] = i.font().toString() if i.font().family() else ''
+            settings['Font'][i.configName] = i.font().toString() if i.userSet else ''
         if not self.defFontGBox.isChecked() and 'default' in settings['Font']:
             del settings['Font']['default']
         fontsChanged = oldFonts != tuple(sorted(settings['Font'].items()))
@@ -225,6 +225,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
         # be careful about the order of following operations
         if langChanged:
             setTranslationLocale()
+            fontsChanged = True  # maybe
         if fontsChanged:
             font.load()
         if fontsChanged or themeChanged or schemeChanged or extendChanged or annotatedChanged:
@@ -394,6 +395,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
     def _setFontButton(btn, font_):
         """Set Font Button's text and font"""
         btn.setFont(font_)
+        btn.userSet = getattr(font_, 'userSet', True)  # use True if being called by _handleFontBtn
         family = font_.family() if font_.exactMatch() else QFontInfo(font_).family()
         btn.setText('%s %spt' % (family, font_.pointSize()))
 

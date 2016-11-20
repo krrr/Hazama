@@ -15,7 +15,7 @@ class DiaryListDelegate(QStyledItemDelegate):
     painting method compared to colorful theme."""
     def __init__(self):
         super().__init__()  # don't pass parent because of mem problem
-        # Because some font has much more space at top and bottom, we use ascent instead
+        # Because some fonts have much more space at top and bottom, we use ascent instead
         # of height, and add it with a small number.
         magic = int(4 * scaleRatio)
         self.title_h = max(font.title_m.ascent(), font.datetime_m.ascent()) + magic
@@ -98,7 +98,7 @@ class DiaryListDelegate(QStyledItemDelegate):
             else:
                 painter.resetTransform()
                 return
-            # too many tags
+            # draw ellipsis if too many tags
             painter.setPen(Qt.DotLine)
             painter.drawLine(-4, self.tagPath_h/2, 2, self.tagPath_h/2)
             painter.resetTransform()
