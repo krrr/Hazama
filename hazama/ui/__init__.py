@@ -203,9 +203,10 @@ def restoreWidgetGeo(widget, geoStr):
 
     a, b = geoStr.split(',')
     success = widget.restoreGeometry(QByteArray.fromHex(a))
-    geoRatio = float(b)
-    if success and abs(scaleRatio - geoRatio) > 0.01:
-        widget.resize(widget.size() / geoRatio * scaleRatio)
+    ratio = scaleRatio / float(b)
+    if success and abs(ratio - 1) > 0.01:
+        widget.move(widget.pos() * ratio)
+        widget.resize(widget.size() * ratio)
 
 
 def makeQIcon(*filenames, scaled2x=False):
