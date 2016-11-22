@@ -5,6 +5,7 @@ from PySide.QtCore import *
 from hazama.ui import (font, winDwmExtendWindowFrame, scaleRatio, refreshStyle,
                        makeQIcon, saveWidgetGeo, restoreWidgetGeo, markIcon)
 from hazama.ui.customwidgets import QLineEditWithMenuIcon
+from hazama.ui.diarymodel import DiaryModel
 from hazama.ui.configdialog import ConfigDialog, StyleSheetEditor
 from hazama.ui.mainwindow_ui import Ui_mainWindow
 from hazama.ui.heatmap import HeatMap
@@ -252,8 +253,7 @@ class MainWindow(QMainWindow, Ui_mainWindow):
               '>= %d' % (550 * ratio)]
         descriptions = [i + ' ' + qApp.translate('HeatMap', '(characters)') for i in ds]
 
-        def colorFunc(y, m, d, cellColors):
-            data = colorFunc.cached.get((y, m, d), 0)
+        def colorFunc(data, cellColors):
             if data == 0:
                 return cellColors[0]
             elif data < 200 * ratio:
@@ -264,12 +264,11 @@ class MainWindow(QMainWindow, Ui_mainWindow):
                 return cellColors[3]
 
         # iter through model once and cache result.
-        colorFunc.cached = {}
-        model = self.diaryList.originModel
-        for i in range(model.rowCount()):
-            dt, length = model.index(i, 1).data(), model.index(i, 6).data()
+        cached = {}
+        for diary in self.diaryList.originModel.getAll():
+            dt, length = diary[DiaryModel.DATETIME], diary[DiaryModel.LENGTH]
             year, month, last = dt.split('-')
-            colorFunc.cached[(int(year), int(month), int(last[:2]))] = length
+            cached[(int(year), int(month), int(last[:2]))] = length
 
         try:
             self.heatMap.activateWindow()
@@ -278,6 +277,7 @@ class MainWindow(QMainWindow, Ui_mainWindow):
             self.heatMap.closeSc = QShortcut(QKeySequence(Qt.Key_Escape), self.heatMap,
                                              activated=self.heatMap.close)
             self.heatMap.setColorFunc(colorFunc)
+            self.heatMap.setDataFunc(lambda y, m, d: cached.get((y, m, d), 0))
             self.heatMap.sample.setDescriptions(descriptions)
             self.heatMap.setAttribute(Qt.WA_DeleteOnClose)
             self.heatMap.resize(self.size())

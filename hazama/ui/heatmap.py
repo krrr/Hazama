@@ -75,9 +75,14 @@ class HeatMap(QWidget):
 
     def setColorFunc(self, f):
         """Set function that determine each cell's background color.
-        This function will be called with args: year, month, day, cellColors.
+        The function will be called with args: data, cellColors
         cellColors is something like defCellColors."""
         self.view.cellColorFunc = f
+
+    def setDataFunc(self, f):
+        """Set function that determine each cell's data.
+        The function will be called with args: year, month, day"""
+        self.view.dataFunc = f
 
     def _moveYear(self, offset):
         self.view.year += offset
@@ -106,6 +111,7 @@ class HeatMap(QWidget):
 
 class HeatMapView(QGraphicsView):
     cellColorFunc = lambda *args: Qt.white  # dummy
+    dataFunc = lambda *args: 0  # dummy
     cellLen = 9
     cellSpacing = 2
     monthSpacingX = 14
@@ -146,7 +152,10 @@ class HeatMapView(QGraphicsView):
                 date.setDate(self.year, m+1, d)
                 if date <= QDate.currentDate():
                     item.setPen(QPen(self.cellBorderColor))
-                    item.setBrush(self.cellColorFunc(self.year, m+1, d, cellColors))
+                    data = self.dataFunc(self.year, m+1, d)
+                    if data > 0:
+                        item.setBrush(self.cellColorFunc(data, cellColors))
+                        item.setToolTip('%d  (%s)' % (data, locale.toString(date)))
                 else:
                     p = QPen(Qt.gray)
                     p.setStyle(Qt.DotLine)
