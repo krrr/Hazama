@@ -1,5 +1,6 @@
 import os
 import logging
+import PySide.QtCore
 from PySide.QtGui import *
 from PySide.QtCore import *
 from hazama.ui import (font, winDwmExtendWindowFrame, scaleRatio, refreshStyle,
@@ -108,6 +109,10 @@ class MainWindow(QMainWindow, Ui_mainWindow):
             QTimer.singleShot(1200, task.start)
             task.succeeded.connect(self.setUpdateHint)  # use lambda here will cause segfault!
 
+        # disable winEvent hack if PySide version doesn't support it
+        if not hasattr(PySide.QtCore, 'MSG') or not hasattr(MSG, 'lParam'):
+            del self.winEvent
+
         # delay list loading until main event loop start
         QTimer.singleShot(0, self.diaryList.load)
 
@@ -146,6 +151,21 @@ class MainWindow(QMainWindow, Ui_mainWindow):
 
         menu.exec_(event.globalPos())
         menu.deleteLater()
+
+    def winEvent(self, msg):
+        """Make extended frame draggable (Windows only). This hack is better than
+        receiving MouseMoveEvent and moving the window because it can handle aero snap."""
+        if msg.message == 0x0084:  # WM_NCHITTEST
+            x = msg.lParam & 0xFFFF
+            y = msg.lParam >> 16
+            widget = self.childAt(self.mapFromGlobal(QPoint(x, y)))
+            if widget is self.toolBar or widget is self.countLabel:
+                # qApp.mouseButtons() & Qt.LeftButton doesn't work here; must use win32api
+                return True, 2  # HTCAPTION
+            else:
+                return False, 0
+        else:
+            return False, 0  # let Qt handle the message
 
     def startStyleSheetEditor(self):
         try:
