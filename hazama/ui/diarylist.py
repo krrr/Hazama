@@ -1,9 +1,7 @@
 import random
-from collections import OrderedDict
 from PySide.QtGui import *
 from PySide.QtCore import *
 from hazama.ui import font, datetimeTrans, scaleRatio, makeQIcon, refreshStyle
-from hazama.ui.editor import Editor
 from hazama.ui.diarymodel import DiaryModel
 from hazama.ui.customobjects import NTextDocument, MultiSortFilterProxyModel
 from hazama.ui.customwidgets import NElideLabel, NDocumentLabel
@@ -214,7 +212,6 @@ class DiaryList(QListView):
     """Main List that display preview of diaries"""
     startLoading = Signal()
     countChanged = Signal()
-    tagsChanged = Signal()
 
     class ScrollBar(QScrollBar):
         """Annotated scrollbar."""
@@ -279,21 +276,15 @@ class DiaryList(QListView):
         self.setModel(self.modelProxy)
         self.sort()
 
-        self.editAct = QAction(self.tr('Edit'), self,
-                               triggered=self.startEditor)
+        self.editAct = QAction(self.tr('Edit'), self)
         self.delAct = QAction(makeQIcon(':/menu/list-delete.png', scaled2x=True),
-                              self.tr('Delete'), self,
-                              shortcut=QKeySequence.Delete, triggered=self.deleteDiary)
+                              self.tr('Delete'), self, shortcut=QKeySequence.Delete)
         self.randAct = QAction(makeQIcon(':/menu/random-big.png', scaled2x=True),
                                self.tr('Random'), self,
                                shortcut=QKeySequence(Qt.Key_F7), triggered=self.selectRandomly)
         self.gotoAct = QAction(self.tr('Go to location'), self)
         for i in (self.editAct, self.delAct, self.randAct, self.gotoAct):
             self.addAction(i)
-
-        self.editors = OrderedDict()  # diaryId => Editor, id of new diary is -1
-        self.doubleClicked.connect(self.startEditor)
-        self.activated.connect(self.startEditor)
 
     def contextMenuEvent(self, event):
         menu = QMenu()
@@ -310,7 +301,7 @@ class DiaryList(QListView):
         menu.exec_(event.globalPos())
 
     def selectAll(self):
-        """Prevent original implement to select invisible columns."""
+        """Prevent original implement to select invisible columns from the Table Model."""
         sel = QItemSelection(self.model().index(0, 0),
                              self.model().index(self.model().rowCount()-1, 0))
         self.selectionModel().select(sel, QItemSelectionModel.ClearAndSelect)
@@ -318,41 +309,6 @@ class DiaryList(QListView):
     def selectRandomly(self):
         randRow = random.randrange(0, self.modelProxy.rowCount())
         self.setCurrentIndex(self.modelProxy.index(randRow, 0))
-
-    def startEditor(self):
-        dic = self._getDiaryDict(self.currentIndex())
-        id_ = dic['id']
-        if id_ in self.editors:
-            self.editors[id_].activateWindow()
-        else:
-            e = Editor(dic)
-            self._setEditorStaggerPos(e)
-            self.editors[id_] = e
-            e.closed.connect(self.onEditorClose)
-            pre, next_ = lambda: self._editorMove(-1), lambda: self._editorMove(1)
-            e.preSc.activated.connect(pre)
-            e.quickPreSc.activated.connect(pre)
-            e.nextSc.activated.connect(next_)
-            e.quickNextSc.activated.connect(next_)
-            e.show()
-            return id_
-
-    def startEditorNew(self):
-        if -1 in self.editors:
-            self.editors[-1].activateWindow()
-        else:
-            e = Editor({'id': -1})
-            self._setEditorStaggerPos(e)
-            self.editors[-1] = e
-            e.closed.connect(self.onEditorClose)
-            e.show()
-
-    def _setEditorStaggerPos(self, editor):
-        if self.editors:
-            lastOpenEditor = list(self.editors.values())[-1]
-            pos = lastOpenEditor.pos() + QPoint(16, 16) * scaleRatio
-            # can't check available screen space because of bug in pyside
-            editor.move(pos)
 
     def load(self):
         self.startLoading.emit()
@@ -373,35 +329,15 @@ class DiaryList(QListView):
         self.originModel.clear()
         self.load()
 
-    def deleteDiary(self):
-        indexes = self.selectedIndexes()
-        if not indexes:
-            return
-        msg = QMessageBox(self)
-        okBtn = msg.addButton(qApp.translate('Dialog', 'Delete'), QMessageBox.AcceptRole)
-        msg.setIcon(QMessageBox.Question)
-        msg.addButton(qApp.translate('Dialog', 'Cancel'), QMessageBox.RejectRole)
-        msg.setWindowTitle(self.tr('Delete diaries'))
-        msg.setText(self.tr('Selected diaries will be deleted permanently!'))
-        msg.exec_()
-        msg.deleteLater()
-
-        if msg.clickedButton() == okBtn:
-            for i in indexes: db.delete(i.data())
-            for r in reversed(sorted(i.row() for i in indexes)):
-                self.originModel.removeRow(r)
-            self.countChanged.emit()
-            self.tagsChanged.emit()  # tags might changed
-
     def handleExport(self, path, export_all):
         if export_all:
             selected = None
         else:
-            selected = list(map(self._getDiaryDict, self.selectedIndexes()))
+            selected = list(map(self.getDiaryDict, self.selectedIndexes()))
         db.export_txt(path, selected)
 
-    def _getDiaryDict(self, idx):
-        """Get a diary tuple by its index in proxy model."""
+    def getDiaryDict(self, idx):
+        """Get a diary dict by its index in proxy model. Diary dict is only used by Editor."""
         return self.originModel.getDiaryDictByRow(self.modelProxy.mapToSource(idx).row())
 
     def sort(self):
@@ -420,26 +356,6 @@ class DiaryList(QListView):
             self.scrollbar.update()
         else:
             self.scrollbar.poses = ()
-
-    def _editorMove(self, step):
-        if len(self.editors) > 1: return
-        id_ = list(self.editors.keys())[0]
-        editor = self.editors[id_]
-        if editor.needSave(): return
-        idx = self.modelProxy.match(
-            self.modelProxy.index(0, 0), 0, id_, flags=Qt.MatchExactly)
-        if len(idx) != 1: return
-        row = idx[0].row()  # the row of the caller (Editor) 's diary in proxy model
-
-        if ((step == -1 and row == 0) or
-                (step == 1 and row == self.modelProxy.rowCount() - 1)):
-            return
-        newIdx = self.modelProxy.index(row+step, 0)
-        self.clearSelection()
-        self.setCurrentIndex(newIdx)
-        dic = self._getDiaryDict(newIdx)
-        editor.fromDiaryDict(dic)
-        self.editors[dic['id']] = self.editors.pop(id_)
 
     def _setFilter(self, filterKey, s):
         self.modelProxy.setFilterPattern(filterKey, s)
@@ -466,24 +382,3 @@ class DiaryList(QListView):
             diary = db[i.data()]  # lazy
             model.setData(i.sibling(i.row(), DiaryModel.TAGS), diary[DiaryModel.TAGS])
         self.setFilterByTag(newTagName)
-
-    def onEditorClose(self, id_, needSave):
-        """Write editor's data to model and database, and destroy editor"""
-        editor = self.editors[id_]
-        new = id_ == -1
-        if needSave:
-            qApp.setOverrideCursor(QCursor(Qt.WaitCursor))
-            dic = editor.toDiaryDict()
-            if not new and not editor.tagModified:  # let database skip heavy tag update operation
-                dic['tags'] = None
-            row = self.originModel.saveDiary(dic)
-
-            self.clearSelection()
-            self.setCurrentIndex(self.modelProxy.mapFromSource(
-                self.originModel.index(row, 0)))
-
-            if new: self.countChanged.emit()  # new diary
-            if editor.tagModified: self.tagsChanged.emit()
-            qApp.restoreOverrideCursor()
-        editor.deleteLater()
-        del self.editors[id_]

@@ -1,8 +1,10 @@
 import os
 import logging
 import PySide.QtCore
+from collections import OrderedDict
 from PySide.QtGui import *
 from PySide.QtCore import *
+from hazama.ui.editor import Editor
 from hazama.ui import (font, winDwmExtendWindowFrame, scaleRatio, refreshStyle,
                        makeQIcon, saveWidgetGeo, restoreWidgetGeo, markIcon)
 from hazama.ui.customwidgets import QLineEditWithMenuIcon
@@ -11,7 +13,7 @@ from hazama.ui.configdialog import ConfigDialog, StyleSheetEditor
 from hazama.ui.mainwindow_ui import Ui_mainWindow
 from hazama.ui.heatmap import HeatMap
 from hazama import updater, mactype
-from hazama.config import settings, isWin
+from hazama.config import settings, db, isWin
 
 
 class MainWindow(QMainWindow, Ui_mainWindow):
@@ -19,13 +21,16 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         super().__init__()
         self.setupUi(self)
         self.cfgDialog = self.heatMap = self.ssEditor = None  # create on action triggered
+        self.editors = OrderedDict()  # diaryId => Editor, id of new diary is -1
 
         restoreWidgetGeo(self, settings['Main'].get('windowGeo'))
         # setup toolbar bg properties; the second stage is in showEvent
         self.setToolbarProperty()
         self.toolBar.setIconSize(QSize(24, 24) * scaleRatio)
 
+        self.diaryList.editAct.triggered.connect(self.startEditor)
         self.diaryList.gotoAct.triggered.connect(self.onGotoActTriggered)
+        self.diaryList.delAct.triggered.connect(self.deleteDiary)
         # setup TagList width
         tListW = settings['Main'].getint('tagListWidth')
         tListW = tListW * scaleRatio if tListW else int(self.width() * 0.2)
@@ -239,6 +244,103 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         else:
             self.searchBox.contentChanged.connect(self.diaryList.setFilterByDatetime)
 
+    def deleteDiary(self):
+        indexes = self.diaryList.selectedIndexes()
+        if not indexes:
+            return
+        msg = QMessageBox(self)
+        okBtn = msg.addButton(qApp.translate('Dialog', 'Delete'), QMessageBox.AcceptRole)
+        msg.setIcon(QMessageBox.Question)
+        msg.addButton(qApp.translate('Dialog', 'Cancel'), QMessageBox.RejectRole)
+        msg.setWindowTitle(self.tr('Delete diaries'))
+        msg.setText(self.tr('Selected diaries will be deleted permanently!'))
+        msg.exec_()
+        msg.deleteLater()
+
+        if msg.clickedButton() == okBtn:
+            for i in indexes: db.delete(i.data())
+            for r in reversed(sorted(i.row() for i in indexes)):
+                self.diaryList.originModel.removeRow(r)
+            self.tagList.reload()  # tags might changed
+
+    def startEditor(self, idx=None):
+        dic = self.diaryList.getDiaryDict(idx or self.diaryList.currentIndex())
+        id_ = dic['id']
+        if id_ in self.editors:
+            self.editors[id_].activateWindow()
+        else:
+            e = Editor(dic)
+            self._setEditorStaggerPos(e)
+            self.editors[id_] = e
+            e.closed.connect(self.onEditorClose)
+            pre, next_ = lambda: self._editorMove(-1), lambda: self._editorMove(1)
+            e.preSc.activated.connect(pre)
+            e.quickPreSc.activated.connect(pre)
+            e.nextSc.activated.connect(next_)
+            e.quickNextSc.activated.connect(next_)
+            e.show()
+
+    def startEditorNew(self):
+        if -1 in self.editors:
+            self.editors[-1].activateWindow()
+        else:
+            e = Editor({'id': -1})
+            self._setEditorStaggerPos(e)
+            self.editors[-1] = e
+            e.closed.connect(self.onEditorClose)
+            e.show()
+
+    def _setEditorStaggerPos(self, editor):
+        if self.editors:
+            lastOpenEditor = list(self.editors.values())[-1]
+            pos = lastOpenEditor.pos() + QPoint(16, 16) * scaleRatio
+            # can't check available screen space because of bug in pyside
+            editor.move(pos)
+
+    def _editorMove(self, step):
+        if len(self.editors) > 1: return
+        id_ = list(self.editors.keys())[0]
+        editor = self.editors[id_]
+        if editor.needSave(): return
+
+        model = self.diaryList.modelProxy
+        idx = model.match(model.index(0, 0), 0, id_, flags=Qt.MatchExactly)
+        if len(idx) != 1: return
+        row = idx[0].row()  # the row of the caller (Editor) 's diary in proxy model
+
+        if ((step == -1 and row == 0) or
+           (step == 1 and row == model.rowCount() - 1)):
+            return
+        newIdx = model.index(row+step, 0)
+        self.diaryList.clearSelection()
+        self.diaryList.setCurrentIndex(newIdx)
+        dic = self.diaryList.getDiaryDict(newIdx)
+        editor.fromDiaryDict(dic)
+        self.editors[dic['id']] = self.editors.pop(id_)
+
+    def onEditorClose(self, id_, needSave):
+        """Write editor's data to model and database, and destroy editor"""
+        editor = self.editors[id_]
+        new = id_ == -1
+        if needSave:
+            qApp.setOverrideCursor(QCursor(Qt.WaitCursor))
+            dic = editor.toDiaryDict()
+            if not new and not editor.tagModified:  # let database skip heavy tag update operation
+                dic['tags'] = None
+            row = self.diaryList.originModel.saveDiary(dic)
+
+            self.diaryList.clearSelection()
+            self.diaryList.setCurrentIndex(self.diaryList.modelProxy.mapFromSource(
+                self.diaryList.originModel.index(row, 0)))
+
+            if new:
+                self.updateCountLabel()
+            if editor.tagModified:
+                self.tagList.reload()
+            qApp.restoreOverrideCursor()
+        editor.deleteLater()
+        del self.editors[id_]
+
     def onAppearanceChanged(self):
         self.diaryList.setupTheme()
         self.tagList.setupTheme()
@@ -265,6 +367,7 @@ class MainWindow(QMainWindow, Ui_mainWindow):
 
     @Slot()
     def on_mapAct_triggered(self):
+        # some languages have more info in single character
         # ratios are from http://www.sonasphere.com/blog/?p=1319
         ratio = {QLocale.Chinese: 1, QLocale.English: 4, QLocale.Japanese: 1.5,
                  }.get(QLocale().language(), 1.6)

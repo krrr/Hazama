@@ -206,10 +206,7 @@
    <header>hazama.ui.diarylist</header>
    <slots>
     <signal>countChanged()</signal>
-    <signal>tagsChanged()</signal>
     <signal>startLoading()</signal>
-    <slot>deleteDiary()</slot>
-    <slot>startEditorNew()</slot>
     <slot>setFilterByTag(QString)</slot>
     <slot>reload()</slot>
     <slot>refreshFilteredTags(QString)</slot>
@@ -239,7 +236,7 @@
   <connection>
    <sender>creAct</sender>
    <signal>triggered()</signal>
-   <receiver>diaryList</receiver>
+   <receiver>mainWindow</receiver>
    <slot>startEditorNew()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -247,15 +244,15 @@
      <y>-1</y>
     </hint>
     <hint type="destinationlabel">
-     <x>305</x>
-     <y>182</y>
+     <x>285</x>
+     <y>241</y>
     </hint>
    </hints>
   </connection>
   <connection>
    <sender>delAct</sender>
    <signal>triggered()</signal>
-   <receiver>diaryList</receiver>
+   <receiver>mainWindow</receiver>
    <slot>deleteDiary()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -263,8 +260,8 @@
      <y>-1</y>
     </hint>
     <hint type="destinationlabel">
-     <x>305</x>
-     <y>182</y>
+     <x>285</x>
+     <y>241</y>
     </hint>
    </hints>
   </connection>
@@ -297,22 +294,6 @@
     <hint type="destinationlabel">
      <x>254</x>
      <y>224</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>diaryList</sender>
-   <signal>tagsChanged()</signal>
-   <receiver>tagList</receiver>
-   <slot>reload()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>305</x>
-     <y>241</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>50</x>
-     <y>241</y>
     </hint>
    </hints>
   </connection>
@@ -364,10 +345,29 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>diaryList</sender>
+   <signal>activated(QModelIndex)</signal>
+   <receiver>mainWindow</receiver>
+   <slot>startEditor(QModelIndex)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>342</x>
+     <y>258</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>285</x>
+     <y>241</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>toggleTagList()</slot>
   <slot>updateCountLabel()</slot>
   <slot>updateCountLabelOnLoad()</slot>
+  <slot>startEditorNew()</slot>
+  <slot>startEditor(QModelIndex)</slot>
+  <slot>deleteDiary()</slot>
  </slots>
 </ui>
