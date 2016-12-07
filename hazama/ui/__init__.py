@@ -300,12 +300,13 @@ class Fonts:
 
         lst = cls.preferredFonts.get(locale.name() if locale.language() != sysLocale.language() else
                                      sysLocale.name())
+        if not lst:
+            return None
         f = QApplication.instance().font()
         for i in lst:
             f.setFamily(i)
             if f.exactMatch():
                 return f
-
         return None
 
 
