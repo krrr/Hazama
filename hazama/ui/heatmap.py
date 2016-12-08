@@ -166,7 +166,9 @@ class HeatMapView(QGraphicsView):
             monthGroup.setPos(x, y+nameH)
             # month name
             monthText = self.scene.addSimpleText(locale.toString(date, 'MMM'), font)
-            monthText.setPen(self.palette().color(QPalette.WindowText))
+            color = self.palette().color(QPalette.WindowText)
+            monthText.setPen(color)  # both brush and pen will make text bolder than normal one
+            monthText.setBrush(color)
             nameW = monthText.boundingRect().width()
             monthText.setPos(x+(monthDisX-self.monthSpacingX-nameW)/2, y)
 

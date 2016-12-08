@@ -1,48 +1,46 @@
 /* This file contains base of theme colorful and "green" color scheme, and other
    color scheme QSS should override this. */
 
-QMainWindow QSplitter::handle {background: #979A9B}
-QListView#tagList {
+QMainWindow QSplitter::handle { background: #979A9B }
+TagList {
     padding-top: 3px;
     background: #E7EFF5;
 }
-QListView#diaryList {
+DiaryList {
     padding: 0px;
     background: #FAFAFA;
 }
-QScrollBar#diaryListSB { qproperty-annotateColor: #7092be; }
+QScrollBar#diaryListSB { qproperty-annotateColor: #7092be }
 QLineEdit#tagListEdit {
     border: none;
     margin: 1px;
     margin-right: 3px;
 }
 
-QLineEdit#searchBox {
-    background: #FAFAFA;
-}
+SearchBox { background: #FAFAFA }
 
 /* ToolBar part */
-QMainWindow QToolBar {
+QMainWindow > QToolBar {
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
         stop:0 #EBF2F7,
         stop:1 #E2EAF0);
 }
-QMainWindow QToolBar {border-bottom: 1px solid #979A9B}
+QMainWindow > QToolBar { border-bottom: 1px solid #979A9B }
 QLabel#countLabel {color: #616D78}
 
 /* Editor part */
-QWidget#editor #textEditor {  /* use system selection-color */
+Editor > #textEditor {  /* use system selection-color */
     selection-color: none;
     selection-background-color: none;
 }
-QWidget#editor {
-    background-color: #E3EBC7;
+Editor {
+    background: #E3EBC7;
 }
-QWidget#editor #tagEditor, #titleEditor, #textEditor {
-    background-color: rgba(255, 255, 255, 155);
+Editor > #tagEditor, #titleEditor, #textEditor {
+    background: rgba(255, 255, 255, 155);
 }
-QWidget#editor #tagEditor:focus, #titleEditor:focus, #textEditor:focus {
-    background-color: rgba(255, 255, 255, 200);
+Editor > #tagEditor:focus, #titleEditor:focus, #textEditor:focus {
+    background: rgba(255, 255, 255, 200);
 }
 
 /* DiaryListItem part */
@@ -66,10 +64,10 @@ QFrame#DiaryListItem[selected="true"][active="false"] {
         stop:0 #EBEBEB,
         stop:1 #D9D9D9);
 }
-QFrame#DiaryListItem #DiaryListItemText {
+QFrame#DiaryListItem > #DiaryListItemText {
     margin: 2px 3px 2px 5px;
 }
-QFrame#DiaryListItem QToolButton {  /* icons */
+QFrame#DiaryListItem > QToolButton {  /* icons */
     margin: 0px;
     margin-right: 1px;
     border: none;
@@ -93,7 +91,7 @@ QFrame#TagListItem[selected="true"] {
 }
 
 /* HeatMap part */
-QWidget#heatMap {
+HeatMap {
     background: #FAFAFA;
 }
 
@@ -104,15 +102,12 @@ QFrame#heatMapBar {
         stop:1 #E2EAF0);
 }
 
-QPushButton#heatMapBtn {color: #616D78}
-QPushButton#heatMapBtn:hover {color: #818F9C}
+QPushButton#heatMapBtn { color: #616D78 }
+QPushButton#heatMapBtn:hover { color: #818F9C }
 
-QWidget#heatMap QToolButton {
-    border: 1px solid gray;
-    border-radius: 3px;
-}
-QWidget#heatMap QToolButton:hover {background: rgba(255, 255, 255, 120)}
-QWidget#heatMap QToolButton:pressed {background: rgba(255, 255, 255, 180)}
+HeatMap QToolButton { border: 1px solid gray }
+HeatMap QToolButton:hover { background: rgba(255, 255, 255, 120) }
+HeatMap QToolButton:pressed { background: rgba(255, 255, 255, 180) }
 
 QGraphicsView#heatMapView {
     qproperty-cellBorderColor: #979A9B;

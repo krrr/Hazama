@@ -1,6 +1,4 @@
-QWidget#editor {
-    background-color: #F0F0F0;
-}
+Editor { background: #F0F0F0 }
 
 QFrame#DiaryListItem {
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
