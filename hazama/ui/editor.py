@@ -7,8 +7,10 @@ from hazama.ui import (font, datetimeTrans, currentDatetime, fullDatetimeFmt,
                        saveWidgetGeo, restoreWidgetGeo, datetimeToQt, dbDatetimeFmtQt)
 from hazama.config import settings, db
 
+# TODO: editor in the main window (no tabs)
 
-class Editor(QWidget, Ui_editor):
+
+class Editor(QFrame, Ui_editor):
     """The widget that used to edit diary's body, title, tag and datetime.
     Signal closed: (diaryId, needSave)
     """
