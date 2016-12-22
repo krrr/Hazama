@@ -98,8 +98,9 @@ class DiaryModel(QAbstractTableModel):
                 # save year firsts
                 year = d[1][:4]
                 if year != yearBefore and nextRow+i > 0:
-                    yearFirsts[int(year)] = nextRow+i-1 if reverse else nextRow+i
+                    yearFirsts[int(yearBefore)] = nextRow+i-1 if reverse else nextRow+i
                 yearBefore = year
+                # end saving year firsts
 
                 self._lst.append(d)
                 if i % 15 == 0:
@@ -107,12 +108,14 @@ class DiaryModel(QAbstractTableModel):
             self.endInsertRows()
             rest -= count  # count may become minus
 
-        self._yearFirsts = tuple(yearFirsts.values()) if sortBy == 'datetime' else ()
+        pairs = yearFirsts.items() if sortBy == 'datetime' else ()
+        self._yearFirsts = tuple(sorted(pairs, reverse=reverse))
 
     def getYearFirsts(self):
-        """Get row of the first diary of each year. Data is calculated in loadFromDb."""
+        """Get (year: row) pairs. row is the row of the first diary of each year (excluding
+        the year at last of the diary list). This is calculated in loadFromDb."""
         # access model using QModelIndex is slow, and user rarely changes
-        # sortBy, so only calculate it when loading
+        # sortBy, so calculate it once when loading
         sortBy = settings['Main']['listSortBy']
         reverse = settings['Main'].getboolean('listReverse')
         return self._yearFirsts if (sortBy, reverse) == self._yearFirstsArgs else ()

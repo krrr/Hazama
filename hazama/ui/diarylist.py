@@ -215,14 +215,17 @@ class DiaryList(QListView):
 
     class ScrollBar(QScrollBar):
         """Annotated scrollbar."""
+        wantSetRow = Signal(int)
+
         def __init__(self, parent):
             super().__init__(parent, objectName='diaryListSB')
-            self.poses = ()
+            self._poses = ()
+            self._pairs = ()  # year: row
             self._color = QColor('gold')
 
         def paintEvent(self, event):
             super().paintEvent(event)
-            if not self.poses:
+            if not self._poses:
                 return
             p = QPainter(self)
             # avoid painting on slider handle
@@ -242,7 +245,21 @@ class DiaryList(QListView):
             p.setBrush(c)
             c.setAlpha(145)
             p.setPen(QPen(c, scaleRatio))
-            p.drawRects([QRect(x, y+h*i, w, 3*scaleRatio) for i in self.poses])
+            p.drawRects([QRect(x, y+h*i, w, 3*scaleRatio) for i in self._poses])
+
+        def contextMenuEvent(self, event):
+            """Used to jump to the first day of years. Original menu is almost useless."""
+            menu = QMenu()
+            menu.addAction(QAction(self.tr('Go to the first diary of each year'), menu, enabled=False))
+            for year, row in self._pairs:
+                menu.addAction(QAction(str(year), menu,
+                                       triggered=lambda r=row: self.wantSetRow.emit(r)))
+            menu.exec_(event.globalPos())
+            menu.deleteLater()
+
+        def setPositions(self, rowCount, pairs):
+            self._poses = tuple(p / rowCount for _, p in pairs)
+            self._pairs = pairs
 
         def getAnnotateColor(self):
             return self._color
@@ -260,6 +277,7 @@ class DiaryList(QListView):
         # qApp.wheelScrollLines)
         self.setVerticalScrollMode(self.ScrollPerPixel)
         self.scrollbar = DiaryList.ScrollBar(self)
+        self.scrollbar.wantSetRow.connect(self.setRow)
         self.setVerticalScrollBar(self.scrollbar)
 
         self.setupTheme()
@@ -306,9 +324,11 @@ class DiaryList(QListView):
                              self.model().index(self.model().rowCount()-1, 0))
         self.selectionModel().select(sel, QItemSelectionModel.ClearAndSelect)
 
+    def setRow(self, row):
+        self.setCurrentIndex(self.modelProxy.index(row, 0))
+
     def selectRandomly(self):
-        randRow = random.randrange(0, self.modelProxy.rowCount())
-        self.setCurrentIndex(self.modelProxy.index(randRow, 0))
+        self.setRow(random.randrange(0, self.modelProxy.rowCount()))
 
     def load(self):
         self.startLoading.emit()
@@ -351,8 +371,7 @@ class DiaryList(QListView):
 
     def setAnnotatedScrollbar(self, show=None):
         if show is not False and settings['Main'].getboolean('listAnnotated'):
-            l = self.originModel.rowCount()
-            self.scrollbar.poses = tuple(i / l for i in self.originModel.getYearFirsts())
+            self.scrollbar.setPositions(self.originModel.rowCount(), self.originModel.getYearFirsts())
             self.scrollbar.update()
         else:
             self.scrollbar.poses = ()
