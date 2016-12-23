@@ -6,9 +6,14 @@ QMainWindow > QToolBar {
     spacing: 0px
 }
 QMainWindow > QToolBar[titleBarBgType="win"] {
+    /* Windows 8 always have bright color */
     background: transparent;
-    /* Windows will add thin border to parts except toolbar (if system theme has this) */
+    /* Windows below 10 will add thin border to parts except toolbar (if system theme has this) */
     border: none;
+}
+QMainWindow > QToolBar[titleBarBgType="win10"] {
+    /* Windows 10 may have dark theme color */
+    background: rgba(255, 255, 255, 80);
 }
 QMainWindow > QToolBar[titleBarBgType="other"] {
     background: none;
@@ -16,7 +21,7 @@ QMainWindow > QToolBar[titleBarBgType="other"] {
 
 QLabel#countLabel { color: #909090 }
 
-QMainWindow > QToolBar[extendTitleBar="true"] #countLabel { color: #111111 }
+QMainWindow > QToolBar[extendTitleBar="true"] #countLabel { color: #444 }
 
 QPushButton#searchBoxBtn { border: 0px }
 /**** End ToolBar ****/

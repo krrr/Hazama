@@ -12,12 +12,14 @@ CUSTOM_STYLESHEET_DELIMIT = '/**** BEGIN CUSTOM STYLESHEET ****/'
 
 # for default settings
 isWin = hasattr(sys, 'getwindowsversion')
-_winVer = sys.getwindowsversion() if isWin else None
-isWinVistaOrLater = isWin and _winVer >= (6, 0)
-isWin7OrLater = isWin and _winVer >= (6, 1)
-isWin8OrLater = isWin and _winVer >= (6, 2)
+winVer = sys.getwindowsversion() if isWin else None
+isWinVistaOrLater = isWin and winVer >= (6, 0)
+isWin7 = isWin and winVer[:2] == (6, 1)
+isWin7OrLater = isWin and winVer >= (6, 1)
+isWin8 = isWin and winVer[:2] == (6, 2)
+isWin8OrLater = isWin and winVer >= (6, 2)
 # isWin10OrLater requires manifest file on old Py versions (<= 3.4)
-isWin10OrLater = isWin and _winVer >= (10, 0)
+isWin10 = isWin and winVer >= (10, 0)
 
 settings = ConfigParser()
 # set default values. some values have no defaults, such as windowGeo and tagListWidth

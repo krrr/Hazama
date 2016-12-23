@@ -93,6 +93,7 @@ class NTextDocument(QTextDocument, TextFormatter):
     def setText(self, text, formats=None):
         self.setPlainText(text)
         if formats:
+            # noinspection PyAttributeOutsideInit
             cur = self._cur = QTextCursor(self)
             for start, length, type_ in formats:
                 cur.setPosition(start)
@@ -313,3 +314,16 @@ class QSSHighlighter(QSyntaxHighlighter):
 
         if self.currentBlockState() == self.IN_COMMENT:
             self.setFormat(comm_start, len(text)-comm_start, self.commentFmt)
+
+
+class NGraphicsDropShadowEffect(QGraphicsDropShadowEffect):
+    """Adjust strength of effect simply by drawing multiple times."""
+    def __init__(self, times=1, parent=None):
+        super().__init__(parent)
+        self._times = times
+
+    def draw(self, painter):
+        # super dirty solution, but it will be faster than implementing blurring
+        # algorithm in Python
+        for i in range(self._times):
+            super().draw(painter)

@@ -8,12 +8,13 @@ from hazama.ui.editor import Editor
 from hazama.ui import (font, winDwmExtendWindowFrame, scaleRatio, refreshStyle,
                        makeQIcon, saveWidgetGeo, restoreWidgetGeo, markIcon)
 from hazama.ui.customwidgets import QLineEditWithMenuIcon
+from hazama.ui.customobjects import NGraphicsDropShadowEffect
 from hazama.ui.diarymodel import DiaryModel
 from hazama.ui.configdialog import ConfigDialog, StyleSheetEditor
 from hazama.ui.mainwindow_ui import Ui_mainWindow
 from hazama.ui.heatmap import HeatMap
 from hazama import updater, mactype
-from hazama.config import settings, db, isWin
+from hazama.config import settings, db, isWin, winVer, isWin10, isWin7, isWin8
 
 
 class MainWindow(QMainWindow, Ui_mainWindow):
@@ -68,15 +69,16 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         self.sorAct.setMenu(menu)
         self.toolBar.widgetForAction(self.sorAct).setPopupMode(QToolButton.InstantPopup)
 
-        # Qt Designer doesn't allow us to add widget in toolbar
         # setup count label
-        countLabel = self.countLabel = QLabel(self.toolBar)
-        countLabel.setObjectName('countLabel')
+        # Qt Designer doesn't allow us to add widget in toolbar
         p = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Maximum)
         p.setHorizontalStretch(8)
-        countLabel.setSizePolicy(p)
-        countLabel.setAlignment(Qt.AlignVCenter | Qt.AlignRight)
-        countLabel.setIndent(6)
+        spacer1 = QWidget(self.toolBar)
+        spacer1.setSizePolicy(p)
+        self.toolBar.addWidget(spacer1)
+        countLabel = self.countLabel = QLabel(self.toolBar, objectName='countLabel')
+        countLabel.setSizePolicy(QSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum))
+        countLabel.setMargin(4 * scaleRatio)
         self.toolBar.addWidget(countLabel)
 
         # setup search box
@@ -90,9 +92,9 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         box.byDatetimeAct.triggered.connect(self._setSearchBy)
         self._setSearchBy()
         self.toolBar.addWidget(box)
-        spacerWidget = QWidget(self.toolBar)
-        spacerWidget.setFixedSize(2.5 * scaleRatio, 1)
-        self.toolBar.addWidget(spacerWidget)
+        spacer2 = QWidget(self.toolBar)
+        spacer2.setFixedSize(2.5 * scaleRatio, 1)
+        self.toolBar.addWidget(spacer2)
         if settings['Main'].getboolean('tagListVisible'):
             self.tListAct.trigger()
         else:
@@ -116,7 +118,7 @@ class MainWindow(QMainWindow, Ui_mainWindow):
 
         # disable winEvent hack if PySide version doesn't support it
         if not hasattr(PySide.QtCore, 'MSG') or not hasattr(MSG, 'lParam'):
-            del self.winEvent
+            del MainWindow.winEvent
 
         # delay list loading until main event loop start
         QTimer.singleShot(0, self.diaryList.load)
@@ -186,7 +188,12 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         self.toolBar.setProperty('extendTitleBar', ex)
         type_ = ''
         if ex:
-            type_ = 'win' if isWin else 'other'
+            if isWin10:
+                type_ = 'win10'  # system theme has no border
+            elif isWin:
+                type_ = 'win'
+            else:
+                type_ = 'other'
         self.toolBar.setProperty('titleBarBgType', type_)
         if self.isVisible():  # not being called by __init__
             refreshStyle(self.toolBar)
@@ -194,9 +201,19 @@ class MainWindow(QMainWindow, Ui_mainWindow):
             self._applyExtendTitleBarBg()
 
     def _applyExtendTitleBarBg(self):
-        if isWin and settings['Main'].getboolean('extendTitleBarBg'):
-            winDwmExtendWindowFrame(self.winId(), self.toolBar.height())
-            self.setAttribute(Qt.WA_TranslucentBackground)
+        if settings['Main'].getboolean('extendTitleBarBg'):
+            if isWin:
+                winDwmExtendWindowFrame(self.winId(), self.toolBar.height())
+                self.setAttribute(Qt.WA_TranslucentBackground)
+
+            if not isWin or not isWin8:
+                eff = NGraphicsDropShadowEffect(5 if isWin7 else 3, self.countLabel)
+                eff.setColor(QColor(Qt.white))
+                eff.setOffset(0, 0)
+                eff.setBlurRadius((16 if isWin7 else 8) * scaleRatio)
+                self.countLabel.setGraphicsEffect(eff)
+        else:
+            self.countLabel.setGraphicsEffect(None)
 
     def onSortOrderChanged(self, checked):
         name = self.sender().name
