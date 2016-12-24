@@ -364,7 +364,7 @@
           <item>
            <widget class="QLabel" name="bkLabel">
             <property name="text">
-             <string>Backup every day and keep each one for a week.
+             <string>Backup diaries everyday and keep them for a week.
 </string>
             </property>
             <property name="alignment">
