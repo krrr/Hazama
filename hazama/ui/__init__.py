@@ -310,6 +310,13 @@ class Fonts:
         return None
 
 
+def NProperty(type_, var):
+    """Replace Property of PySide so that boilerplate getter/setter code is not needed."""
+    return Property(type_,
+                    lambda self: getattr(self, var),
+                    lambda self, to: setattr(self, var, to))
+
+
 def init():
     logging.debug('PySide ver: %s  (lib path: %s)', PySide.__version__,
                   QLibraryInfo.location(QLibraryInfo.LibrariesPath))

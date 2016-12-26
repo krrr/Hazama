@@ -1,7 +1,8 @@
 import random
 from PySide.QtGui import *
 from PySide.QtCore import *
-from hazama.ui import font, datetimeTrans, scaleRatio, makeQIcon, refreshStyle
+from hazama.ui import (font, datetimeTrans, scaleRatio, makeQIcon, refreshStyle,
+                       NProperty)
 from hazama.ui.diarymodel import DiaryModel
 from hazama.ui.customobjects import NTextDocument, MultiSortFilterProxyModel
 from hazama.ui.customwidgets import NElideLabel, NDocumentLabel
@@ -240,7 +241,7 @@ class DiaryList(QListView):
             x, y, w, h = groove.getRect()
             x += 1
             w -= 2
-            c = self.getAnnotateColor()
+            c = self._color
             c.setAlpha(70)
             p.setBrush(c)
             c.setAlpha(145)
@@ -261,13 +262,7 @@ class DiaryList(QListView):
             self._poses = tuple(p / rowCount for _, p in pairs)
             self._pairs = pairs
 
-        def getAnnotateColor(self):
-            return self._color
-
-        def setAnnotateColor(self, color):
-            self._color = color
-
-        annotateColor = Property(QColor, getAnnotateColor, setAnnotateColor)
+        annotateColor = NProperty(QColor, '_color')
 
     def __init__(self, parent=None):
         super().__init__(parent)

@@ -1,7 +1,7 @@
 from PySide.QtGui import *
 from PySide.QtCore import *
 from itertools import chain
-from hazama.ui import scaleRatio, makeQIcon
+from hazama.ui import scaleRatio, makeQIcon, NProperty
 
 # the default colors that represent heat of data, from cold to hot
 defCellColors = (QColor(255, 255, 255), QColor(255, 243, 208),
@@ -120,8 +120,8 @@ class HeatMapView(QGraphicsView):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.yearVal = QDate.currentDate().year()
-        self.cellBorderColorVal = Qt.lightGray
+        self._year = QDate.currentDate().year()
+        self._cellBorderColor = Qt.lightGray
         for idx, c in enumerate(defCellColors):
             setattr(self, '_cellColor%d' % idx, c)
 
@@ -175,42 +175,17 @@ class HeatMapView(QGraphicsView):
     def resizeEvent(self, event):
         self.fitInView(self.scene.sceneRect(), Qt.KeepAspectRatio)
 
-    def setCellBorderColor(self, color):
-        self.cellBorderColorVal = color
-
-    def getCellBorderColor(self):
-        return self.cellBorderColorVal
-
-    def getYear(self):
-        return self.yearVal
-
     def setYear(self, year):
-        self.yearVal = year
+        self._year = year
         self.scene.clear()
         self.setupMap()
 
-    def getCellColor0(self): return self._cellColor0
-
-    def setCellColor0(self, c): self._cellColor0 = c
-
-    def getCellColor1(self): return self._cellColor1
-
-    def setCellColor1(self, c): self._cellColor1 = c
-
-    def getCellColor2(self): return self._cellColor2
-
-    def setCellColor2(self, c): self._cellColor2 = c
-
-    def getCellColor3(self): return self._cellColor3
-
-    def setCellColor3(self, c): self._cellColor3 = c
-
-    year = property(getYear, setYear)
-    cellBorderColor = Property(QColor, getCellBorderColor, setCellBorderColor)
-    cellColor0 = Property(QColor, getCellColor0, setCellColor0)
-    cellColor1 = Property(QColor, getCellColor1, setCellColor1)
-    cellColor2 = Property(QColor, getCellColor2, setCellColor2)
-    cellColor3 = Property(QColor, getCellColor3, setCellColor3)
+    year = property(lambda self: self._year, setYear)
+    cellBorderColor = NProperty(QColor, '_cellBorderColor')
+    cellColor0 = NProperty(QColor, '_cellColor0')
+    cellColor1 = NProperty(QColor, '_cellColor1')
+    cellColor2 = NProperty(QColor, '_cellColor2')
+    cellColor3 = NProperty(QColor, '_cellColor3')
 
 
 class ColorSampleView(QGraphicsView):
