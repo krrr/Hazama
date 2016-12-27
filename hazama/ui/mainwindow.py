@@ -32,11 +32,12 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         self.diaryList.editAct.triggered.connect(self.startEditor)
         self.diaryList.gotoAct.triggered.connect(self.onGotoActTriggered)
         self.diaryList.delAct.triggered.connect(self.deleteDiary)
-        # setup TagList width
-        tListW = settings['Main'].getint('tagListWidth')
-        tListW = tListW * scaleRatio if tListW else int(self.width() * 0.2)
-        if not self.isMaximized():
-            self.splitter.setSizes([tListW, self.width()-tListW])
+
+        # setup TagList
+        self._tagListAni = QPropertyAnimation(self, 'tagListWidth')
+        self._tagListAni.setEasingCurve(QEasingCurve(QEasingCurve.OutCubic))
+        self._tagListAni.setDuration(150)
+        self._tagListAni.finished.connect(self.onTagListAniFinished)
 
         # setup sort menu
         menu = QMenu(self)
@@ -96,9 +97,14 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         spacer2.setFixedSize(2.5 * scaleRatio, 1)
         self.toolBar.addWidget(spacer2)
         if settings['Main'].getboolean('tagListVisible'):
-            self.tListAct.trigger()
+            self.tListAct.setChecked(True)  # will not trigger signal
+            if self.isMaximized():
+                # Qt will maximize the window after showing... why?
+                QTimer.singleShot(0, lambda: self.toggleTagList(True, animated=False))
+            else:
+                self.toggleTagList(True, animated=False)
         else:
-            self.tagList.hide()
+            self.tagList.hide()  # don't use toggleTagList, it will save width
         # setup shortcuts
         searchSc = QShortcut(QKeySequence.Find, self)
         searchSc.activated.connect(self.searchBox.setFocus)
@@ -133,8 +139,7 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         tListVisible = self.tagList.isVisible()
         settings['Main']['tagListVisible'] = str(tListVisible)
         if tListVisible:
-            settings['Main']['tagListWidth'] = str(int(self.splitter.sizes()[0] / scaleRatio))
-        event.accept()
+            settings['Main']['tagListWidth'] = str(int(self._tagListWidth() / scaleRatio))
 
     def changeEvent(self, event):
         if event.type() != QEvent.LanguageChange:
@@ -173,6 +178,18 @@ class MainWindow(QMainWindow, Ui_mainWindow):
                 return False, 0
         else:
             return False, 0  # let Qt handle the message
+
+    def _tagListWidth(self):
+        return self.splitter.sizes()[0]
+
+    def _setTagListWidth(self, w):
+        sizes = self.splitter.sizes()
+        if sizes[1] == 0:
+            self.splitter.setSizes([w, self.width()-w])
+        else:
+            sizes[1] = sizes[0] + sizes[1] - w
+            sizes[0] = w
+            self.splitter.setSizes(sizes)
 
     def startStyleSheetEditor(self):
         try:
@@ -223,13 +240,35 @@ class MainWindow(QMainWindow, Ui_mainWindow):
             settings['Main']['listSortBy'] = name
         self.diaryList.sort()
 
-    def toggleTagList(self, checked):
-        self.tagList.setVisible(checked)
-        if checked:
+    def toggleTagList(self, show, animated=True):
+        if show:
             self.tagList.load()
+            self.tagList.show()
+            # minus 1 to make animation direction check correct
+            tListW = settings['Main'].getint('tagListWidth')
+            tListW = tListW * scaleRatio if tListW else int(self.width() * 0.2)
+            if animated:
+                self._tagListAni.hiding = False
+                self._tagListAni.stop()
+                self._tagListAni.setStartValue(max(self._tagListWidth(),
+                                                   self.tagList.minimumSize().width()))
+                self._tagListAni.setEndValue(tListW)
+                self._tagListAni.start()
+            else:
+                self._setTagListWidth(tListW)
         else:
-            self.tagList.clear()
-            settings['Main']['tagListWidth'] = str(int(self.splitter.sizes()[0] / scaleRatio))
+            if self._tagListAni.state() == QAbstractAnimation.Running:
+                self.tagList.clear()
+            else:
+                settings['Main']['tagListWidth'] = str(int(self._tagListWidth() / scaleRatio))
+            if animated:
+                self._tagListAni.hiding = True
+                self._tagListAni.stop()
+                self._tagListAni.setStartValue(self._tagListWidth())
+                self._tagListAni.setEndValue(self.tagList.minimumSize().width())
+                self._tagListAni.start()
+            else:
+                self.tagList.hide()
 
     def updateCountLabel(self):
         """Update label that display count of diaries in Main List.
@@ -371,6 +410,11 @@ class MainWindow(QMainWindow, Ui_mainWindow):
             self.tagList.setCurrentRow(0)
         self.diaryList.scrollTo(self.diaryList.currentIndex(), QListView.PositionAtCenter)
 
+    def onTagListAniFinished(self):
+        if self._tagListAni.hiding:
+            self.tagList.hide()
+            self.tagList.clear()
+
     @Slot()
     def on_cfgAct_triggered(self):
         """Start config dialog"""
@@ -425,6 +469,8 @@ class MainWindow(QMainWindow, Ui_mainWindow):
             self.heatMap.setWindowTitle(self.tr('Heat Map'))
             self.heatMap.move(self.pos() + QPoint(12, 12)*scaleRatio)
             self.heatMap.show()
+
+    tagListWidth = Property(int, _tagListWidth, _setTagListWidth)
 
 
 class SearchBox(QLineEditWithMenuIcon):
