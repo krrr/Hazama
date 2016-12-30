@@ -579,7 +579,7 @@
          <item>
           <widget class="QSpinBox" name="preLinesBox">
            <property name="minimum">
-            <number>0</number>
+            <number>1</number>
            </property>
            <property name="maximum">
             <number>19</number>

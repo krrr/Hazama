@@ -64,6 +64,13 @@ aboutError = '''
 '''
 
 
+def _set_check_changed(section, key, value, default=None):
+    old = settings[section].get(key, None)
+    new = str(value)
+    settings[section][key] = new
+    return old == new
+
+
 class ConfigDialog(QDialog, Ui_configDialog):
     diaryChanged = Signal()
     appearanceChanged = Signal()
@@ -186,19 +193,14 @@ class ConfigDialog(QDialog, Ui_configDialog):
     def accept(self):
         """Save settings here."""
         # these settings may trigger signals
-        lang = languagesR[self.langCombo.currentText()]
-        langChanged = lang != settings['Main'].get('lang', 'en')
-        theme = self.themeCombo.currentText()
-        themeChanged = theme != settings['Main']['theme']
-        extend = self.extendBgCheck.isChecked()
-        extendChanged = extend != settings['Main'].getboolean('extendTitleBarBg')
-        annotated = self.annotateCheck.isChecked()
-        annotatedChanged = annotated != settings['Main'].getboolean('listAnnotated')
+        lookChanged = False
+        langChanged = _set_check_changed('Main', 'lang', languagesR[self.langCombo.currentText()],
+                                         default='en')
+        lookChanged |= _set_check_changed('Main', 'theme', self.themeCombo.currentText())
+        lookChanged |= _set_check_changed('Main', 'extendTitleBarBg', self.extendBgCheck.isChecked())
+        lookChanged |= _set_check_changed('Main', 'listAnnotated', self.annotateCheck.isChecked())
+        lookChanged |= _set_check_changed('Main', 'previewLines', self.preLinesBox.value())
 
-        settings['Main']['lang'] = lang
-        settings['Main']['theme'] = theme
-        settings['Main']['extendTitleBarBg'] = str(extend)
-        settings['Main']['listAnnotated'] = str(annotated)
         settings['Update']['autoCheck'] = str(self.updateCheck.isChecked())
         settings['Editor']['autoIndent'] = str(self.aindCheck.isChecked())
         settings['Editor']['tabIndent'] = str(self.tabIndentCheck.isChecked())
@@ -206,7 +208,6 @@ class ConfigDialog(QDialog, Ui_configDialog):
         settings['Main']['tagListCount'] = str(self.tListCountCheck.isChecked())
         settings['Editor']['titleFocus'] = str(self.focusTitleRadio.isChecked())
         settings['Main']['backup'] = str(self.bkCheck.isChecked())
-        settings['Main']['previewLines'] = str(self.preLinesBox.value())
         settings['Font']['enhanceRender'] = str(self.enRenderCheck.isChecked())
 
         oldFonts = tuple(sorted(settings['Font'].items()))
@@ -218,7 +219,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
 
         schemeChanged = False
         scheme = self.schemeCombo.currentText()
-        if theme == 'colorful':
+        if self.themeCombo.currentText() == 'colorful':
             schemeChanged = scheme != settings['ThemeColorful']['colorScheme']
             settings['ThemeColorful']['colorScheme'] = scheme
 
@@ -228,7 +229,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
             fontsChanged = True  # maybe
         if fontsChanged:
             font.load()
-        if fontsChanged or themeChanged or schemeChanged or extendChanged or annotatedChanged:
+        if fontsChanged or schemeChanged or lookChanged:
             # Load style sheet first because many size calculation rely on it.
             # But some style sheet used dynamic properties, manual refresh is needed.
             setStyleSheet()
