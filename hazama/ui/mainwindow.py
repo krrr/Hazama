@@ -242,14 +242,16 @@ class MainWindow(QMainWindow, Ui_mainWindow):
 
     def toggleTagList(self, show, animated=True):
         if show:
-            self.tagList.load()
-            self.tagList.show()
+            if self._tagListAni.state() == QAbstractAnimation.Running:
+                self._tagListAni.stop()
+            else:
+                self.tagList.load()
+                self.tagList.show()
             # minus 1 to make animation direction check correct
             tListW = settings['Main'].getint('tagListWidth')
             tListW = tListW * scaleRatio if tListW else int(self.width() * 0.2)
             if animated:
                 self._tagListAni.hiding = False
-                self._tagListAni.stop()
                 self._tagListAni.setStartValue(max(self._tagListWidth(),
                                                    self.tagList.minimumSize().width()))
                 self._tagListAni.setEndValue(tListW)
@@ -258,12 +260,11 @@ class MainWindow(QMainWindow, Ui_mainWindow):
                 self._setTagListWidth(tListW)
         else:
             if self._tagListAni.state() == QAbstractAnimation.Running:
-                self.tagList.clear()
+                self._tagListAni.stop()
             else:
                 settings['Main']['tagListWidth'] = str(int(self._tagListWidth() / scaleRatio))
             if animated:
                 self._tagListAni.hiding = True
-                self._tagListAni.stop()
                 self._tagListAni.setStartValue(self._tagListWidth())
                 self._tagListAni.setEndValue(self.tagList.minimumSize().width())
                 self._tagListAni.start()
