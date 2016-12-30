@@ -13,48 +13,99 @@ class QLineEditWithMenuIcon(QLineEdit):
         menu.deleteLater()
 
 
-class NDocumentLabel(QFrame):
-    """Simple widget to draw QTextDocument. sizeHint will always related
+class MultiLineElideLabel(QFrame):
+    ElideMark = '\u2026'
+    """Similar to QML text.maximumLineCount. sizeHint will always be related
     to fixed number of lines set. If font fallback happen, it may look bad."""
 
-    def __init__(self, parent=None, lines=None, **kwargs):
-        super().__init__(parent, **kwargs)
-        self._lines = self._heightHint = None
-        self.doc = NTextDocument(self)
-        self.doc.setDocumentMargin(0)
-        self.doc.setUndoRedoEnabled(False)
-        self.setLines(lines or 4)
-        self.doc.documentLayout().setPaintDevice(self)  # make difference on high DPI
-
-    def paintEvent(self, event):
-        painter = QPainter(self)
-        rect = self.contentsRect()
-        painter.translate(rect.topLeft())
-        rect.moveTo(0, 0)  # become clip rect
-        self.doc.drawContentsPalette(painter, rect, self.palette())
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._maximumLineCount = 4
+        self._layout = QTextLayout()
+        self._layout.setCacheEnabled(True)
+        self._text = None
+        self._elideMarkWidth = None
+        self._elideMarkPos = None
+        self._heightHint = None
+        self._lineHeight = None
+        self._realHeight = None
+        self._updateSize()
 
     def resizeEvent(self, event):
-        self.doc.setTextWidth(self.contentsRect().width())
+        self._setupTextLayout()
         super().resizeEvent(event)
+
+    def setFont(self, f):
+        super().setFont(f)
+        self._updateSize()
 
     def sizeHint(self):
         __, top, __, bottom = self.getContentsMargins()
         return QSize(-1, self._heightHint + top + bottom)
 
-    def setFont(self, f):
-        self.doc.setDefaultFont(f)
-        super().setFont(f)
-        self.setLines(self._lines)  # refresh size hint
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.translate(self.contentsRect().topLeft())
 
-    def setText(self, text, formats):
-        self.doc.setText(text, formats)
-        # delete exceed lines here using QTextCursor will slow down
+        self._layout.draw(painter, QPoint())
 
-    def setLines(self, lines):
-        self._lines = lines
-        self.doc.setText('\n' * (lines - 1), None)
-        self._heightHint = int(self.doc.size().height())
-        self.updateGeometry()
+        if self._elideMarkPos is not None:
+            painter.drawText(self._elideMarkPos, self.ElideMark)
+
+    def _updateSize(self):
+        self._lineHeight = self.fontMetrics().height()
+        self._heightHint = self._lineHeight * self._maximumLineCount
+        self._elideMarkWidth = self.fontMetrics().width(self.ElideMark)
+
+    def setText(self, text):
+        self._text = text.replace('\n', '\u2028')
+        self._setupTextLayout()
+
+    def _setupTextLayout(self):
+        layout = self._layout
+        layout.clearLayout()
+        layout.setFont(self.font())
+
+        opt = layout.textOption()
+        opt.setWrapMode(QTextOption.WrapAnywhere)
+        layout.setTextOption(opt)
+
+        lineWidthLimit = self.contentsRect().width()
+        layout.setText(self._text)
+
+        height = 0
+        visibleTextLen = 0
+        linesLeft = self._maximumLineCount
+        self._elideMarkPos = None
+
+        layout.beginLayout()
+        while True:
+            line = layout.createLine()
+            if not line.isValid():
+                break  # call methods of invalid one will segfault
+
+            line.setLineWidth(lineWidthLimit)
+            visibleTextLen += line.textLength()
+            line.setPosition(QPointF(0, height))
+            height += line.height()
+
+            linesLeft -= 1
+            if linesLeft == 0:
+                if visibleTextLen < len(self._text):
+                    # ignore right to left text
+                    line.setLineWidth(lineWidthLimit - self._elideMarkWidth)
+                    self._elideMarkPos = QPoint(line.naturalTextWidth(),
+                                                height-line.height()+self.fontMetrics().ascent())
+
+                break
+        layout.endLayout()
+        self._realHeight = height
+
+    def setMaximumLineCount(self, lines):
+        self._maximumLineCount = lines
+        self._updateSize()
+        if self._text:
+            self._setupTextLayout()
 
 
 class NTextEdit(QTextEdit, TextFormatter):

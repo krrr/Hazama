@@ -5,7 +5,7 @@ from hazama.ui import (font, datetimeTrans, scaleRatio, makeQIcon, refreshStyle,
                        NProperty)
 from hazama.ui.diarymodel import DiaryModel
 from hazama.ui.customobjects import NTextDocument, MultiSortFilterProxyModel
-from hazama.ui.customwidgets import NElideLabel, NDocumentLabel
+from hazama.ui.customwidgets import NElideLabel, MultiLineElideLabel
 from hazama.config import settings, db
 
 
@@ -127,8 +127,8 @@ class DiaryListDelegateColorful(QItemDelegate):
             self.datetime.setFont(font.datetime)
             self.datetime.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Preferred)
 
-            self.text = NDocumentLabel(self, objectName='DiaryListItemText')
-            self.text.setLines(settings['Main'].getint('previewLines'))
+            self.text = MultiLineElideLabel(self, objectName='DiaryListItemText')
+            self.text.setMaximumLineCount(settings['Main'].getint('previewLines'))
             self.text.setFont(font.text)
 
             self.tag = NElideLabel(self, objectName='DiaryListItemTag')
@@ -165,7 +165,7 @@ class DiaryListDelegateColorful(QItemDelegate):
             refreshStyle(self)
             # no need to call self.update here
 
-        def setTexts(self, dt, text, title, tags, formats):
+        def setTexts(self, dt, text, title, tags):
             # Some layout behaviours are full of mystery, even changing order of
             # calls will break the UI
             self.datetime.setText(datetimeTrans(dt))
@@ -174,7 +174,7 @@ class DiaryListDelegateColorful(QItemDelegate):
             # width of title area depends on itemW's width
             self.title.setText(
                 font.title_m.elidedText(title, Qt.ElideRight, self.title.width()))
-            self.text.setText(text, formats)
+            self.text.setText(text)
             if tags:
                 tags = ' \u2022 '.join(tags.split())  # use bullet to separate
                 self.tag.setText(tags)
@@ -194,7 +194,7 @@ class DiaryListDelegateColorful(QItemDelegate):
         row = index.row()
 
         self._itemW.resize(option.rect.size())
-        self._itemW.setTexts(*(index.sibling(row, i).data() for i in range(1, 6)))
+        self._itemW.setTexts(*(index.sibling(row, i).data() for i in range(1, 5)))
         self._itemW.setProperty('selected', bool(option.state & QStyle.State_Selected))
         self._itemW.setProperty('active', bool(option.state & QStyle.State_Active))
         self._itemW.refreshStyle()
