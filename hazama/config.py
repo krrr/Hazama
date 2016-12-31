@@ -25,6 +25,7 @@ settings = ConfigParser()
 # set default values. some values have no defaults, such as windowGeo and tagListWidth
 settings.update({
     'Main': {'debug': False,
+             'lang': 'en',
              'backup': True,
              'dbPath': 'nikkichou.db',
              'tagListCount': True,

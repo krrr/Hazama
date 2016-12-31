@@ -51,13 +51,12 @@ def readRcTextFile(path):
 
 def setTranslationLocale():
     global locale, sysLocale, _trans, _transQt
-    lang = settings['Main'].get('lang')
+    lang = settings['Main']['lang']
     sysLocale = QLocale.system()
-    if not lang:
-        lang = settings['Main']['lang'] = locale.name()
-    if lang == sysLocale.name():
+    if lang == 'en' or sysLocale.name() == lang:  # use system's locale
+        # lang=='en' because user is likely to use English if his lang is not supported
         locale = sysLocale
-    else:  # special case: application language is different from system's
+    else:  # override system's locale
         locale = QLocale(lang)
         QLocale.setDefault(locale)
     langPath = os.path.join(appPath, 'lang')
@@ -250,7 +249,7 @@ class Fonts:
     """Manage all fonts used in application"""
     preferredFonts = {
         'zh_CN': ('Microsoft YaHei', 'WenQuanYi Micro Hei', 'WenQuanYi Zen Hei', 'Noto Sans CJK SC',
-                  'Source Han Sans CN Normal'),
+                  'Source Han Sans CN Normal', '微软雅黑'),
         'ja_JP': ('Meiryo', 'Noto Sans CJK JP', '游ゴシック Medium'),
         'zh_TW': ('Microsoft JhengHei', 'Noto Sans CJK TC')}
 

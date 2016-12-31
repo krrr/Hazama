@@ -68,7 +68,7 @@ def _set_check_changed(section, key, value, default=None):
     old = settings[section].get(key, None)
     new = str(value)
     settings[section][key] = new
-    return old == new
+    return old != new
 
 
 class ConfigDialog(QDialog, Ui_configDialog):
@@ -123,7 +123,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
         # language ComboBox
         for l in sorted(languagesR):
             self.langCombo.addItem(l)
-        lang = settings['Main'].get('lang', 'en')
+        lang = settings['Main']['lang']
         langIndex = self.langCombo.findText(languages.get(lang, 'English'))
         self.langCombo.setCurrentIndex(langIndex)
 
@@ -193,9 +193,8 @@ class ConfigDialog(QDialog, Ui_configDialog):
     def accept(self):
         """Save settings here."""
         # these settings may trigger signals
+        langChanged = _set_check_changed('Main', 'lang', languagesR[self.langCombo.currentText()])
         lookChanged = False
-        langChanged = _set_check_changed('Main', 'lang', languagesR[self.langCombo.currentText()],
-                                         default='en')
         lookChanged |= _set_check_changed('Main', 'theme', self.themeCombo.currentText())
         lookChanged |= _set_check_changed('Main', 'extendTitleBarBg', self.extendBgCheck.isChecked())
         lookChanged |= _set_check_changed('Main', 'listAnnotated', self.annotateCheck.isChecked())
