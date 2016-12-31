@@ -58,9 +58,9 @@ class BuildQt(Command):
 
     @staticmethod
     def compile_ts():
-        lang_dir = pjoin('hazama', 'lang')
+        lang_dir = pjoin('build', 'lang')
         if not os.path.isdir(lang_dir):
-            os.mkdir(lang_dir)
+            os.makedirs(lang_dir)
 
         lres = find_executable('lrelease-qt4') or find_executable('lrelease')
         if not lres:

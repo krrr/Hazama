@@ -43,10 +43,21 @@ def readRcTextFile(path):
     assert path.startswith(':/')
     f = QFile(path)
     if not f.open(QFile.ReadOnly | QFile.Text):
-        raise FileNotFoundError('failed to read rc text %s' % path)
+        raise FileNotFoundError
     text = str(f.readAll())
     f.close()
     return text
+
+
+def readRcFile(path):
+    """Read whole binary file from qt resources system."""
+    assert path.startswith(':/')
+    f = QFile(path)
+    if not f.open(QFile.ReadOnly):
+        raise FileNotFoundError
+    ret = f.readAll().data()
+    f.close()
+    return ret
 
 
 def setTranslationLocale():
@@ -62,14 +73,18 @@ def setTranslationLocale():
     langPath = os.path.join(appPath, 'lang')
     logging.info('set translation ' + lang)
 
-    _trans = QTranslator()
-    _trans.load(lang, langPath)
-    _transQt = QTranslator()
-    if hasattr(sys, 'frozen'):
-        _transQt.load('qt_' + lang, langPath)
-    else:
-        _transQt.load('qt_' + lang, QLibraryInfo.location(QLibraryInfo.TranslationsPath))
-    for i in [_trans, _transQt]: QApplication.instance().installTranslator(i)
+    if lang != 'en':
+        try:
+            _trans = QTranslator()
+            dat = readRcFile(':/trans.qm')
+            _trans.load(dat)
+
+            _transQt = QTranslator()
+            dat = readRcFile(':/trans_qt.qm')
+            _transQt.load(dat)
+            for i in [_trans, _transQt]: QApplication.instance().installTranslator(i)
+        except FileNotFoundError:
+            logging.warning('failed to load translation for locale %s' % locale.name())
 
     global dateFmt, datetimeFmt, fullDatetimeFmt
     timeFmt = settings['Main'].get('timeFormat')

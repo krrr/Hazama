@@ -64,4 +64,14 @@
     <file>menu/bold.png</file>
     <file>menu/bold-mega.png</file>
   </qresource>
+
+  <qresource lang="zh">
+    <file alias="trans.qm">../build/lang/zh_CN.qm</file>
+    <file alias="trans_qt.qm">../build/lang/qt_zh_CN.qm</file>
+  </qresource>
+  <qresource lang="ja">
+    <file alias="trans.qm">../build/lang/ja.qm</file>
+    <file alias="trans_qt.qm">../build/lang/qt_ja.qm</file>
+  </qresource>
+
 </RCC>
