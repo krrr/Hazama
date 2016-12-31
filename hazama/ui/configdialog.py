@@ -4,17 +4,14 @@ from PySide.QtGui import *
 from PySide.QtCore import *
 from hazama import __version__, diarybook, mactype
 from hazama.ui import (font, setStyleSheet, scaleRatio, fixWidgetSizeOnHiDpi, isDwmUsable,
-                       dbDatetimeFmtQt, makeQIcon, setTranslationLocale)
+                       DB_DATETIME_FMT_QT, makeQIcon, setTranslationLocale,
+                       TRANS_DISPLAY_NAMES, TRANSLATIONS, THEMES, THEME_COLORFUL_SCHEMES)
 from hazama.ui.configdialog_ui import Ui_configDialog
 from hazama.config import settings, db, isWin7OrLater, isWin, CUSTOM_STYLESHEET_DELIMIT
 from hazama.ui.customobjects import QSSHighlighter
 from hazama import updater
 
 
-languages = {'en': 'English', 'zh_CN': '简体中文', 'ja_JP': '日本語'}
-languagesR = {b: a for a, b in languages.items()}
-themes = ['1px-rect', 'colorful']
-colorfulSchemes = ['green', 'yellow', 'white']
 aboutBrowserCss = '''
 p, ul {margin:0px; font-size:9pt;}
 a {color:#00345e; text-decoration: none;}
@@ -121,16 +118,15 @@ class ConfigDialog(QDialog, Ui_configDialog):
         if isWin and not isDwmUsable():
             self.extendBgCheck.setEnabled(False)
         # language ComboBox
-        for l in sorted(languagesR):
-            self.langCombo.addItem(l)
-        lang = settings['Main']['lang']
-        langIndex = self.langCombo.findText(languages.get(lang, 'English'))
+        for i in TRANS_DISPLAY_NAMES:
+            self.langCombo.addItem(i)
+        langIndex = TRANSLATIONS.index(settings['Main']['lang'])
         self.langCombo.setCurrentIndex(langIndex)
 
         self.rstCombo.model().item(0).setSelectable(False)
         self.rstCombo.addItems(diarybook.list_backups())
-        self.themeCombo.addItems(themes)
-        self.themeCombo.setCurrentIndex(themes.index(settings['Main']['theme']))
+        self.themeCombo.addItems(THEMES)
+        self.themeCombo.setCurrentIndex(THEMES.index(settings['Main']['theme']))
         self.preLinesBox.setValue(settings['Main'].getint('previewLines'))
         # theme specific
         if settings['Main']['theme'] == '1px-rect':
@@ -168,7 +164,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
         else:
             diaryDtRange = db.get_datetime_range()
         if diaryDtRange:
-            qRange = tuple(map(lambda x: QDateTime.fromString(x, dbDatetimeFmtQt),
+            qRange = tuple(map(lambda x: QDateTime.fromString(x, DB_DATETIME_FMT_QT),
                                diaryDtRange))
             days = qRange[0].daysTo(qRange[1])
         else:
@@ -193,7 +189,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
     def accept(self):
         """Save settings here."""
         # these settings may trigger signals
-        langChanged = _set_check_changed('Main', 'lang', languagesR[self.langCombo.currentText()])
+        langChanged = _set_check_changed('Main', 'lang', TRANSLATIONS[self.langCombo.currentIndex()])
         lookChanged = False
         lookChanged |= _set_check_changed('Main', 'theme', self.themeCombo.currentText())
         lookChanged |= _set_check_changed('Main', 'extendTitleBarBg', self.extendBgCheck.isChecked())
@@ -256,9 +252,9 @@ class ConfigDialog(QDialog, Ui_configDialog):
         for i in [self.schemeCombo, self.schemeLabel]:
             i.setEnabled(True)
         if theme == 'colorful':
-            self.schemeCombo.addItems(colorfulSchemes)
+            self.schemeCombo.addItems(THEME_COLORFUL_SCHEMES)
             scm = settings['ThemeColorful']['colorScheme']
-            self.schemeCombo.setCurrentIndex(colorfulSchemes.index(scm))
+            self.schemeCombo.setCurrentIndex(THEME_COLORFUL_SCHEMES.index(scm))
 
     def _handleFontBtn(self):
         btn = self.sender()

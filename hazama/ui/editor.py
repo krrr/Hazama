@@ -4,7 +4,7 @@ from hazama.ui.editor_ui import Ui_editor
 from hazama.ui.customobjects import TagCompleter
 from hazama.ui.customwidgets import DateTimeDialog
 from hazama.ui import (font, datetimeTrans, currentDatetime, fullDatetimeFmt,
-                       saveWidgetGeo, restoreWidgetGeo, datetimeToQt, dbDatetimeFmtQt)
+                       saveWidgetGeo, restoreWidgetGeo, datetimeToQt, DB_DATETIME_FMT_QT)
 from hazama.config import settings, db
 
 # TODO: editor in the main window (no tabs)
@@ -143,7 +143,7 @@ class Editor(QFrame, Ui_editor):
         dtStr = currentDatetime() if self.datetime is None else self.datetime
         newDt = DateTimeDialog.getDateTime(datetimeToQt(dtStr), fullDatetimeFmt, self)
         if newDt is not None:
-            newDtStr = newDt.toString(dbDatetimeFmtQt)
+            newDtStr = newDt.toString(DB_DATETIME_FMT_QT)
             if newDtStr != self.datetime:
                 self.datetime = newDtStr
                 self.dtBtn.setText(datetimeTrans(newDtStr))

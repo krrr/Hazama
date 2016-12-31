@@ -19,17 +19,23 @@ font = None
 scaleRatio = None
 _trans = _transQt = None  # Translator, just used to keep reference
 
+# CONSTANTS
+DB_DATETIME_FMT_QT = 'yyyy-MM-dd HH:mm'
 
-dbDatetimeFmtQt = 'yyyy-MM-dd HH:mm'
+TRANSLATIONS = ('en', 'zh_CN', 'ja_JP')
+TRANS_DISPLAY_NAMES = ('English', '简体中文', '日本語')
+
+THEMES = ('1px-rect', 'colorful')
+THEME_COLORFUL_SCHEMES = ('green', 'yellow', 'white')
 
 
 def datetimeToQt(s):
-    return locale.toDateTime(s, dbDatetimeFmtQt)
+    return locale.toDateTime(s, DB_DATETIME_FMT_QT)
 
 
 def datetimeTrans(s, stripTime=False):
     """Localize datetime in database format."""
-    dt = QDateTime.fromString(s, dbDatetimeFmtQt)
+    dt = QDateTime.fromString(s, DB_DATETIME_FMT_QT)
     return locale.toString(dt, dateFmt if stripTime else datetimeFmt)
 
 
@@ -62,8 +68,16 @@ def readRcFile(path):
 
 def setTranslationLocale():
     global locale, sysLocale, _trans, _transQt
-    lang = settings['Main']['lang']
+
     sysLocale = QLocale.system()
+
+    lang = settings['Main'].get('lang')
+    if not lang:
+        if sysLocale.name() in TRANSLATIONS:
+            lang = settings['Main']['lang'] = sysLocale.name()
+        else:
+            lang = settings['Main']['lang'] = 'en'
+
     if lang == 'en' or sysLocale.name() == lang:  # use system's locale
         # lang=='en' because user is likely to use English if his lang is not supported
         locale = sysLocale
@@ -73,18 +87,19 @@ def setTranslationLocale():
     langPath = os.path.join(appPath, 'lang')
     logging.info('set translation ' + lang)
 
+    _trans = QTranslator()
+    _transQt = QTranslator()
     if lang != 'en':
         try:
-            _trans = QTranslator()
             dat = readRcFile(':/trans.qm')
             _trans.load(dat)
 
-            _transQt = QTranslator()
             dat = readRcFile(':/trans_qt.qm')
             _transQt.load(dat)
-            for i in [_trans, _transQt]: QApplication.instance().installTranslator(i)
         except FileNotFoundError:
             logging.warning('failed to load translation for locale %s' % locale.name())
+    # install empty trans equals removeTranslator; for restart-less config changing
+    for i in [_trans, _transQt]: QApplication.instance().installTranslator(i)
 
     global dateFmt, datetimeFmt, fullDatetimeFmt
     timeFmt = settings['Main'].get('timeFormat')
