@@ -247,11 +247,12 @@ def refreshStyle(widget):
 
 class Fonts:
     """Manage all fonts used in application"""
-    preferredFonts = {
-        'zh_CN': ('Microsoft YaHei', 'WenQuanYi Micro Hei', 'WenQuanYi Zen Hei', 'Noto Sans CJK SC',
-                  'Source Han Sans CN Normal', '微软雅黑'),
-        'ja_JP': ('Meiryo', 'Noto Sans CJK JP', '游ゴシック Medium'),
-        'zh_TW': ('Microsoft JhengHei', 'Noto Sans CJK TC')}
+    preferredFonts = {  # unlike CSS, if font family name is localized then it's English name will be ignored
+        'zh_CN': ('Microsoft YaHei', '微软雅黑',
+                  'WenQuanYi Micro Hei', 'WenQuanYi Zen Hei', '文泉驿正黑',
+                  'Noto Sans CJK SC', 'Source Han Sans CN Normal', '思源黑体'),
+        'ja_JP': ('Yu Gothic Medium', '游ゴシック Medium', 'Meiryo', 'メイリオ', 'Noto Sans CJK JP'),
+        'zh_TW': ('Microsoft JhengHei', '微软正黑体', 'Noto Sans CJK TC')}
 
     def __init__(self):
         # all fonts have userSet attribute
