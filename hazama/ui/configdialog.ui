@@ -702,7 +702,7 @@
            </widget>
           </item>
           <item row="2" column="1">
-           <widget class="QPushButton" name="titleFontBtn">
+           <widget class="FontSelectButton" name="titleFontBtn">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -728,7 +728,7 @@
            </widget>
           </item>
           <item row="3" column="1">
-           <widget class="QPushButton" name="textFontBtn">
+           <widget class="FontSelectButton" name="textFontBtn">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -778,7 +778,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="defFontBtn">
+              <widget class="FontSelectButton" name="defFontBtn">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
                  <horstretch>0</horstretch>
@@ -813,7 +813,7 @@
            </widget>
           </item>
           <item row="1" column="1">
-           <widget class="QPushButton" name="dtFontBtn">
+           <widget class="FontSelectButton" name="dtFontBtn">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -870,6 +870,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>FontSelectButton</class>
+   <extends>QPushButton</extends>
+   <header>hazama.ui.customwidgets</header>
+  </customwidget>
+ </customwidgets>
  <resources>
   <include location="../../res/res.qrc"/>
  </resources>

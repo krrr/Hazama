@@ -9,6 +9,7 @@ from hazama.ui import (font, setStyleSheet, scaleRatio, fixWidgetSizeOnHiDpi, is
 from hazama.ui.configdialog_ui import Ui_configDialog
 from hazama.config import settings, db, isWin7OrLater, isWin, CUSTOM_STYLESHEET_DELIMIT
 from hazama.ui.customobjects import QSSHighlighter
+from hazama.ui.customwidgets import FontSelectButton
 from hazama import updater
 
 
@@ -140,17 +141,19 @@ class ConfigDialog(QDialog, Ui_configDialog):
         self.enRenderCheck.setVisible(isWin)
         self.enRenderCheck.setEnabled(mactype.isUsable())
         self.defFontGBox.setChecked('default' in settings['Font'])
-        self.dtFontBtn.configName = 'datetime'
-        self.titleFontBtn.configName = 'title'
-        self.textFontBtn.configName = 'text'
-        self.defFontBtn.configName = 'default'
-        self.buttons = (self.dtFontBtn, self.titleFontBtn, self.textFontBtn,
-                        self.defFontBtn)
-        for i in self.buttons:
-            i.clicked.connect(self._handleFontBtn)
-            self._setFontButton(i, getattr(font, i.configName))
+        self.fontBtns = (self.dtFontBtn, self.titleFontBtn, self.textFontBtn,
+                         self.defFontBtn)
+        fontBtnConfigNames = ('datetime', 'title', 'text', 'default')
+        fontDialogPreview = 'AaBbYy@2017 %s' % self.langCombo.currentText()
+
+        for b, n in zip(self.fontBtns, fontBtnConfigNames):
+            b.configName = n
+            b.resettable = n != 'default'
+            b.PreviewText = fontDialogPreview  # change class var may cause segfault!
+            font_ = getattr(font, n)
+            b.setFont(font_, font_.userSet)  # userSet is set by Font in __init__
             if scaleRatio > 1:
-                i.setMinimumWidth((i.minimumWidth() * scaleRatio))
+                b.setMinimumWidth((b.minimumWidth() * scaleRatio))
         # setup statistics
         diaryCount = len(db)
         if diaryCount < 2:
@@ -206,8 +209,8 @@ class ConfigDialog(QDialog, Ui_configDialog):
         settings['Font']['enhanceRender'] = str(self.enRenderCheck.isChecked())
 
         oldFonts = tuple(sorted(settings['Font'].items()))
-        for i in self.buttons:
-            settings['Font'][i.configName] = i.font().toString() if i.userSet else ''
+        for b in self.fontBtns:
+            settings['Font'][b.configName] = b.font().toString() if b.userSet else ''
         if not self.defFontGBox.isChecked() and 'default' in settings['Font']:
             del settings['Font']['default']
         fontsChanged = oldFonts != tuple(sorted(settings['Font'].items()))
@@ -255,21 +258,6 @@ class ConfigDialog(QDialog, Ui_configDialog):
             self.schemeCombo.addItems(THEME_COLORFUL_SCHEMES)
             scm = settings['ThemeColorful']['colorScheme']
             self.schemeCombo.setCurrentIndex(THEME_COLORFUL_SCHEMES.index(scm))
-
-    def _handleFontBtn(self):
-        btn = self.sender()
-        dlg = QFontDialog(self)
-        dlg.setCurrentFont(btn.font())
-        fixWidgetSizeOnHiDpi(dlg)
-        # set sample text in dialog with some hack
-        try:
-            sample = dlg.findChildren(QLineEdit)[3]
-            sample.setText('AaBbYy@2013 %s' % self.langCombo.currentText())
-        except Exception as e:
-            logging.warning('failed to hack Qt font dialog: %s' % e)
-        ret = dlg.exec_()
-        if ret:
-            self._setFontButton(btn, dlg.selectedFont())
 
     def _easterEgg(self):
         if self.appIcoBtn.icon().isNull():
@@ -386,14 +374,6 @@ class ConfigDialog(QDialog, Ui_configDialog):
         self.aboutBrowser.setHtml('<p align="center">%s</p>' % oneLine)
         if adjust:
             self._adjustAboutAreaHeight()
-
-    @staticmethod
-    def _setFontButton(btn, font_):
-        """Set Font Button's text and font"""
-        btn.setFont(font_)
-        btn.userSet = getattr(font_, 'userSet', True)  # use True if being called by _handleFontBtn
-        family = font_.family() if font_.exactMatch() else QFontInfo(font_).family()
-        btn.setText('%s %spt' % (family, font_.pointSize()))
 
     @Slot()
     def on_exportBtn_clicked(self):

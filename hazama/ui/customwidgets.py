@@ -1,6 +1,7 @@
+import logging
 from PySide.QtCore import *
 from PySide.QtGui import *
-from hazama.ui import setStdEditMenuIcons, makeQIcon
+from hazama.ui import setStdEditMenuIcons, makeQIcon, fixWidgetSizeOnHiDpi
 from hazama.ui.customobjects import TextFormatter, NTextDocument
 
 
@@ -53,6 +54,8 @@ class MultiLineElideLabel(QFrame):
             painter.drawText(self._elideMarkPos, self.ElideMark)
 
     def _updateSize(self):
+        # use height because leading is not included
+        # this make realHeight equals heightHint even if font fallback happen
         self._lineHeight = self.fontMetrics().height()
         self._heightHint = self._lineHeight * self._maximumLineCount
         self._elideMarkWidth = self.fontMetrics().width(self.ElideMark)
@@ -102,6 +105,8 @@ class MultiLineElideLabel(QFrame):
         self._realHeight = height
 
     def setMaximumLineCount(self, lines):
+        if lines == self._maximumLineCount:
+            return
         self._maximumLineCount = lines
         self._updateSize()
         if self._text:
@@ -308,3 +313,51 @@ class DateTimeDialog(QDialog):
         ret = dialog.exec_()
         dialog.deleteLater()
         return dialog.dtEdit.dateTime() if ret else None
+
+
+class FontSelectButton(QPushButton):
+    """Select fonts with QFontDialog."""
+    PreviewText = 'AaBbYy@2017'
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._dialog = None
+        self.userSet = None  # whether the font is set by user
+        self.configName = None
+        self.resettable = False  # display "reset to default" button in dialog
+        self.clicked.connect(self._showDialog)
+
+    def setFont(self, font_, userSet=True):
+        """Set Font Button's text and font"""
+        super().setFont(font_)
+        self.userSet = userSet
+        family = font_.family() if font_.exactMatch() else QFontInfo(font_).family()
+        self.setText('%s %spt' % (family, font_.pointSize()))
+
+    def _showDialog(self):
+        dlg = self._dialog = QFontDialog(self)
+        dlg.setCurrentFont(self.font())
+        fixWidgetSizeOnHiDpi(dlg)
+
+        # set sample text and add button with some hack
+        try:
+            sample = dlg.findChildren(QLineEdit)[3]
+            sample.setText(self.PreviewText)
+
+            if self.resettable:
+                box = dlg.findChildren(QDialogButtonBox)[0]
+                box.addButton(QDialogButtonBox.RestoreDefaults)
+                box.clicked.connect(self._onFontDialogBtnClicked)
+        except Exception as e:
+            logging.warning('failed to hack Qt font dialog: %s' % e)
+
+        ret = dlg.exec_()
+        if ret:
+            self.setFont(dlg.selectedFont(), userSet=True)
+        self._dialog = None
+
+    def _onFontDialogBtnClicked(self, btn):
+        if btn.parent().buttonRole(btn) == QDialogButtonBox.ResetRole:
+            assert self.resettable
+            self._dialog.reject()
+            self.setFont(qApp.font(), userSet=False)

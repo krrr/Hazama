@@ -296,11 +296,11 @@ class Fonts:
         self.default = QApplication.instance().font()
         saved = settings['Font'].get('default')
         preferred = None if saved else self.getPreferredFont()
-        self.default.userSet = bool(saved)
         if saved:
             self.default.fromString(saved)
         elif preferred:
             self.default = preferred
+        self.default.userSet = bool(saved)
         logging.debug('app font %s' % self.default)
         QApplication.instance().setFont(self.default)
 
