@@ -67,9 +67,18 @@ class BuildQt(Command):
         if not lres:
             raise DistutilsExecError('lrelease not found')
 
-        for i in glob(pjoin('translation', '*.ts')):
-            qm_filename = os.path.basename(i).split('.')[0] + '.qm'
-            spawn([lres, i, '-qm', pjoin(lang_dir, qm_filename)])
+        trans = [os.path.basename(i).split('.')[0] for i in
+                 glob(pjoin('translation', '*.ts'))]
+        for i in trans:
+            spawn([lres, pjoin('translation', i+'.ts'), '-qm', pjoin(lang_dir, i+'.qm')])
+
+        # copy corresponding Qt translations to build/lang
+        pyside_dir = pjoin(sys.exec_prefix, 'lib', 'site-packages', 'PySide')
+        for i in trans:
+            target = pjoin(lang_dir, 'qt_%s.qm' % i)
+            if not os.path.isfile(target):
+                print('copy to ' + target)
+                shutil.copy(pjoin(pyside_dir, 'translations', 'qt_%s.qm' % i), target)
 
 
 class UpdateTranslations(Command):
@@ -180,9 +189,8 @@ setup(name='Hazama',
       description=hazama.__desc__,
       url='https://krrr.github.io/hazama',
       packages=['hazama', 'hazama.ui'],
-      package_data={'hazama': ['lang/*.qm']},
       cmdclass={'build': CustomBuild, 'build_qt': BuildQt, 'install': CustomInstall,
                 'update_ts': UpdateTranslations, 'build_exe': BuildExe, 'clean': Clean,
                 'desktop_entry': InstallDesktopEntry},
-      zip_safe=False,
+      zip_safe=True,
       entry_points={'gui_scripts': ['hazama = hazama:main_entry']})
