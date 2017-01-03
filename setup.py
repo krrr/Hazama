@@ -28,6 +28,7 @@ class BuildQt(Command):
                     ('rc', 'r', 'compile rc files only')]
 
     def initialize_options(self):
+        # noinspection PyAttributeOutsideInit
         self.ts = self.ui = self.rc = False
         self.force = False
 
@@ -92,8 +93,11 @@ class BuildExe(Command):
     def run(self):
         spawn([sys.executable, pjoin('utils', 'setupfreeze.py'), 'build_exe'])
         # remove duplicate python DLL
-        dll_path = glob(pjoin('build', 'python*.dll'))[0]
-        os.remove(pjoin('build', 'lib', os.path.basename(dll_path)))
+        try:
+            dll_path = glob(pjoin('build', 'python*.dll'))[0]
+            os.remove(pjoin('build', 'lib', os.path.basename(dll_path)))
+        except IndexError:
+            pass
 
 
 class InstallDesktopEntry(Command):
@@ -144,6 +148,25 @@ Terminal=false
         shutil.copy('res/appicon-64.png', ico_dir + 'hazama.png')
 
 
+class Clean(Command):
+    description = 'Clean up auto-generated py files.'
+    user_options = []
+
+    initialize_options = finalize_options = lambda self: None
+
+    def run(self):
+        for i in glob(pjoin('hazama', 'ui', '*_ui.py')):
+            print('remove file: ' + i)
+            os.remove(i)
+        for i in ['build', pjoin('hazama', 'ui', 'res_rc.py')]:
+            if os.path.isfile(i):
+                print('remove file: ' + i)
+                os.remove(i)
+            elif os.path.isdir('build'):
+                print('remove dir: ' + i)
+                shutil.rmtree('build')
+
+
 # fix env variables for PySide tools
 if sys.platform == 'win32':
     os.environ['PATH'] += (';' + pjoin(sys.exec_prefix, 'Scripts') +
@@ -159,7 +182,7 @@ setup(name='Hazama',
       packages=['hazama', 'hazama.ui'],
       package_data={'hazama': ['lang/*.qm']},
       cmdclass={'build': CustomBuild, 'build_qt': BuildQt, 'install': CustomInstall,
-                'update_ts': UpdateTranslations, 'build_exe': BuildExe,
+                'update_ts': UpdateTranslations, 'build_exe': BuildExe, 'clean': Clean,
                 'desktop_entry': InstallDesktopEntry},
       zip_safe=False,
       entry_points={'gui_scripts': ['hazama = hazama:main_entry']})
