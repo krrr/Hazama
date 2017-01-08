@@ -1,8 +1,8 @@
 /**** ToolBar ****/
 QMainWindow > QToolBar {
     background: #f2f1e7;
-    border-bottom: 1px solid #b53d00;
-    padding: 2px;
+    border-bottom: 1dip solid #b53d00;
+    padding: 1dip;
     spacing: 0px
 }
 QMainWindow > QToolBar[titleBarBgType="win"] {
@@ -39,7 +39,7 @@ Editor > #dtBtn { color: #333 }
 DiaryList {
     background: #f2f1e7;
     border: 0px;
-    padding-top: 1px;
+    padding-top: 1dip;
 }
 QScrollBar#diaryListSB { qproperty-annotateColor: #db8a60 }
 
@@ -56,8 +56,8 @@ QMainWindow QSplitter::handle { background: #b53d00 }
 HeatMap { background: white }
 
 QFrame#heatMapBar {
-    border-bottom: 1px solid lightgray;
-    padding: 0px 4px 0px 4px;
+    border-bottom: 1dip solid lightgray;
+    padding: 0px 4dip 0px 4dip;
     background: gray;
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
         stop:0 #f2f1e7,
@@ -72,7 +72,7 @@ QPushButton#heatMapBtn {
 }
 QPushButton#heatMapBtn:hover { color: #999 }
 
-HeatMap QToolButton { border: 1px solid gray }
+HeatMap QToolButton { border: 1dip solid gray }
 HeatMap QToolButton:hover { background: rgba(0, 0, 0, 33) }
 HeatMap QToolButton:pressed { background: rgba(0, 0, 0, 55) }
 
@@ -80,9 +80,8 @@ QGraphicsView#heatMapView {
     qproperty-cellBorderColor: darkgray;
     color: black;
     background: transparent;
-    margin: 1px;
+    margin: 3dip;
     border: none;
-    padding: 3px;
 }
 
 QGraphicsView#heatMapSample {

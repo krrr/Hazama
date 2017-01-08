@@ -1,3 +1,4 @@
+import re
 import sys
 import os
 import time
@@ -6,6 +7,7 @@ import PySide
 import hazama.ui.res_rc  # load resources, let showErrors have icons
 from PySide.QtGui import *
 from PySide.QtCore import *
+from hazama.util import my_fround
 from hazama.config import (settings, appPath, isWin, isWinVistaOrLater, isWin8OrLater,
                            CUSTOM_STYLESHEET_DELIMIT)
 
@@ -153,27 +155,41 @@ def setStdEditMenuIcons(menu):
     sel.setIcon(QIcon.fromTheme('edit-select-all'))
 
 
-def setStyleSheet():
-    """If -stylesheet not in sys.argv, append custom.qss(if exists) to default one and
+_qssPixelSub = re.compile(r'\b\d+dip', re.ASCII)
+_originSetSsMethod = None
+
+
+def setStyleSheetPatched(ss):
+    # support custom device independent pixel (dip), like px in CSS
+    # 1dip @96DPI == 1px
+    # 1dip @ 144DPI == 1px  (for hair lines)
+    qa = QApplication.instance().originStyleSheet = ss
+    _originSetSsMethod(_qssPixelSub.sub(
+        lambda px: '%dpx' % int(my_fround(px.group()[:-3]) * scaleRatio),
+        ss))
+
+
+def loadStyleSheet():
+    """If -stylesheet not in sys.argv, append custom.qss(if any) to default one and
     load it. Otherwise load the one in sys.argv"""
     if '-stylesheet' in sys.argv:
-        logging.info('override default StyleSheet by command line arg')
-    else:
-        ss = [readRcTextFile(':/default.qss')]
-        # append theme part
-        if settings['Main']['theme'] == 'colorful':
-            ss.append(readRcTextFile(':/colorful.qss'))
-            scheme = settings['ThemeColorful']['colorScheme']
-            if scheme != 'green':
-                ss.append(readRcTextFile(':/colorful-%s.qss' % scheme))
-        # load custom
-        ss.append(CUSTOM_STYLESHEET_DELIMIT)
-        if os.path.isfile('custom.qss'):
-            logging.info('set custom StyleSheet')
-            with open('custom.qss', encoding='utf-8') as f:
-                ss.append(f.read())
+        return logging.info('override default StyleSheet by command line arg')
 
-        QApplication.instance().setStyleSheet(''.join(ss))
+    ss = [readRcTextFile(':/default.qss')]
+    # append theme part
+    if settings['Main']['theme'] == 'colorful':
+        ss.append(readRcTextFile(':/colorful.qss'))
+        scheme = settings['ThemeColorful']['colorScheme']
+        if scheme != 'green':
+            ss.append(readRcTextFile(':/colorful-%s.qss' % scheme))
+    # load custom
+    ss.append(CUSTOM_STYLESHEET_DELIMIT)
+    if os.path.isfile('custom.qss'):
+        logging.info('set custom StyleSheet')
+        with open('custom.qss', encoding='utf-8') as f:
+            ss.append(f.read())
+
+    QApplication.instance().setStyleSheet(''.join(ss))
 
 
 def winDwmExtendWindowFrame(hwnd, topMargin):
@@ -301,7 +317,7 @@ class Fonts:
         elif preferred:
             self.default = preferred
         self.default.userSet = bool(saved)
-        logging.debug('app font %s' % self.default)
+        logging.debug('app font: %s @%dpt' % (self.default.family(), self.default.pointSize()))
         QApplication.instance().setFont(self.default)
 
         for i in ('title', 'datetime', 'text'):
@@ -362,5 +378,8 @@ def init():
     font = Fonts()
     font.load()
 
-    setStyleSheet()
+    global _originSetSsMethod
+    _originSetSsMethod = app.setStyleSheet
+    app.setStyleSheet = setStyleSheetPatched
+    loadStyleSheet()
     return app

@@ -3,7 +3,7 @@ import logging
 from PySide.QtGui import *
 from PySide.QtCore import *
 from hazama import __version__, diarybook, mactype
-from hazama.ui import (font, setStyleSheet, scaleRatio, fixWidgetSizeOnHiDpi, isDwmUsable,
+from hazama.ui import (font, loadStyleSheet, scaleRatio, fixWidgetSizeOnHiDpi, isDwmUsable,
                        DB_DATETIME_FMT_QT, makeQIcon, setTranslationLocale,
                        TRANS_DISPLAY_NAMES, TRANSLATIONS, THEMES, THEME_COLORFUL_SCHEMES)
 from hazama.ui.configdialog_ui import Ui_configDialog
@@ -230,7 +230,7 @@ class ConfigDialog(QDialog, Ui_configDialog):
         if fontsChanged or schemeChanged or lookChanged:
             # Load style sheet first because many size calculation rely on it.
             # But some style sheet used dynamic properties, manual refresh is needed.
-            setStyleSheet()
+            loadStyleSheet()
             self.appearanceChanged.emit()
 
         logging.info('settings saved')
@@ -455,7 +455,7 @@ class StyleSheetEditor(QDialog):
         QPlainTextEdit { border: none; }
         ''')
         self._highlighter = QSSHighlighter(self.styleSheetEdit.document())
-        self.styleSheetEdit.setPlainText(qApp.styleSheet())
+        self.styleSheetEdit.setPlainText(qApp.originStyleSheet)
         layout = QVBoxLayout(self)
         layout.addWidget(self.styleSheetEdit)
         layout.addWidget(self._buttonBox)
