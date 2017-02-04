@@ -6,11 +6,13 @@ import hazama
 from os.path import join as pjoin
 from glob import glob
 from setuptools import setup
+from distutils.sysconfig import get_python_lib
 from distutils.core import Command
 from distutils.errors import DistutilsExecError
 from distutils.spawn import find_executable, spawn
 from distutils.command.build import build
 from setuptools.command.install import install
+from distutils.command.clean import clean
 
 
 class CustomBuild(build):
@@ -18,7 +20,40 @@ class CustomBuild(build):
 
 
 class CustomInstall(install):
-    sub_commands = install.sub_commands + [('desktop_entry', lambda self: sys.platform == 'linux')]
+    _desktop_template = """
+[Desktop Entry]
+Version={ver}
+Type=Application
+Name=Hazama
+GenericName=Hazama
+Comment=Writing diary
+Comment[ja]=日記を書く
+Comment[zh_CN]=写日记
+Icon=hazama
+Exec=hazama
+NoDisplay=false
+Categories=Qt;Utility;
+StartupNotify=false
+Terminal=false
+"""
+
+    def run(self):
+        super().run()
+        if sys.platform == 'win32':
+            return
+
+        entry_dir = pjoin(self.root, 'usr/share/applications/')
+        svg_dir = pjoin(self.root, 'usr/share/icons/hicolor/scalable/apps/')
+        png_dir = pjoin(self.root, 'usr/share/icons/hicolor/48x48/apps/')
+        for i in (entry_dir, svg_dir, png_dir):
+            os.makedirs(i, exist_ok=True)
+
+        with open(entry_dir + 'Hazama.desktop', 'w') as f:
+            f.write(self._desktop_template.strip().format(ver=hazama.__version__))
+            f.write('\n')
+
+        shutil.copy('res/appicon/appicon-64.svg', svg_dir + 'hazama.svg')
+        shutil.copy('res/appicon-48.png', png_dir + 'hazama.png')
 
 
 class BuildQt(Command):
@@ -72,8 +107,10 @@ class BuildQt(Command):
         for i in trans:
             spawn([lres, pjoin('translation', i+'.ts'), '-qm', pjoin(lang_dir, i+'.qm')])
 
+        if sys.platform != 'win32':
+            return
         # copy corresponding Qt translations to build/lang
-        pyside_dir = pjoin(sys.exec_prefix, 'lib', 'site-packages', 'PySide')
+        pyside_dir = pjoin(get_python_lib(), 'PySide')
         for i in trans:
             target = pjoin(lang_dir, 'qt_%s.qm' % i)
             if not os.path.isfile(target):
@@ -100,7 +137,7 @@ class BuildExe(Command):
     initialize_options = finalize_options = lambda self: None
 
     def run(self):
-        spawn([sys.executable, pjoin('utils', 'setupfreeze.py'), 'build_exe'])
+        spawn([sys.executable, pjoin('utils', 'setupfreeze5.py'), 'build_exe'])
         # remove duplicate python DLL
         try:
             dll_path = glob(pjoin('build', 'python*.dll'))[0]
@@ -109,61 +146,9 @@ class BuildExe(Command):
             pass
 
 
-class InstallDesktopEntry(Command):
-    description = 'Install .desktop and icon for linux desktop'
-    user_options = []
-    template = """
-[Desktop Entry]
-Version={ver}
-Type=Application
-Name=Hazama
-GenericName=Hazama
-Comment=Writing diary
-Comment[ja]=日記を書く
-Comment[zh_CN]=写日记
-Icon=hazama
-Exec=hazama
-NoDisplay=false
-Categories=Qt;Utility;
-StartupNotify=false
-Terminal=false
-"""
-
-    initialize_options = finalize_options = lambda self: None
-
+class Clean(clean):
     def run(self):
-        # deal with --root option of install when called as sub-command by it
-        if sys.argv[1] == 'install' and '--root' in sys.argv:
-            root = sys.argv[sys.argv.index('--root')+1]
-        else:
-            root = '/'
-        entry_dir = pjoin(root, 'usr/share/applications/')
-        ico_dir = pjoin(root, 'usr/share/pixmaps/')
-        if root != '/':
-            os.makedirs(entry_dir, exist_ok=True)
-            os.makedirs(ico_dir, exist_ok=True)
-
-        with open('Hazama.desktop', 'w') as f:
-            f.write(self.template.strip().format(ver=hazama.__version__))
-            f.write('\n')
-        if not os.path.isdir(entry_dir):
-            print('.desktop file has been generated, but program don\'t know where to put it')
-            return
-        shutil.move('Hazama.desktop', entry_dir)
-
-        if not os.path.isdir(ico_dir):
-            print('program don\'t know where to put application icon')
-            return
-        shutil.copy('res/appicon-64.png', ico_dir + 'hazama.png')
-
-
-class Clean(Command):
-    description = 'Clean up auto-generated py files.'
-    user_options = []
-
-    initialize_options = finalize_options = lambda self: None
-
-    def run(self):
+        super().run()
         for i in glob(pjoin('hazama', 'ui', '*_ui.py')):
             print('remove file: ' + i)
             os.remove(i)
@@ -184,13 +169,13 @@ if sys.platform == 'win32':
 
 # PySide installed by linux package manager will not recognized by setuptools, so requires not added.
 setup(name='Hazama',
-      author=hazama.__author__,
+      author='krrr',
+      author_email='guogaishiwo@gmail.com',
       version=hazama.__version__,
       description=hazama.__desc__,
       url='https://krrr.github.io/hazama',
       packages=['hazama', 'hazama.ui'],
       cmdclass={'build': CustomBuild, 'build_qt': BuildQt, 'install': CustomInstall,
-                'update_ts': UpdateTranslations, 'build_exe': BuildExe, 'clean': Clean,
-                'desktop_entry': InstallDesktopEntry},
+                'update_ts': UpdateTranslations, 'build_exe': BuildExe, 'clean': Clean},
       zip_safe=True,
       entry_points={'gui_scripts': ['hazama = hazama:main_entry']})

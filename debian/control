@@ -1,0 +1,17 @@
+Source: hazama
+Section: utils
+Maintainer: Yuu Mousou (krrr) <guogaishiwo@gmail.com>
+Priority: optional
+Build-Depends: python3-setuptools, python3, debhelper (>= 9), python3-pyside, pyside-tools, qt4-linguist-tools
+Standards-Version: 3.9.7
+X-Python3-Version: >= 3.3
+
+
+
+Package: hazama
+Homepage: https://krrr.github.io/hazama
+Architecture: all
+Depends: ${misc:Depends}, ${python3:Depends}, python3-pyside
+Description: simple cross-platform diary application
+ Hazama is a GUI application for keeping diary, simple and highly customizable.
+ It's developed in Python3 with PySide.

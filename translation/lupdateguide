@@ -9,6 +9,7 @@ SOURCES = ../hazama/ui/__init__.py \
           ../hazama/ui/editor_ui.py \
           ../hazama/ui/mainwindow.py \
           ../hazama/ui/mainwindow_ui.py \
-          ../hazama/ui/listview.py
+          ../hazama/ui/taglist.py \
+          ../hazama/ui/diarylist.py
 TRANSLATIONS = zh_CN.ts \
 			   ja.ts

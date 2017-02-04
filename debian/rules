@@ -1,0 +1,13 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@ --with python3 --buildsystem=pybuild
+
+
+override_dh_auto_build:
+	echo "Skip build because install will call build"
+
+
+override_dh_auto_install:
+	python3 setup.py install --root=$(CURDIR)/debian/hazama --install-layout=deb
+	find $(CURDIR)/debian/hazama -name "__pycache__" | xargs rm -rf 

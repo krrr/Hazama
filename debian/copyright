@@ -1,0 +1,8 @@
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: Hazama
+Source: https://github.com/krrr/Hazama
+
+Files: *
+Copyright: 2017 Yuu Mousou (krrr)
+License: GPL-2+
+ see /usr/share/common-licenses/GPL-2
