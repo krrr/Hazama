@@ -1,5 +1,6 @@
 ﻿import sqlite3
 import os
+import sys
 import shutil
 import logging
 from datetime import date, timedelta
@@ -94,15 +95,17 @@ class DiaryBook:
         self._commit, self._exe = self._conn.commit, self._conn.execute
 
         self._exe('PRAGMA foreign_keys = ON')
+
         # prevent other instance from visiting one database
         self._exe('PRAGMA locking_mode = EXCLUSIVE')
-        try:
-            self._exe('BEGIN EXCLUSIVE')  # obtain lock by dummy transaction
-        except sqlite3.OperationalError as e:
-            if str(e).startswith('database is locked'):
-                raise DatabaseLockedError
-            else:
-                raise
+        if sys.version_info[:3] != (3, 6, 0):  # this py version has bug in sqlite module
+            try:
+                self._exe('BEGIN EXCLUSIVE')  # obtain lock by dummy transaction
+            except sqlite3.OperationalError as e:
+                if str(e).startswith('database is locked'):
+                    raise DatabaseLockedError
+                else:
+                    raise
         self._conn.executescript(schema)  # check schema
 
     def disconnect(self):
