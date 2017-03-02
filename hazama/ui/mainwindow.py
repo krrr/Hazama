@@ -317,7 +317,7 @@ class MainWindow(QMainWindow, Ui_mainWindow):
         if msg.clickedButton() == okBtn:
             for i in indexes: db.delete(i.data())
             for r in reversed(sorted(i.row() for i in indexes)):
-                self.diaryList.originModel.removeRow(r)
+                self.diaryList.model().removeRow(r)
             self.tagList.reload()  # tags might changed
 
     def startEditor(self, idx=None):
