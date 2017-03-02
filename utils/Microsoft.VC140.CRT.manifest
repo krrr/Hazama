@@ -1,10 +1,10 @@
-﻿<!-- Put a bunch of ucrt DLLs into sub directory! Name the sub dir "Microsoft.VC140.CRT" and put me in. -->
+﻿<!-- Put a bunch of ucrt DLLs into sub directory. Name the sub dir "Microsoft.VC140.CRT"
+  and put this file in. Don't put vcruntime140.dll and msvcp140.dll, or cold start speed will slow down. -->
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
     <assemblyIdentity type="win32" name="Microsoft.VC140.CRT" version="14.00.24210.0" processorArchitecture="x86"></assemblyIdentity>
     
-    <file name='vcruntime140.dll'></file>
-    <file name='msvcp140.dll'></file>
+    <file name='ucrtbase.dll'></file>
     <file name='api-ms-win-core-console-l1-1-0.dll'></file>
     <file name='api-ms-win-core-datetime-l1-1-0.dll'></file>
     <file name='api-ms-win-core-debug-l1-1-0.dll'></file>
