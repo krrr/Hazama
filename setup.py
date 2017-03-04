@@ -107,9 +107,10 @@ class BuildQt(Command):
         for i in trans:
             spawn([lres, pjoin('translation', i+'.ts'), '-qm', pjoin(lang_dir, i+'.qm')])
 
-        if sys.platform != 'win32':
-            return
         # copy corresponding Qt translations to build/lang
+        if sys.platform != 'win32':
+            # linux have complete qt library, so don't include; ignore warnings when compile_rc
+            return
         pyside_dir = pjoin(get_python_lib(), 'PySide')
         for i in trans:
             target = pjoin(lang_dir, 'qt_%s.qm' % i)

@@ -85,23 +85,24 @@ def setTranslationLocale():
         locale = sysLocale
     else:  # override system's locale
         locale = QLocale(lang)
-        QLocale.setDefault(locale)
-    langPath = os.path.join(appPath, 'lang')
+    QLocale.setDefault(locale)
     logging.info('set translation ' + lang)
 
     _trans = QTranslator()
     _transQt = QTranslator()
     if lang != 'en':
         try:
-            dat = readRcFile(':/trans.qm')
-            _trans.load(dat)
-
-            dat = readRcFile(':/trans_qt.qm')
-            _transQt.load(dat)
+            _trans.load(readRcFile(':/trans.qm'))
         except FileNotFoundError:
             logging.warning('failed to load translation for locale %s' % locale.name())
+
+        try:
+            _transQt.load(readRcFile(':/trans_qt.qm'))
+        except FileNotFoundError:
+            _transQt.load('qt_' + locale.name(), QLibraryInfo.location(QLibraryInfo.TranslationsPath))
     # install empty trans equals removeTranslator; for restart-less config changing
-    for i in [_trans, _transQt]: QApplication.instance().installTranslator(i)
+    for i in (_trans, _transQt):
+        QApplication.instance().installTranslator(i)
 
     global dateFmt, datetimeFmt, fullDatetimeFmt
     timeFmt = settings['Main'].get('timeFormat')
