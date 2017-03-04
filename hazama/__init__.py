@@ -22,6 +22,7 @@ __author__ = 'krrr'
 # 1. Only slots methods which is auto connected need Slot decorator
 # 2. StyleSheets using dynamic property require (un)polish to take effect
 # 3. Subclass of QWidget refuse to paint QSS background. Use QFrame or set WA_StyledBackground
+# 4. Inner class will break qt linguist!
 
 def main_entry():
     import time

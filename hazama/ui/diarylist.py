@@ -209,60 +209,61 @@ class DiaryListDelegateColorful(QItemDelegate):
         return QSize(-1, self._itemW.heightWithTag if hasTag else self._itemW.heightNoTag)
 
 
+class DiaryListScrollBar(QScrollBar):
+    """Annotated scrollbar."""
+    wantSetRow = Signal(int)
+
+    def __init__(self, parent):
+        super().__init__(parent, objectName='diaryListSB')
+        self._poses = ()
+        self._pairs = ()  # year: row
+        self._color = QColor('gold')
+
+    def paintEvent(self, event):
+        super().paintEvent(event)
+        if not self._poses:
+            return
+        p = QPainter(self)
+        # avoid painting on slider handle
+        opt = QStyleOptionSlider()
+        self.initStyleOption(opt)
+        groove = self.style().subControlRect(QStyle.CC_ScrollBar, opt,
+                                             QStyle.SC_ScrollBarGroove, self)
+        slider = self.style().subControlRect(QStyle.CC_ScrollBar, opt,
+                                             QStyle.SC_ScrollBarSlider, self)
+        p.setClipRegion(QRegion(groove) - QRegion(slider), Qt.IntersectClip)
+
+        x, y, w, h = groove.getRect()
+        x += 1
+        w -= 2
+        c = self._color
+        c.setAlpha(70)
+        p.setBrush(c)
+        c.setAlpha(145)
+        p.setPen(QPen(c, scaleRatio))
+        p.drawRects([QRect(x, y+h*i, w, 3*scaleRatio) for i in self._poses])
+
+    def contextMenuEvent(self, event):
+        """Used to jump to the first day of years. Original menu is almost useless."""
+        menu = QMenu()
+        menu.addAction(QAction(self.tr('Go to the first diary of each year'), menu, enabled=False))
+        for year, row in self._pairs:
+            menu.addAction(QAction(str(year), menu,
+                                   triggered=lambda r=row: self.wantSetRow.emit(r)))
+        menu.exec_(event.globalPos())
+        menu.deleteLater()
+
+    def setPositions(self, rowCount, pairs):
+        self._poses = tuple(p / rowCount for _, p in pairs)
+        self._pairs = pairs
+
+    annotateColor = NProperty(QColor, '_color')
+
+
 class DiaryList(QListView):
     """Main List that display preview of diaries"""
     startLoading = Signal()
     countChanged = Signal()
-
-    class ScrollBar(QScrollBar):
-        """Annotated scrollbar."""
-        wantSetRow = Signal(int)
-
-        def __init__(self, parent):
-            super().__init__(parent, objectName='diaryListSB')
-            self._poses = ()
-            self._pairs = ()  # year: row
-            self._color = QColor('gold')
-
-        def paintEvent(self, event):
-            super().paintEvent(event)
-            if not self._poses:
-                return
-            p = QPainter(self)
-            # avoid painting on slider handle
-            opt = QStyleOptionSlider()
-            self.initStyleOption(opt)
-            groove = self.style().subControlRect(QStyle.CC_ScrollBar, opt,
-                                                 QStyle.SC_ScrollBarGroove, self)
-            slider = self.style().subControlRect(QStyle.CC_ScrollBar, opt,
-                                                 QStyle.SC_ScrollBarSlider, self)
-            p.setClipRegion(QRegion(groove) - QRegion(slider), Qt.IntersectClip)
-
-            x, y, w, h = groove.getRect()
-            x += 1
-            w -= 2
-            c = self._color
-            c.setAlpha(70)
-            p.setBrush(c)
-            c.setAlpha(145)
-            p.setPen(QPen(c, scaleRatio))
-            p.drawRects([QRect(x, y+h*i, w, 3*scaleRatio) for i in self._poses])
-
-        def contextMenuEvent(self, event):
-            """Used to jump to the first day of years. Original menu is almost useless."""
-            menu = QMenu()
-            menu.addAction(QAction(self.tr('Go to the first diary of each year'), menu, enabled=False))
-            for year, row in self._pairs:
-                menu.addAction(QAction(str(year), menu,
-                                       triggered=lambda r=row: self.wantSetRow.emit(r)))
-            menu.exec_(event.globalPos())
-            menu.deleteLater()
-
-        def setPositions(self, rowCount, pairs):
-            self._poses = tuple(p / rowCount for _, p in pairs)
-            self._pairs = pairs
-
-        annotateColor = NProperty(QColor, '_color')
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -271,7 +272,7 @@ class DiaryList(QListView):
         # but mouse wheel still scroll item by item (the number of items scrolled depends on
         # qApp.wheelScrollLines)
         self.setVerticalScrollMode(self.ScrollPerPixel)
-        self.scrollbar = DiaryList.ScrollBar(self)
+        self.scrollbar = DiaryListScrollBar(self)
         self.scrollbar.wantSetRow.connect(self.setRow)
         self.setVerticalScrollBar(self.scrollbar)
 
