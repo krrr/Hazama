@@ -193,7 +193,7 @@ def loadStyleSheet():
     QApplication.instance().setStyleSheet(''.join(ss))
 
 
-def winDwmExtendWindowFrame(hwnd, topMargin):
+def winDwmExtendWindowFrame(hwnd, left=0, right=0, top=0, bottom=0):
     """Extend background of title bar to toolbar. Only available on Windows
     because it depends on DWM."""
     if not isDwmUsable(): return
@@ -209,7 +209,7 @@ def winDwmExtendWindowFrame(hwnd, topMargin):
         pythonapi.PyCapsule_GetPointer.argtypes = [py_object, c_char_p]
         # winId is PyCapsule object, which storing HWND
         hwnd = pythonapi.PyCapsule_GetPointer(hwnd, None)
-    margin = Margin(0, 0, topMargin, 0)
+    margin = Margin(left, right, top, bottom)
     windll.dwmapi.DwmExtendFrameIntoClientArea(hwnd, byref(margin))
 
     return True

@@ -33,6 +33,10 @@ Editor > #textEditor {
     selection-background-color: #e0f2ff;
 }
 Editor > #dtBtn { color: #333 }
+
+QFrame#bottomArea[bgType="win10"] {
+    background: rgba(255, 255, 255, 80);
+}
 /**** End Editor ****/
 
 /**** Lists ****/

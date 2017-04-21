@@ -1,11 +1,13 @@
+import PySide.QtCore
 from PySide.QtGui import *
 from PySide.QtCore import *
 from hazama.ui.editor_ui import Ui_editor
-from hazama.ui.customobjects import TagCompleter
+from hazama.ui.customobjects import TagCompleter, NGraphicsDropShadowEffect
 from hazama.ui.customwidgets import DateTimeDialog
 from hazama.ui import (font, datetimeTrans, currentDatetime, fullDatetimeFmt,
-                       saveWidgetGeo, restoreWidgetGeo, datetimeToQt, DB_DATETIME_FMT_QT)
-from hazama.config import settings, db
+                       saveWidgetGeo, restoreWidgetGeo, datetimeToQt, DB_DATETIME_FMT_QT,
+                       winDwmExtendWindowFrame, scaleRatio)
+from hazama.config import settings, db, isWin, isWin10, isWin8, isWin7
 
 # TODO: editor in the main window (no tabs)
 
@@ -41,6 +43,9 @@ class Editor(QFrame, Ui_editor):
         self.tagEditor.returnPressed.connect(
             lambda: None if self.readOnly else self.box.button(QDialogButtonBox.Save).setFocus())
 
+        if isWin10 and settings['Main'].getboolean('extendTitleBarBg'):
+            self.bottomArea.setProperty('bgType', 'win10')
+
         # setup shortcuts
         # seems PySide has problem with QKeySequence.StandardKeys
         self.closeSaveSc = QShortcut(QKeySequence.Save, self, self.close)
@@ -55,12 +60,26 @@ class Editor(QFrame, Ui_editor):
         self.fromDiaryDict(diaryDict)
 
     def showEvent(self, event):
+        self._applyExtendTitleBarBg()
         if settings['Editor'].getboolean('titleFocus'):
             self.titleEditor.setCursorPosition(0)
         else:
             self.textEditor.setFocus()
             self.textEditor.moveCursor(QTextCursor.Start)
-        event.accept()
+
+    # disable winEvent hack if PySide version doesn't support it
+    if hasattr(PySide.QtCore, 'MSG') and hasattr(MSG, 'lParam'):
+        def winEvent(self, msg):
+            """See MainWindow.winEvent."""
+            if msg.message == 0x0084:
+                pos = QPoint(msg.lParam & 0xFFFF, msg.lParam >> 16)
+                widget = self.childAt(self.mapFromGlobal(pos))
+                if widget is self.bottomArea:
+                    return True, 2
+                else:
+                    return False, 0
+            else:
+                return False, 0
 
     def closeEvent(self, event):
         """Normal close will save diary. For cancel operation, call closeNoSave."""
@@ -78,6 +97,19 @@ class Editor(QFrame, Ui_editor):
             event.accept()
         else:
             super().mousePressEvent(event)
+
+    def _applyExtendTitleBarBg(self):
+        if isWin and settings['Main'].getboolean('extendTitleBarBg'):
+            winDwmExtendWindowFrame(self.winId(), bottom=self.bottomArea.height())
+            self.setAttribute(Qt.WA_TranslucentBackground)
+
+            if not isWin8:
+                for i in (self.dtBtn, self.lockBtn):
+                    eff = NGraphicsDropShadowEffect(5 if isWin7 else 3, i)
+                    eff.setColor(QColor(Qt.white))
+                    eff.setOffset(0, 0)
+                    eff.setBlurRadius((16 if isWin7 else 8) * scaleRatio)
+                    i.setGraphicsEffect(eff)
 
     def closeNoSave(self):
         self._saveOnClose = False
@@ -101,6 +133,9 @@ class Editor(QFrame, Ui_editor):
         for i in [self.quickCloseSc, self.quickPreSc, self.quickNextSc]:
             i.setEnabled(readOnly)
         self.readOnly = readOnly
+
+        if isWin and settings['Main'].getboolean('extendTitleBarBg'):
+            winDwmExtendWindowFrame(self.winId(), bottom=self.bottomArea.height())
 
     def fromDiaryDict(self, dic):
         self.timeModified = self.tagModified = False
