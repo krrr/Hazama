@@ -3,7 +3,7 @@ Section: utils
 Maintainer: Yuu Mousou (krrr) <guogaishiwo@gmail.com>
 Priority: optional
 Build-Depends: python3-setuptools, python3, debhelper (>= 9), python3-pyside, pyside-tools, qt4-linguist-tools
-Standards-Version: 3.9.7
+Standards-Version: 3.9.5
 X-Python3-Version: >= 3.3
 
 

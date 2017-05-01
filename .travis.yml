@@ -1,0 +1,24 @@
+language: python
+dist: trusty
+python:
+  - "3.5"
+
+# install dependencies
+before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get install python3-pyside python3-setuptools pyside-tools qt4-linguist-tools
+  - sudo apt-get install dpkg-dev debhelper devscripts fakeroot cdbs
+
+install: true
+
+script:
+  - debuild -uc -us
+
+deploy:
+  provider: releases
+  api_key: ${github_api_token}
+  file: "../hazama*.deb"
+  file_glob: true
+  skip_cleanup: true
+  on:
+    tags: true
