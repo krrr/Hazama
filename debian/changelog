@@ -1,3 +1,10 @@
+hazama (1.0.3) xenial; urgency=medium
+
+  * 1.0.3
+
+ -- Yuu Mousou (krrr) <guogaishiwo@gmail.com>  Sat, 04 Mar 2017 18:20:04 +0800
+
+
 hazama (1.0.1) xenial; urgency=medium
 
   * Init deb package
