@@ -1,18 +1,32 @@
 language: python
+sudo: false  # faster
 dist: trusty
 python:
   - "3.5"
 
+branches:
+  except:
+  - dev
+
 # install dependencies
-before_install:
-  - sudo apt-get -qq update
-  - sudo apt-get install python3-pyside python3-setuptools pyside-tools qt4-linguist-tools
-  - sudo apt-get install dpkg-dev debhelper devscripts fakeroot cdbs
+addons:
+  apt:
+    packages:
+    - python3-pyside
+    - python3-setuptools
+    - pyside-tools
+    - qt4-linguist-tools
+    - dpkg-dev
+    - debhelper
+    - devscripts
+    - fakeroot
+    - cdbs
 
 install: true
 
 script:
-  - debuild -uc -us
+  - debuild -uc -us  # it will call setup.py build
+  - /usr/bin/python3 utils/tests.py  # system python is also 3.5
 
 deploy:
   provider: releases
