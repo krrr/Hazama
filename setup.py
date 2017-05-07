@@ -138,7 +138,7 @@ class BuildExe(Command):
     initialize_options = finalize_options = lambda self: None
 
     def run(self):
-        spawn([sys.executable, pjoin('utils', 'setupfreeze5.py'), 'build_exe'])
+        spawn([sys.executable, pjoin('utils', 'setupfreeze.py'), 'build_exe'])
         # remove duplicate python DLL
         try:
             dll_path = glob(pjoin('build', 'python*.dll'))[0]
@@ -179,4 +179,5 @@ setup(name='Hazama',
       cmdclass={'build': CustomBuild, 'build_qt': BuildQt, 'install': CustomInstall,
                 'update_ts': UpdateTranslations, 'build_exe': BuildExe, 'clean': Clean},
       zip_safe=True,
+      extras_require = {'packaging': ['cx_freeze']},
       entry_points={'gui_scripts': ['hazama = hazama:main_entry']})
