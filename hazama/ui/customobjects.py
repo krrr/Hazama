@@ -1,4 +1,6 @@
 import re
+from collections import deque
+from hazama.ui import refreshStyle
 from PySide.QtCore import *
 from PySide.QtGui import *
 
@@ -327,3 +329,99 @@ class NGraphicsDropShadowEffect(QGraphicsDropShadowEffect):
         # algorithm in Python
         for i in range(self._times):
             super().draw(painter)
+
+
+class NWidgetDelegate(QAbstractItemDelegate):
+    """Rendering widgets instead of drawing using QPainter. Every widget representing
+    an row will be cached, and it will be recycled once become invisible. Height
+    of item widget will also be cached."""
+    def __init__(self, model, itemHeightColumn):
+        super().__init__()
+        self._itemWidgetCache = []
+        self._itemWidgetCacheHeadRow = 0
+
+        self._viewHeight = None
+        self._itemHeightColumn = itemHeightColumn
+
+        self._heightMeasureWidget = self.getItemWidget(None, None, None)
+        self._freeWidgets = deque(maxlen=20)
+
+        model.layoutChanged.connect(self.invalidateCache)
+        model.rowsInserted.connect(self.invalidateCache)
+        model.rowsRemoved.connect(self.invalidateCache)
+
+    def paint(self, painter, option, index):
+        row = index.row()
+
+        y = option.rect.y()
+        if y <= 0:  # the first item got painted is always at top of list
+            moved = abs(row - self._itemWidgetCacheHeadRow)
+            if moved >= 1:
+                scrollDown = row > self._itemWidgetCacheHeadRow
+                if scrollDown:
+                    self._freeWidgets.extend(self._itemWidgetCache[:moved])
+                    del self._itemWidgetCache[:moved]
+                else:
+                    # can't determine which item become completely invisible
+                    if moved >= len(self._itemWidgetCache):  # moved so far that cached items are all useless
+                        self._freeWidgets.extend(self._itemWidgetCache)
+                        self._itemWidgetCache.clear()
+                    else:
+                        self._itemWidgetCache = [None] * moved + self._itemWidgetCache
+                self._itemWidgetCacheHeadRow = row
+        elif y + option.rect.height() >= self._viewHeight:  # the last visible item
+            # this hack can't recycle widget immediately after scrolled up
+            while getattr(self._itemWidgetCache[-1], 'lastSetRow', -1) > row:
+                self._freeWidgets.append(self._itemWidgetCache.pop())
+
+        idx = row - self._itemWidgetCacheHeadRow
+
+        if idx < len(self._itemWidgetCache):
+            w = self._itemWidgetCache[idx]
+        else:
+            w = None
+            self._itemWidgetCache.append(None)
+        if w is None:
+            recycled = self._freeWidgets.pop() if self._freeWidgets else None
+            w = self.getItemWidget(index, row, recycled)
+            w.layout().activate()  # have to layout hidden widget manually
+
+            self._itemWidgetCache[idx] = w
+            w.lastSetRow = row
+
+        w.resize(option.rect.size())
+        w.setProperty('selected', bool(option.state & QStyle.State_Selected))
+        w.setProperty('active', bool(option.state & QStyle.State_Active))
+        refreshStyle(w)  # must be called after dynamic property changed
+
+        # don't use offset argument of QWidget.render
+        painter.translate(option.rect.topLeft())
+        w.render(painter, QPoint())
+        painter.resetTransform()
+
+    def sizeHint(self, option, index):
+        row = index.row()
+        height = index.sibling(row, self._itemHeightColumn).data()
+        if height is None:
+            w = self.getItemWidget(index, row, self._heightMeasureWidget)
+            w.layout().activate()
+            height = w.sizeHint().height()
+
+            model = index.model()
+            # updateHeightCache bypass emitting dataChanged signal
+            model.sourceModel().updateHeightCache(model.mapToSource(index).row(), height)
+
+        return QSize(-1, height)
+
+    def getItemWidget(self, index, row, recycled):
+        """Create item widget or reuse if recycled is not None. Fill contents if
+        index and row is not None."""
+        raise NotImplementedError
+
+    def invalidateCache(self):
+        # view width changing will not invalidate cache
+        self._freeWidgets.extend(self._itemWidgetCache)
+        self._itemWidgetCache.clear()
+
+    def adjustWidgetCache(self, height):
+        self._viewHeight = height

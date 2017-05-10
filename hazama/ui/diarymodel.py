@@ -10,7 +10,8 @@ class DiaryModel(QAbstractTableModel):
     and the view will still issue a huge amount of queries.
     Table structure: id | datetime | text | title | tags | formats | len(text)
     """
-    ID, DATETIME, TEXT, TITLE, TAGS, FORMATS, LENGTH = range(7)
+    ROW_WIDTH = 8
+    ID, DATETIME, TEXT, TITLE, TAGS, FORMATS, HEIGHT_CACHE, LENGTH = range(ROW_WIDTH)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -22,18 +23,19 @@ class DiaryModel(QAbstractTableModel):
         return len(self._lst)
 
     def columnCount(self, *__):
-        return 7
+        return DiaryModel.ROW_WIDTH
 
     def data(self, index, role=Qt.DisplayRole):
         if role != Qt.DisplayRole:
             return
         d, col = self._lst[index.row()], index.column()
-        if col == 6:  # len(text)
-            return len(d[2])
+        if col == DiaryModel.LENGTH:
+            return len(d[DiaryModel.TEXT])
         else:
             return d[col]
 
     def setData(self, index, value, *__):
+        print('|/')
         r, c = index.row(), index.column()
         self._lst[r][c] = value
         self.dataChanged.emit(*[self.index(r, c)] * 2)
@@ -52,6 +54,13 @@ class DiaryModel(QAbstractTableModel):
         self.endInsertRows()
         return True
 
+    def updateHeightCache(self, row, height):
+        # skip dataChanged signal
+        self._lst[row][DiaryModel.HEIGHT_CACHE] = height
+
+    def _invalidateHeightCache(self, row):
+        self._lst[row][DiaryModel.HEIGHT_CACHE] = None
+
     def saveDiary(self, dic):
         assert isinstance(dic, dict)
         realId = db.save(dic)
@@ -66,7 +75,9 @@ class DiaryModel(QAbstractTableModel):
             if diary[self.TAGS] is None:  # tags not changed
                 diary[self.TAGS] = self._lst[row][self.TAGS]
         self._lst[row] = diary
-        self.dataChanged.emit(self.index(row, 0), self.index(row, 6))
+        self._lst[row].append(None)
+        self.dataChanged.emit(self.index(row, 0), self.index(row, DiaryModel.ROW_WIDTH-1))
+        self._invalidateHeightCache(row)
         return row
 
     def loadFromDb(self):
@@ -102,6 +113,7 @@ class DiaryModel(QAbstractTableModel):
                 yearBefore = year
                 # end saving year firsts
 
+                d.append(None)  # space for HEIGHT_CACHE
                 self._lst.append(d)
                 if i % 15 == 0:
                     qApp.processEvents()
@@ -123,7 +135,7 @@ class DiaryModel(QAbstractTableModel):
     def getRowById(self, id_):
         # user tends to modify newer diaries?
         for idx, d in enumerate(reversed(self._lst)):
-            if d[0] == id_:
+            if d[DiaryModel.ID] == id_:
                 return len(self._lst) - 1 - idx
         raise KeyError
 
@@ -138,4 +150,4 @@ class DiaryModel(QAbstractTableModel):
     def getAll(self):
         # using data() is slow, because it will create many index objects
         for i in self._lst:
-            yield tuple(i) + (len(i[2]),)  # len(text)
+            yield tuple(i) + (len(i[DiaryModel.TEXT]),)

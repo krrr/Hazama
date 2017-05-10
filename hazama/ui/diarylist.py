@@ -1,10 +1,9 @@
 import random
 from PySide.QtGui import *
 from PySide.QtCore import *
-from hazama.ui import (font, datetimeTrans, scaleRatio, makeQIcon, refreshStyle,
-                       NProperty)
+from hazama.ui import (font, datetimeTrans, scaleRatio, makeQIcon, NProperty)
 from hazama.ui.diarymodel import DiaryModel
-from hazama.ui.customobjects import NTextDocument, MultiSortFilterProxyModel
+from hazama.ui.customobjects import NTextDocument, MultiSortFilterProxyModel, NWidgetDelegate
 from hazama.ui.customwidgets import NElideLabel, MultiLineElideLabel
 from hazama.config import settings, db
 
@@ -108,17 +107,12 @@ class DiaryListDelegate(QStyledItemDelegate):
         return QSize(-1, self.all_h+3)  # 3 is spacing between entries
 
 
-class DiaryListDelegateColorful(QItemDelegate):
+class DiaryListDelegateColorful(NWidgetDelegate):
     """ItemDelegate of theme 'colorful' for DiaryList. Using widget rendering."""
     class ItemWidget(QFrame):
-        """Widget that used to draw an item in ItemDelegate.paint method.
-        This widget's height is 'fixed'(two possible height) because delegate's
-        sizeHint method is called very often. So font fallback will cause problem.
-        """
+        """Widget that used to draw an item in paint method."""
         def __init__(self, parent=None):
             super().__init__(parent, objectName='DiaryListItem')
-            self.heightWithTag = self.heightNoTag = None
-
             self.title = NElideLabel(self, objectName='DiaryListItemTitle')
             self.title.setFont(font.title)
             self.title.setAlignment(Qt.AlignVCenter | Qt.AlignRight)
@@ -144,69 +138,38 @@ class DiaryListDelegateColorful(QItemDelegate):
             self.tagIco.setIconSize(QSize(minSz, minSz))
             self.tagIco.setIcon(QIcon(':/tag.png'))
 
-            self._vLayout0 = QVBoxLayout(self)
-            self._hLayout0 = QHBoxLayout()
-            self._hLayout1 = QHBoxLayout()
-            for i in [self._vLayout0, self._hLayout0, self._hLayout1]:
+            self.vLayout0 = QVBoxLayout(self)
+            self.hLayout0 = QHBoxLayout()
+            self.hLayout1 = QHBoxLayout()
+            for i in [self.vLayout0, self.hLayout0, self.hLayout1]:
                 i.setContentsMargins(0, 0, 0, 0)
                 i.setSpacing(0)
 
             for i in [self.datetimeIco, self.datetime, self.title]:
-                self._hLayout0.addWidget(i)
-            self._hLayout0.insertSpacing(2, 10)
+                self.hLayout0.addWidget(i)
+            self.hLayout0.insertSpacing(2, 10)
             for i in [self.tagIco, self.tag]:
-                self._hLayout1.addWidget(i)
-            self._vLayout0.addLayout(self._hLayout0)
-            self._vLayout0.addWidget(self.text)
-            self._vLayout0.addLayout(self._hLayout1)
+                self.hLayout1.addWidget(i)
+            self.vLayout0.addLayout(self.hLayout0)
+            self.vLayout0.addWidget(self.text)
+            self.vLayout0.addLayout(self.hLayout1)
 
-        def refreshStyle(self):
-            """Must be called after dynamic property changed"""
-            refreshStyle(self)
-            # no need to call self.update here
+    def getItemWidget(self, index, row, recycled):
+        w = recycled or self.ItemWidget()
 
-        def setTexts(self, dt, text, title, tags):
-            # Some layout behaviours are full of mystery, even changing order of
-            # calls will break the UI
-            self.datetime.setText(datetimeTrans(dt))
-            # without this width of dt will not be updated (for performance reason?)
-            self._hLayout0.activate()
-            # width of title area depends on itemW's width
-            self.title.setText(
-                font.title_m.elidedText(title, Qt.ElideRight, self.title.width()))
-            self.text.setText(text)
+        if index is not None:
+            dt, text, title, tags = (index.sibling(row, i).data() for i in range(1, 5))
+            # Some layout behaviours are full of mystery, be careful!!!!
+            w.datetime.setText(datetimeTrans(dt))
+
+            w.title.setText(title)
+            w.text.setText(text)
             if tags:
                 tags = ' \u2022 '.join(tags.split())  # use bullet to separate
-                self.tag.setText(tags)
-            self.tag.setVisible(bool(tags))
-            self.tagIco.setVisible(bool(tags))
-
-        def refreshHeightInfo(self):
-            self.heightWithTag = self.sizeHint().height()
-            self.heightNoTag = self.heightWithTag - self._hLayout1.sizeHint().height()
-
-    def __init__(self):
-        super().__init__()
-        self._itemW = self.ItemWidget()
-        self._itemW.refreshHeightInfo()
-
-    def paint(self, painter, option, index):
-        row = index.row()
-
-        self._itemW.resize(option.rect.size())
-        self._itemW.setTexts(*(index.sibling(row, i).data() for i in range(1, 5)))
-        self._itemW.setProperty('selected', bool(option.state & QStyle.State_Selected))
-        self._itemW.setProperty('active', bool(option.state & QStyle.State_Active))
-        self._itemW.refreshStyle()
-
-        # don't use offset argument of QWidget.render
-        painter.translate(option.rect.topLeft())
-        self._itemW.render(painter, QPoint())
-        painter.resetTransform()
-
-    def sizeHint(self, option, index):
-        hasTag = bool(index.sibling(index.row(), 4).data())
-        return QSize(-1, self._itemW.heightWithTag if hasTag else self._itemW.heightNoTag)
+                w.tag.setText(tags)
+            w.tag.setVisible(bool(tags))
+            w.tagIco.setVisible(bool(tags))
+        return w
 
 
 class DiaryListScrollBar(QScrollBar):
@@ -276,7 +239,6 @@ class DiaryList(QListView):
         self.scrollbar.wantSetRow.connect(self.setRow)
         self.setVerticalScrollBar(self.scrollbar)
 
-        self.setupTheme()
         # disable default editor. Editor is implemented in the View
         self.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
@@ -289,6 +251,8 @@ class DiaryList(QListView):
         self.modelProxy.addFilter([db.DATETIME])
         self.setModel(self.modelProxy)
         self.sort()
+
+        self.setupTheme()
 
         self.editAct = QAction(self.tr('Edit'), self)
         self.delAct = QAction(makeQIcon(':/menu/list-delete.png', scaled2x=True),
@@ -320,6 +284,11 @@ class DiaryList(QListView):
                              self.model().index(self.model().rowCount()-1, 0))
         self.selectionModel().select(sel, QItemSelectionModel.ClearAndSelect)
 
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        if self._delegate.__class__ == DiaryListDelegateColorful:
+            self._delegate.adjustWidgetCache(self.height())
+
     def setRow(self, row):
         self.setCurrentIndex(self.modelProxy.index(row, 0))
 
@@ -334,7 +303,10 @@ class DiaryList(QListView):
 
     def setupTheme(self):
         theme = settings['Main']['theme']
-        self._delegate = {'colorful': DiaryListDelegateColorful}.get(theme, DiaryListDelegate)()
+        if theme == 'colorful':
+            self._delegate = DiaryListDelegateColorful(self.modelProxy, DiaryModel.HEIGHT_CACHE)
+        else:
+            self._delegate = DiaryListDelegate()
         self.setItemDelegate(self._delegate)
         if self.isVisible():
             # force items to be laid again
