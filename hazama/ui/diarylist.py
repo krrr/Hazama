@@ -217,6 +217,10 @@ class DiaryListScrollBar(QScrollBar):
         menu.deleteLater()
 
     def setPositions(self, rowCount, pairs):
+        if rowCount is None or pairs is None:
+            self._poses = self._pairs = ()
+            return
+
         self._poses = tuple(p / rowCount for _, p in pairs)
         self._pairs = pairs
 
@@ -340,9 +344,8 @@ class DiaryList(QListView):
     def setAnnotatedScrollbar(self, show=None):
         if show is not False and settings['Main'].getboolean('listAnnotated'):
             self.scrollbar.setPositions(self.originModel.rowCount(), self.originModel.getYearFirsts())
-            self.scrollbar.update()
         else:
-            self.scrollbar.poses = ()
+            self.scrollbar.setPositions(None, None)
 
     def _setFilter(self, filterKey, s):
         self.modelProxy.setFilterPattern(filterKey, s)
