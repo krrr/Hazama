@@ -344,7 +344,7 @@ class NWidgetDelegate(QAbstractItemDelegate):
         self._itemHeightColumn = itemHeightColumn
 
         self._heightMeasureWidget = self.getItemWidget(None, None, None)
-        self._freeWidgets = deque(maxlen=20)
+        self._freeWidgets = deque(maxlen=10)
 
         model.layoutChanged.connect(self.invalidateCache)
         model.rowsInserted.connect(self.invalidateCache)
@@ -419,6 +419,8 @@ class NWidgetDelegate(QAbstractItemDelegate):
         raise NotImplementedError
 
     def invalidateCache(self):
+        if not self._itemWidgetCache:
+            return
         # view width changing will not invalidate cache
         self._freeWidgets.extend(self._itemWidgetCache)
         self._itemWidgetCache.clear()
