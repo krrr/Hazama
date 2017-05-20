@@ -451,11 +451,10 @@ class StyleSheetEditor(QDialog):
         codeFont = QFont('Consolas' if isWin else 'monospace')
         self.styleSheetEdit = QPlainTextEdit(self)
         self.styleSheetEdit.setFont(codeFont)
-        self.styleSheetEdit.setStyleSheet('''
-        QPlainTextEdit { border: none; }
-        ''')
+        self.styleSheetEdit.setStyleSheet('QPlainTextEdit { border: none; }')
         self._highlighter = QSSHighlighter(self.styleSheetEdit.document())
         self.styleSheetEdit.setPlainText(qApp.originStyleSheet)
+        self.styleSheetEdit.find(CUSTOM_STYLESHEET_DELIMIT)
         layout = QVBoxLayout(self)
         layout.addWidget(self.styleSheetEdit)
         layout.addWidget(self._buttonBox)
