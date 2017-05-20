@@ -316,6 +316,8 @@ class DiaryList(QListView):
             # force items to be laid again
             self.setSpacing(self.spacing())
             self.setAnnotatedScrollbar()
+            self._delegate.adjustWidgetCache(self.height())
+            self.originModel.invalidateHeightCache()
 
     def reload(self):
         self.originModel.clear()

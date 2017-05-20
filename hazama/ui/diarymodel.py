@@ -58,8 +58,12 @@ class DiaryModel(QAbstractTableModel):
         # skip dataChanged signal
         self._lst[row][DiaryModel.HEIGHT_CACHE] = height
 
-    def _invalidateHeightCache(self, row):
-        self._lst[row][DiaryModel.HEIGHT_CACHE] = None
+    def invalidateHeightCache(self, row=None):
+        if row is None:
+            for i in range(len(self._lst)):
+                self._lst[i][DiaryModel.HEIGHT_CACHE] = None
+        else:
+            self._lst[row][DiaryModel.HEIGHT_CACHE] = None
 
     def saveDiary(self, dic):
         assert isinstance(dic, dict)
@@ -77,7 +81,7 @@ class DiaryModel(QAbstractTableModel):
         self._lst[row] = diary
         self._lst[row].append(None)
         self.dataChanged.emit(self.index(row, 0), self.index(row, DiaryModel.ROW_WIDTH-1))
-        self._invalidateHeightCache(row)
+        self.invalidateHeightCache(row)
         return row
 
     def loadFromDb(self):

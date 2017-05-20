@@ -107,6 +107,7 @@ class MultiLineElideLabel(QFrame):
         self._realHeight = int(height)
 
     def setMaximumLineCount(self, lines):
+        """0 means unlimited."""
         if lines == self._maximumLineCount:
             return
         self._maximumLineCount = lines
