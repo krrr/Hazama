@@ -19,6 +19,7 @@ class MultiLineElideLabel(QFrame):
     """Qt Widget version of QML text.maximumLineCount."""
 
     def __init__(self, *args, **kwargs):
+        self._forceHeightHint = kwargs.pop('forceHeightHint', False)
         super().__init__(*args, **kwargs)
         self._maximumLineCount = 4
         self._layout = QTextLayout()
@@ -26,9 +27,9 @@ class MultiLineElideLabel(QFrame):
         self._text = None
         self._elideMarkWidth = None
         self._elideMarkPos = None
-        self._heightHint = None
-        self._lineHeight = None
-        self._realHeight = None
+        self._heightHint = 0
+        self._lineHeight = 0
+        self._realHeight = 0
         self._updateSize()
 
     def resizeEvent(self, event):
@@ -38,10 +39,11 @@ class MultiLineElideLabel(QFrame):
     def setFont(self, f):
         super().setFont(f)
         self._updateSize()
+        self._setupTextLayout()
 
     def sizeHint(self):
         __, top, __, bottom = self.getContentsMargins()
-        return QSize(-1, (self._heightHint if self._realHeight is None else self._realHeight) + top + bottom)
+        return QSize(-1, self._realHeight + top + bottom)
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -58,25 +60,26 @@ class MultiLineElideLabel(QFrame):
         self._lineHeight = self.fontMetrics().height()
         self._heightHint = self._lineHeight * self._maximumLineCount
         self._elideMarkWidth = self.fontMetrics().width(self.ElideMark)
-        self.updateGeometry()
-        # maybe also self.update?
+        if self._forceHeightHint:
+            self._realHeight = self._heightHint
 
     def setText(self, text):
         self._text = text.replace('\n', '\u2028')
         self._setupTextLayout()
-        self.updateGeometry()
 
     def _setupTextLayout(self):
         layout = self._layout
         layout.clearLayout()
         layout.setFont(self.font())
 
+        if not self._text or self._maximumLineCount == 0:
+            if self._realHeight != 0 and not self._forceHeightHint:
+                self.updateGeometry()
+                self._realHeight = 0
+            return
+
         lineWidthLimit = self.contentsRect().width()
         layout.setText(self._text)
-
-        if not self._text or self._maximumLineCount == 0:
-            self._realHeight = 0
-            return
 
         height = 0
         visibleTextLen = 0
@@ -104,15 +107,17 @@ class MultiLineElideLabel(QFrame):
 
                 break
         layout.endLayout()
-        self._realHeight = int(height)
+        height = int(height)
+        if height != self._realHeight and not self._forceHeightHint:
+            self.updateGeometry()
+            self._realHeight = height
 
     def setMaximumLineCount(self, lines):
         """0 means unlimited."""
         if lines == self._maximumLineCount:
             return
         self._maximumLineCount = lines
-        if self._text:
-            self._setupTextLayout()
+        self._setupTextLayout()
         self._updateSize()
 
 

@@ -335,20 +335,16 @@ class NWidgetDelegate(QAbstractItemDelegate):
     """Rendering widgets instead of drawing using QPainter. Every widget representing
     an row will be cached, and it will be recycled once become invisible. Height
     of item widget will also be cached."""
-    def __init__(self, model, itemHeightColumn):
+    def __init__(self, model):
         super().__init__()
         self._itemWidgetCache = []
         self._itemWidgetCacheHeadRow = 0
-
         self._viewHeight = None
-        self._itemHeightColumn = itemHeightColumn
-
-        self._heightMeasureWidget = self.getItemWidget(None, None, None)
         self._freeWidgets = deque(maxlen=10)
 
-        model.layoutChanged.connect(self.invalidateCache)
-        model.rowsInserted.connect(self.invalidateCache)
-        model.rowsRemoved.connect(self.invalidateCache)
+        model.layoutChanged.connect(self._invalidateWidgetCache)
+        model.rowsInserted.connect(self._invalidateWidgetCache)
+        model.rowsRemoved.connect(self._invalidateWidgetCache)
 
     def paint(self, painter, option, index):
         row = index.row()
@@ -384,41 +380,31 @@ class NWidgetDelegate(QAbstractItemDelegate):
         if w is None:
             recycled = self._freeWidgets.pop() if self._freeWidgets else None
             w = self.getItemWidget(index, row, recycled)
-            w.layout().activate()  # have to layout hidden widget manually
 
             self._itemWidgetCache[idx] = w
             w.lastSetRow = row
 
         w.resize(option.rect.size())
-        w.setProperty('selected', bool(option.state & QStyle.State_Selected))
-        w.setProperty('active', bool(option.state & QStyle.State_Active))
-        refreshStyle(w)  # must be called after dynamic property changed
+        properties = (bool(option.state & QStyle.State_Selected),
+                      bool(option.state & QStyle.State_Active))
+        if getattr(w, 'lastSetProperties', None) != properties:
+            w.setProperty('selected', properties[0])
+            w.setProperty('active', properties[1])
+            w.lastSetProperties = properties
+            refreshStyle(w)  # must be called after dynamic property changed
 
         # don't use offset argument of QWidget.render
         painter.translate(option.rect.topLeft())
+        # render will activate layouts and send pending resize events
         w.render(painter, QPoint())
         painter.resetTransform()
-
-    def sizeHint(self, option, index):
-        row = index.row()
-        height = index.sibling(row, self._itemHeightColumn).data()
-        if height is None:
-            w = self.getItemWidget(index, row, self._heightMeasureWidget)
-            w.layout().activate()
-            height = w.sizeHint().height()
-
-            model = index.model()
-            # updateHeightCache bypass emitting dataChanged signal
-            model.sourceModel().updateHeightCache(model.mapToSource(index).row(), height)
-
-        return QSize(-1, height)
 
     def getItemWidget(self, index, row, recycled):
         """Create item widget or reuse if recycled is not None. Fill contents if
         index and row is not None."""
         raise NotImplementedError
 
-    def invalidateCache(self):
+    def _invalidateWidgetCache(self):
         if not self._itemWidgetCache:
             return
         # view width changing will not invalidate cache

@@ -121,7 +121,7 @@ class DiaryListDelegateColorful(NWidgetDelegate):
             self.datetime.setFont(font.datetime)
             self.datetime.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Preferred)
 
-            self.text = MultiLineElideLabel(self, objectName='DiaryListItemText')
+            self.text = MultiLineElideLabel(self, objectName='DiaryListItemText', forceHeightHint=True)
             self.text.setMaximumLineCount(settings['Main'].getint('previewLines'))
             self.text.setFont(font.text)
 
@@ -154,6 +154,12 @@ class DiaryListDelegateColorful(NWidgetDelegate):
             self.vLayout0.addWidget(self.text)
             self.vLayout0.addLayout(self.hLayout1)
 
+    def __init__(self, *args):
+        super().__init__(*args)
+        w = self.getItemWidget(None, None, None)
+        self.itemHeightWithTag = w.sizeHint().height()
+        self.itemHeightNoTag = self.itemHeightWithTag - w.hLayout1.sizeHint().height()
+
     def getItemWidget(self, index, row, recycled):
         w = recycled or self.ItemWidget()
 
@@ -170,6 +176,12 @@ class DiaryListDelegateColorful(NWidgetDelegate):
             w.tag.setVisible(bool(tags))
             w.tagIco.setVisible(bool(tags))
         return w
+
+    def sizeHint(self, option, index):
+        # an attempt to have real height according to text layout has failed,
+        # because program will be unresponsive after width of list changed
+        hasTag = bool(index.sibling(index.row(), 4).data())
+        return QSize(-1, self.itemHeightWithTag if hasTag else self.itemHeightNoTag)
 
 
 class DiaryListScrollBar(QScrollBar):
@@ -308,7 +320,7 @@ class DiaryList(QListView):
     def setupTheme(self):
         theme = settings['Main']['theme']
         if theme == 'colorful':
-            self._delegate = DiaryListDelegateColorful(self.modelProxy, DiaryModel.HEIGHT_CACHE)
+            self._delegate = DiaryListDelegateColorful(self.modelProxy)
         else:
             self._delegate = DiaryListDelegate()
         self.setItemDelegate(self._delegate)
@@ -316,8 +328,8 @@ class DiaryList(QListView):
             # force items to be laid again
             self.setSpacing(self.spacing())
             self.setAnnotatedScrollbar()
-            self._delegate.adjustWidgetCache(self.height())
-            self.originModel.invalidateHeightCache()
+            if theme == 'colorful':
+                self._delegate.adjustWidgetCache(self.height())
 
     def reload(self):
         self.originModel.clear()

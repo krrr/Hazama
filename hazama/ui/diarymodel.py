@@ -1,3 +1,5 @@
+import time
+import logging
 from PySide.QtCore import QAbstractTableModel, QModelIndex, Qt
 from PySide.QtGui import qApp
 from hazama.config import db, settings
@@ -10,8 +12,8 @@ class DiaryModel(QAbstractTableModel):
     and the view will still issue a huge amount of queries.
     Table structure: id | datetime | text | title | tags | formats | len(text)
     """
-    ROW_WIDTH = 8
-    ID, DATETIME, TEXT, TITLE, TAGS, FORMATS, HEIGHT_CACHE, LENGTH = range(ROW_WIDTH)
+    ROW_WIDTH = 7
+    ID, DATETIME, TEXT, TITLE, TAGS, FORMATS, LENGTH = range(ROW_WIDTH)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -19,10 +21,10 @@ class DiaryModel(QAbstractTableModel):
         self._yearFirstsArgs = None
         self._yearFirsts = None
 
-    def rowCount(self, *__):
+    def rowCount(self, parent=None):
         return len(self._lst)
 
-    def columnCount(self, *__):
+    def columnCount(self, parent=None):
         return DiaryModel.ROW_WIDTH
 
     def data(self, index, role=Qt.DisplayRole):
@@ -34,36 +36,23 @@ class DiaryModel(QAbstractTableModel):
         else:
             return d[col]
 
-    def setData(self, index, value, *__):
-        print('|/')
-        r, c = index.row(), index.column()
-        self._lst[r][c] = value
-        self.dataChanged.emit(*[self.index(r, c)] * 2)
+    def setData(self, index, value, role=Qt.DisplayRole):
+        self._lst[index.row()][index.column()] = value
+        self.dataChanged.emit(index, index)
         return True
 
-    def removeRows(self, row, count, *__):
+    def removeRows(self, row, count, parent=None):
         self.beginRemoveRows(QModelIndex(), row, row+count-1)
         del self._lst[row:row+count]
         self.endRemoveRows()
         return True
 
-    def insertRows(self, row, count, *__):
+    def insertRows(self, row, count, parent=None):
         self.beginInsertRows(QModelIndex(), row, row+count-1)
         for i in range(row, row+count):
             self._lst.insert(i, list(db.EMPTY_DIARY))
         self.endInsertRows()
         return True
-
-    def updateHeightCache(self, row, height):
-        # skip dataChanged signal
-        self._lst[row][DiaryModel.HEIGHT_CACHE] = height
-
-    def invalidateHeightCache(self, row=None):
-        if row is None:
-            for i in range(len(self._lst)):
-                self._lst[i][DiaryModel.HEIGHT_CACHE] = None
-        else:
-            self._lst[row][DiaryModel.HEIGHT_CACHE] = None
 
     def saveDiary(self, dic):
         assert isinstance(dic, dict)
@@ -79,9 +68,7 @@ class DiaryModel(QAbstractTableModel):
             if diary[self.TAGS] is None:  # tags not changed
                 diary[self.TAGS] = self._lst[row][self.TAGS]
         self._lst[row] = diary
-        self._lst[row].append(None)
         self.dataChanged.emit(self.index(row, 0), self.index(row, DiaryModel.ROW_WIDTH-1))
-        self.invalidateHeightCache(row)
         return row
 
     def loadFromDb(self):
@@ -89,6 +76,7 @@ class DiaryModel(QAbstractTableModel):
         while loading data, making UI still responsive if the amount of data
         is big. It also delay informing views to update, this avoid unnecessary
         layout operation."""
+        start_time = time.clock()
         sortBy = settings['Main']['listSortBy']
         reverse = settings['Main'].getboolean('listReverse')
         self._yearFirstsArgs = (sortBy, reverse)
@@ -117,7 +105,6 @@ class DiaryModel(QAbstractTableModel):
                 yearBefore = year
                 # end saving year firsts
 
-                d.append(None)  # space for HEIGHT_CACHE
                 self._lst.append(d)
                 if i % 15 == 0:
                     qApp.processEvents()
@@ -126,6 +113,7 @@ class DiaryModel(QAbstractTableModel):
 
         pairs = yearFirsts.items() if sortBy == 'datetime' else ()
         self._yearFirsts = tuple(sorted(pairs, reverse=reverse))
+        logging.debug('loadFromDb took %.2f sec', time.clock()-start_time)
 
     def getYearFirsts(self):
         """Get (year: row) pairs. row is the row of the first diary of each year (excluding
