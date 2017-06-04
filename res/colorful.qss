@@ -75,19 +75,24 @@ QFrame#DiaryListItem > QToolButton {  /* icons */
 
 /* TagListItem part */
 QFrame#TagListItem {
-    padding: 4dip 7dip 4dip 5dip;
+    padding: 4dip 4dip 4dip 7dip;
     background: transparent;
 }
 QFrame#TagListItem * {
     color: #363D43;
 }
 QFrame#TagListItem[selected="true"] {
-    border-right: 3dip solid #7092BE;
+    border-left: 3dip solid #7092BE;
     border-top: 1dip solid #979A9B;
     border-bottom: 1dip solid #979A9B;
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
         stop:0 white,
         stop:1 transparent);
+}
+QLabel#TagListItemCount {
+    background: rgba(0,0,0,22);
+    border-radius: 4dip;
+    border: 1px solid rgba(0,0,0,33);
 }
 
 /* HeatMap part */

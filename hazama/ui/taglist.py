@@ -71,12 +71,10 @@ class TagListDelegateColorful(QItemDelegate):
             self._hLayout.setContentsMargins(0, 0, 0, 0)
 
             self.name = NElideLabel(self, objectName='TagListItemName')
-            self.name.setAlignment(Qt.AlignRight)
-            self.name.elideMode = Qt.ElideLeft
             self.count = QLabel(self, objectName='TagListItemCount')
             self.count.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Preferred)
-            self._hLayout.addWidget(self.count)
             self._hLayout.addWidget(self.name)
+            self._hLayout.addWidget(self.count)
 
         def setFixedWidth(self, w):
             if w != self.width():
@@ -87,20 +85,24 @@ class TagListDelegateColorful(QItemDelegate):
         self._itemW = self.ItemWidget()
         self._itemW.setFixedHeight(self._itemW.sizeHint().height())
         self._countEnabled = settings['Main'].getboolean('tagListCount')
-        if not self._countEnabled: self._itemW.count.hide()
+        if not self._countEnabled:
+            self._itemW.count.hide()
 
     def paint(self, painter, option, index):
-        selected = bool(option.state & QStyle.State_Selected)
-        active = bool(option.state & QStyle.State_Active)
-
         self._itemW.name.setText(index.data(Qt.DisplayRole))
         if self._countEnabled:
+            self._itemW.count.setVisible(index.row() != 0)
             countData = index.data(Qt.UserRole)
             self._itemW.count.setText(str(countData) if countData else '')
-        self._itemW.setProperty('selected', selected)
-        self._itemW.setProperty('active', active)
-        refreshStyle(self._itemW)
-        self._itemW.setFixedWidth(option.rect.width())
+
+        self._itemW.resize(option.rect.size())
+        properties = (bool(option.state & QStyle.State_Selected),
+                      bool(option.state & QStyle.State_Active))
+        if getattr(self._itemW, 'lastSetProperties', None) != properties:
+            self._itemW.setProperty('selected', properties[0])
+            self._itemW.setProperty('active', properties[1])
+            self._itemW.lastSetProperties = properties
+            refreshStyle(self._itemW)  # must be called after dynamic property changed
 
         painter.translate(option.rect.topLeft())
         self._itemW.render(painter, QPoint())
