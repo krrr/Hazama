@@ -1,0 +1,96 @@
+/**** ToolBar ****/
+QMainWindow > QToolBar {
+    background: #f2f1e7;
+    border-bottom: 1dip solid #b53d00;
+    padding: 1dip;
+    spacing: 0px
+}
+QMainWindow > QToolBar[titleBarBgType="win"] {
+    /* Windows 8 always have bright color */
+    background: transparent;
+    /* Windows below 10 will add thin border to parts except toolbar (if system theme has this) */
+    border: none;
+}
+QMainWindow > QToolBar[titleBarBgType="win10"] {
+    /* Windows 10 may have dark theme color */
+    background: rgba(255, 255, 255, 80);
+}
+QMainWindow > QToolBar[titleBarBgType="other"] {
+    background: none;
+}
+
+QLabel#countLabel { color: #909090 }
+
+QMainWindow > QToolBar[extendTitleBar="true"] #countLabel { color: #444 }
+
+QPushButton#searchBoxBtn { border: 0px }
+/**** End ToolBar ****/
+
+/**** Editor ****/
+Editor { background: #e8f5ff }
+Editor > #textEditor {
+    selection-color: black;
+    selection-background-color: #e0f2ff;
+}
+Editor > #dtBtn { color: #333 }
+
+QFrame#bottomArea[bgType="win10"] {
+    background: rgba(255, 255, 255, 80);
+}
+/**** End Editor ****/
+
+/**** Lists ****/
+DiaryList {
+    background: #f2f1e7;
+    border: 0px;
+    padding-top: 1dip;
+}
+QScrollBar#diaryListSB { qproperty-annotateColor: #db8a60 }
+
+TagList {
+    background: #eab68a;
+    border: 0px;
+}
+QLineEdit#tagListEdit { border: none }
+
+QMainWindow QSplitter::handle { background: #b53d00 }
+/**** End Lists ****/
+
+/**** HeatMap ****/
+HeatMap { background: white }
+
+QFrame#heatMapBar {
+    border-bottom: 1dip solid lightgray;
+    padding: 0px 4dip 0px 4dip;
+    background: gray;
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 #f2f1e7,
+        stop:0.8 #f2f1e7,
+        stop:1 rgb(233,231,214));
+}
+
+QPushButton#heatMapBtn {
+    font-size: 18pt;
+    color: #777;
+    border: none;
+}
+QPushButton#heatMapBtn:hover { color: #999 }
+
+HeatMap QToolButton { border: 1dip solid gray }
+HeatMap QToolButton:hover { background: rgba(0, 0, 0, 33) }
+HeatMap QToolButton:pressed { background: rgba(0, 0, 0, 55) }
+
+QGraphicsView#heatMapView {
+    qproperty-cellBorderColor: darkgray;
+    color: black;
+    background: transparent;
+    margin: 3dip;
+    border: none;
+}
+
+QGraphicsView#heatMapSample {
+    background: transparent;
+    border: none;
+}
+/**** End HeatMap ****/
+

@@ -1,0 +1,4 @@
+*.qm
+*.sln
+Makefile*
+hazama.pro.user

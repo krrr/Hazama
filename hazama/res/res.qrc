@@ -1,0 +1,59 @@
+<RCC>
+    <qresource prefix="/">
+        <file>appicon-24.png</file>
+        <file>appicon-48.png</file>
+        <file>search.png</file>
+        <file>search-big.png</file>
+        <file>search-clr.png</file>
+        <file>search-clr-big.png</file>
+        <file>clock.png</file>
+        <file>check.png</file>
+        <file>check-big.png</file>
+        <file>calendar.png</file>
+        <file>tag.png</file>
+        <file>lock.png</file>
+        <file>default.qss</file>
+        <file>colorful.qss</file>
+        <file>colorful-yellow.qss</file>
+        <file>colorful-white.qss</file>
+    <file>toolbar/tag-list.png</file>
+    <file>toolbar/tag-list-big.png</file>
+    <file>toolbar/tag-list-mega.png</file>
+    <file>toolbar/new.png</file>
+    <file>toolbar/new-big.png</file>
+    <file>toolbar/new-mega.png</file>
+    <file>toolbar/delete.png</file>
+    <file>toolbar/delete-big.png</file>
+    <file>toolbar/delete-mega.png</file>
+    <file>toolbar/sort.png</file>
+    <file>toolbar/sort-big.png</file>
+    <file>toolbar/sort-mega.png</file>
+    <file>toolbar/heatmap.png</file>
+    <file>toolbar/heatmap-big.png</file>
+    <file>toolbar/heatmap-mega.png</file>
+    <file>toolbar/config.png</file>
+    <file>toolbar/config-big.png</file>
+    <file>toolbar/config-mega.png</file>
+    <file>toolbar/update-mark.png</file>
+        <file>heatmap/arrow-left.png</file>
+        <file>heatmap/arrow-left-big.png</file>
+        <file>heatmap/arrow-right.png</file>
+        <file>heatmap/arrow-right-big.png</file>
+        <file>menu/list-delete.png</file>
+        <file>menu/list-delete-big.png</file>
+        <file>menu/random.png</file>
+        <file>menu/random-big.png</file>
+        <file>menu/highlight.png</file>
+        <file>menu/highlight-mega.png</file>
+        <file>menu/strikeout.png</file>
+        <file>menu/strikeout-mega.png</file>
+        <file>menu/underline.png</file>
+        <file>menu/underline-mega.png</file>
+        <file>menu/italic.png</file>
+        <file>menu/italic-mega.png</file>
+        <file>menu/bold.png</file>
+        <file>menu/bold-mega.png</file>
+    </qresource>
+    <qresource prefix="/" lang="zh"/>
+    <qresource prefix="/" lang="ja"/>
+</RCC>

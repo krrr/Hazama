@@ -1,0 +1,124 @@
+/* This file contains base of theme colorful and "green" color scheme, and other
+   color scheme QSS should override this. */
+
+QMainWindow QSplitter::handle { background: #979A9B }
+TagList {
+    padding-top: 2dip;
+    background: #E7EFF5;
+}
+DiaryList {
+    padding: 0px;
+    background: #FAFAFA;
+}
+QScrollBar#diaryListSB { qproperty-annotateColor: #7092be }
+QLineEdit#tagListEdit {
+    border: none;
+    margin: 1dip;
+    margin-right: 3dip;
+}
+
+SearchBox { background: #FAFAFA }
+
+/* ToolBar part */
+QMainWindow > QToolBar {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 #EBF2F7,
+        stop:1 #E2EAF0);
+}
+QMainWindow > QToolBar { border-bottom: 1dip solid #979A9B }
+QLabel#countLabel {color: #616D78}
+
+/* Editor part */
+Editor > #textEditor {  /* use system selection-color */
+    selection-color: none;
+    selection-background-color: none;
+}
+Editor {
+    background: #E3EBC7;
+}
+Editor > #tagEditor, #titleEditor, #textEditor {
+    background: rgba(255, 255, 255, 155);
+}
+Editor > #tagEditor:focus, #titleEditor:focus, #textEditor:focus {
+    background: rgba(255, 255, 255, 200);
+}
+
+/* DiaryListItem part */
+QFrame#DiaryListItem {
+    padding: 2dip;
+    border-bottom: 1dip solid #979A9B;
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 #EEF2DE,
+        stop:1 #E3EBC7);
+}
+QFrame#DiaryListItem * {
+    color: #3F474E;
+}
+QFrame#DiaryListItem[selected="true"][active="true"] {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 #DDF1F1,
+        stop:1 #C5E2E3);
+}
+QFrame#DiaryListItem[selected="true"][active="false"] {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 #EBEBEB,
+        stop:1 #D9D9D9);
+}
+QFrame#DiaryListItem > #DiaryListItemText {
+    margin: 2dip 2dip 2dip 4dip;  /* top, right, bottom, left */
+}
+QFrame#DiaryListItem > QToolButton {  /* icons */
+    margin: 0px;
+    margin-right: 1dip;
+    border: none;
+}
+
+/* TagListItem part */
+QFrame#TagListItem {
+    padding: 4dip 4dip 4dip 7dip;
+    background: transparent;
+}
+QFrame#TagListItem * {
+    color: #363D43;
+}
+QFrame#TagListItem[selected="true"] {
+    border-left: 3dip solid #7092BE;
+    border-top: 1dip solid #979A9B;
+    border-bottom: 1dip solid #979A9B;
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 white,
+        stop:1 transparent);
+}
+QLabel#TagListItemCount {
+    background: rgba(0,0,0,22);
+    border-radius: 4dip;
+    border: 1px solid rgba(0,0,0,33);
+}
+
+/* HeatMap part */
+HeatMap {
+    background: #FAFAFA;
+}
+
+QFrame#heatMapBar {
+    border-bottom: 1dip solid #979A9B;
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 #EBF2F7,
+        stop:1 #E2EAF0);
+}
+
+QPushButton#heatMapBtn { color: #616D78 }
+QPushButton#heatMapBtn:hover { color: #818F9C }
+
+HeatMap QToolButton { border: 1dip solid gray }
+HeatMap QToolButton:hover { background: rgba(255, 255, 255, 120) }
+HeatMap QToolButton:pressed { background: rgba(255, 255, 255, 180) }
+
+QGraphicsView#heatMapView {
+    qproperty-cellBorderColor: #979A9B;
+    qproperty-cellColor0: white;
+    qproperty-cellColor1: #CCdff6;
+    qproperty-cellColor2: #7092be;
+    qproperty-cellColor3: #3c4e65;
+    color: #3F474E;
+}

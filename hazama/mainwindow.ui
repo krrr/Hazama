@@ -1,0 +1,344 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>mainWindow</class>
+ <widget class="QMainWindow" name="mainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>437</width>
+    <height>450</height>
+   </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>400</width>
+    <height>450</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>Hazama</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <property name="spacing">
+     <number>0</number>
+    </property>
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
+    <item>
+     <widget class="QSplitter" name="splitter">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <property name="handleWidth">
+       <number>1</number>
+      </property>
+      <property name="childrenCollapsible">
+       <bool>false</bool>
+      </property>
+      <widget class="TagList" name="tagList">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="autoScroll">
+        <bool>false</bool>
+       </property>
+       <property name="editTriggers">
+        <set>QAbstractItemView::EditKeyPressed</set>
+       </property>
+      </widget>
+      <widget class="DiaryList" name="diaryList">
+       <property name="minimumSize">
+        <size>
+         <width>320</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="editTriggers">
+        <set>QAbstractItemView::NoEditTriggers</set>
+       </property>
+       <property name="selectionMode">
+        <enum>QAbstractItemView::ExtendedSelection</enum>
+       </property>
+       <property name="verticalScrollMode">
+        <enum>QAbstractItemView::ScrollPerPixel</enum>
+       </property>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <property name="movable">
+    <bool>false</bool>
+   </property>
+   <property name="floatable">
+    <bool>false</bool>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="creAct"/>
+   <addaction name="delAct"/>
+   <addaction name="tListAct"/>
+   <addaction name="sorAct"/>
+   <addaction name="mapAct"/>
+   <addaction name="cfgAct"/>
+  </widget>
+  <action name="creAct">
+   <property name="icon">
+    <iconset resource="res/res.qrc">
+     <normaloff>:/toolbar/new.png</normaloff>:/toolbar/new.png</iconset>
+   </property>
+   <property name="text">
+    <string>New</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+N</string>
+   </property>
+  </action>
+  <action name="tListAct">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="res/res.qrc">
+     <normaloff>:/toolbar/tag-list.png</normaloff>:/toolbar/tag-list.png</iconset>
+   </property>
+   <property name="text">
+    <string>Tag List</string>
+   </property>
+   <property name="toolTip">
+    <string>Tag List</string>
+   </property>
+   <property name="shortcut">
+    <string>F9</string>
+   </property>
+  </action>
+  <action name="delAct">
+   <property name="icon">
+    <iconset resource="res/res.qrc">
+     <normaloff>:/toolbar/delete.png</normaloff>:/toolbar/delete.png</iconset>
+   </property>
+   <property name="text">
+    <string>Delete</string>
+   </property>
+   <property name="toolTip">
+    <string>Delete</string>
+   </property>
+   <property name="shortcut">
+    <string>Del</string>
+   </property>
+  </action>
+  <action name="sorAct">
+   <property name="icon">
+    <iconset resource="res/res.qrc">
+     <normaloff>:/toolbar/sort.png</normaloff>:/toolbar/sort.png</iconset>
+   </property>
+   <property name="text">
+    <string>Sort By</string>
+   </property>
+   <property name="toolTip">
+    <string>Sort By</string>
+   </property>
+  </action>
+  <action name="cfgAct">
+   <property name="icon">
+    <iconset resource="res/res.qrc">
+     <normaloff>:/toolbar/config.png</normaloff>:/toolbar/config.png</iconset>
+   </property>
+   <property name="text">
+    <string>Settings</string>
+   </property>
+   <property name="toolTip">
+    <string>Settings</string>
+   </property>
+  </action>
+  <action name="mapAct">
+   <property name="icon">
+    <iconset resource="res/res.qrc">
+     <normaloff>:/toolbar/heatmap.png</normaloff>:/toolbar/heatmap.png</iconset>
+   </property>
+   <property name="text">
+    <string>Heat Map</string>
+   </property>
+   <property name="toolTip">
+    <string>Heat Map</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+M</string>
+   </property>
+  </action>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>DiaryList</class>
+   <extends>QListView</extends>
+   <header>diarylist.h</header>
+   <slots>
+    <signal>countChanged()</signal>
+    <signal>startLoading()</signal>
+    <slot>setFilterByTag(QString)</slot>
+    <slot>reload()</slot>
+    <slot>refreshFilteredTags(QString)</slot>
+   </slots>
+  </customwidget>
+  <customwidget>
+   <class>TagList</class>
+   <extends>QListWidget</extends>
+   <header>taglist.h</header>
+   <slots>
+    <signal>currentTagChanged(QString)</signal>
+    <signal>tagNameModified(QString)</signal>
+   </slots>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>diaryList</tabstop>
+  <tabstop>tagList</tabstop>
+ </tabstops>
+ <resources>
+  <include location="res/res.qrc"/>
+ </resources>
+ <connections>
+  <connection>
+   <sender>tListAct</sender>
+   <signal>triggered(bool)</signal>
+   <receiver>mainWindow</receiver>
+   <slot>toggleTagList(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>218</x>
+     <y>224</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>tagList</sender>
+   <signal>currentTagChanged(QString)</signal>
+   <receiver>diaryList</receiver>
+   <slot>setFilterByTag(QString)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>57</x>
+     <y>241</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>276</x>
+     <y>241</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>tagList</sender>
+   <signal>tagNameModified(QString)</signal>
+   <receiver>diaryList</receiver>
+   <slot>refreshFilteredTags(QString)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>57</x>
+     <y>239</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>276</x>
+     <y>239</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>mapAct</sender>
+   <signal>triggered()</signal>
+   <receiver>mainWindow</receiver>
+   <slot>startHeatMap()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>218</x>
+     <y>224</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>diaryList</sender>
+   <signal>activated(QModelIndex)</signal>
+   <receiver>mainWindow</receiver>
+   <slot>startEditor()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>276</x>
+     <y>239</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>218</x>
+     <y>224</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>creAct</sender>
+   <signal>triggered()</signal>
+   <receiver>mainWindow</receiver>
+   <slot>startEditorNew()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>218</x>
+     <y>224</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>delAct</sender>
+   <signal>triggered()</signal>
+   <receiver>mainWindow</receiver>
+   <slot>deleteSelectedDiary()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>218</x>
+     <y>224</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>toggleTagList(bool)</slot>
+  <slot>startHeatMap()</slot>
+  <slot>startEditor()</slot>
+  <slot>startEditorNew()</slot>
+  <slot>deleteSelectedDiary()</slot>
+ </slots>
+</ui>
